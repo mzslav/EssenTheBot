@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { MealRecord } from '../utils/supabaseService';
 import { MealDetailModal } from './MealDetailModal';
+import { Utensils, Camera, Mic, Keyboard, Lightbulb, ChevronRight } from 'lucide-react';
 
 interface RecentItemsListProps {
   meals: MealRecord[];
@@ -10,6 +11,8 @@ interface RecentItemsListProps {
   onViewToday: () => void; 
   onDelete?: (id: number) => void;
   onAddToToday?: (meal: MealRecord) => void;
+  onFavorite?: (meal: MealRecord) => void;
+  onUpdate?: (meal: MealRecord) => void;
 }
 
 function formatDisplayTime(createdAt: string): string {
@@ -25,6 +28,8 @@ export const RecentItemsList = ({
   onViewToday,
   onDelete,
   onAddToToday,
+  onFavorite,
+  onUpdate,
 }: RecentItemsListProps) => {
   const [selectedMeal, setSelectedMeal] = useState<MealRecord | null>(null);
 
@@ -40,19 +45,7 @@ export const RecentItemsList = ({
           style={{ color: themeColor }}
         >
           Всі за сьогодні
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+          <ChevronRight size={14} />
         </button>
       </div>
       <div className="space-y-3">
@@ -69,7 +62,11 @@ export const RecentItemsList = ({
           <div
             className={`rounded-2xl p-6 text-center ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}
           >
-            <div className="text-3xl mb-2">🍽️</div>
+            <div className="flex justify-center mb-3">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-zinc-800 text-zinc-600' : 'bg-zinc-100 text-zinc-400'}`}>
+                <Utensils size={24} />
+              </div>
+            </div>
             <p className={`text-xs ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
               Сьогодні ще нічого не додано.
             </p>
@@ -91,7 +88,7 @@ export const RecentItemsList = ({
                   className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
                   style={{ background: `${themeColor}18` }}
                 >
-                  {meal.emoji || '🍽️'}
+                  {meal.emoji && !['🍔','🍕','🥤','🍽️'].includes(meal.emoji) ? meal.emoji : <Utensils size={20} />}
                 </div>
 
                 <div className="flex-1 min-w-0 text-left">
@@ -113,7 +110,7 @@ export const RecentItemsList = ({
                             : 'bg-slate-500/20 text-slate-400'
                         }`}
                       >
-                        {meal.type === 'photo' ? '📸' : meal.type === 'voice' ? '🎤' : '⌨️'}
+                        {meal.type === 'photo' ? <Camera size={10} /> : meal.type === 'voice' ? <Mic size={10} /> : <Keyboard size={10} />}
                       </span>
                     )}
                   </div>
@@ -167,12 +164,14 @@ export const RecentItemsList = ({
 
 
       <div
-        className={`rounded-2xl p-3.5 flex items-center gap-3 ${
-          isDark ? 'bg-white/5' : 'bg-gradient-to-r from-purple-50 to-blue-50'
+        className={`rounded-2xl p-4 flex items-start gap-3 border ${
+          isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-100 shadow-sm'
         }`}
       >
-        <span className="text-xl">💡</span>
-        <p className={`text-xs leading-relaxed ${isDark ? 'text-white/60' : 'text-slate-600'}`}>
+        <div className={`p-2 rounded-xl flex-shrink-0 ${isDark ? 'bg-yellow-500/20 text-yellow-500' : 'bg-yellow-50 text-yellow-500'}`}>
+          <Lightbulb size={18} />
+        </div>
+        <p className={`text-xs leading-relaxed font-medium mt-0.5 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
           Записуй всі прийоми їжі для точного підрахунку калорій
         </p>
       </div>
@@ -184,7 +183,9 @@ export const RecentItemsList = ({
           themeColor={themeColor}
           onClose={() => setSelectedMeal(null)}
           onDelete={onDelete}
-          onAddToToday={onAddToToday} 
+          onAddToToday={onAddToToday}
+          onFavorite={onFavorite}
+          onUpdate={(updated) => { onUpdate?.(updated); setSelectedMeal(null); }}
           isToday={true} 
         />
       )}

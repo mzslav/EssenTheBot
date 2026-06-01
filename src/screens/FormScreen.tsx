@@ -1,7 +1,8 @@
-// FormScreen.tsx
 import { useState } from 'react';
 import type { FormData } from '../types/types';
 import { questions } from '../data';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 
 interface FormScreenProps {
   isDark: boolean;
@@ -13,9 +14,10 @@ interface FormScreenProps {
 
 export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDataChange, onComplete }: FormScreenProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  
+  const [direction, setDirection] = useState(1);
+
   const question = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const progress = ((currentQuestion) / questions.length) * 100;
 
   const handleAnswer = (value: string | number) => {
     onFormDataChange({ ...formData, [question.key]: value });
@@ -23,6 +25,7 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
+      setDirection(1);
       setCurrentQuestion(prev => prev + 1);
     } else {
       onComplete();
@@ -31,6 +34,7 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
+      setDirection(-1);
       setCurrentQuestion(prev => prev - 1);
     }
   };
@@ -40,118 +44,164 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
     return !question.requiredField || (value !== undefined && value !== '');
   };
 
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 20 : -20,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 20 : -20,
+      opacity: 0
+    })
+  };
+
   return (
-    <div className="relative z-10 w-full max-w-md">
-      <div className="mb-5">
-        <div className={`h-1.5 ${isDark ? 'bg-white/10' : 'bg-slate-300'} rounded-full overflow-hidden`}>
-          <div 
-            className="h-full transition-all duration-500"
-            style={{ 
-              width: `${progress}%`,
-              background: `linear-gradient(90deg, ${themeColor}, #6366f1)`
-            }}
-          ></div>
+    <div className="w-full max-w-md pb-8">
+      <div className="mb-8 pt-4 px-2">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={handlePrevious}
+            disabled={currentQuestion === 0}
+            className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${currentQuestion === 0 ? 'opacity-0' : isDark ? 'bg-zinc-900 text-zinc-100 border border-zinc-800' : 'bg-white text-zinc-900 border border-zinc-200 shadow-sm'}`}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            Крок {currentQuestion + 1} з {questions.length}
+          </p>
+          <div className="w-10" />
         </div>
-        <p className={`text-xs ${isDark ? 'text-white/60' : 'text-slate-600'} mt-2 text-center`}>
-          Питання {currentQuestion + 1} з {questions.length}
-        </p>
+
+        <div className={`h-1.5 ${isDark ? 'bg-zinc-900' : 'bg-zinc-200'} rounded-full overflow-hidden`}>
+          <motion.div
+            className="h-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ ease: "easeInOut", duration: 0.3 }}
+            style={{ background: themeColor }}
+          />
+        </div>
       </div>
 
-      <div className={`${isDark ? 'bg-white/5' : 'bg-white/80'} backdrop-blur-2xl rounded-2xl p-6 border ${isDark ? 'border-white/10' : 'border-purple-200'} shadow-xl`}>
-        <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'} mb-5`}>
-          {question.fieldLabel}
-        </h2>
-
-        {question.fieldType === 'radio' && question.fieldOptions && (
-          <div className="space-y-2.5">
-            {question.fieldOptions.values.map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleAnswer(item.option)}
-                className={`w-full p-3 rounded-xl text-sm text-left transition-all duration-200 ${
-                  formData[question.key] === item.option
-                    ? 'text-white shadow-md scale-[1.01]'
-                    : isDark 
-                      ? 'bg-white/5 text-white hover:bg-white/10' 
-                      : 'bg-white text-slate-900 hover:bg-slate-50 border border-purple-200'
-                }`}
-                style={formData[question.key] === item.option ? {
-                  background: `linear-gradient(135deg, ${themeColor}, #6366f1)`
-                } : {}}
-              >
-                {item.option}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {question.fieldType === 'dropdown' && question.fieldOptions && (
-          <select
-            value={formData[question.key] as string || ''}
-            onChange={(e) => handleAnswer(e.target.value)}
-            className={`w-full p-3 text-sm rounded-xl ${
-              isDark 
-                ? 'bg-white/5 text-white border-white/10' 
-                : 'bg-white text-slate-900 border-purple-200'
-            } border focus:outline-none focus:ring-1`}
-            style={{ 
-              '--tw-ring-color': themeColor 
-            } as React.CSSProperties}
+      <div className="relative min-h-[300px]">
+        <AnimatePresence custom={direction} mode="wait">
+          <motion.div
+            key={currentQuestion}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            className="absolute inset-0 w-full"
           >
-            <option value="">Обери варіант</option>
-            {question.fieldOptions.values.map((item, idx) => (
-              <option key={idx} value={item.option}>
-                {item.option}
-              </option>
-            ))}
-          </select>
-        )}
+            <h2 className={`text-2xl font-black leading-tight tracking-tight px-4 mb-8 text-center ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
+              {question.fieldLabel}
+            </h2>
 
-        {question.fieldType === 'number' && (
-          <input
-            type="number"
-            placeholder={question.placeholder}
-            value={formData[question.key] as number || ''}
-            onChange={(e) => handleAnswer(Number(e.target.value))}
-            className={`w-full p-3 text-sm rounded-xl ${
-              isDark 
-                ? 'bg-white/5 text-white border-white/10 placeholder-white/40' 
-                : 'bg-white text-slate-900 border-purple-200 placeholder-slate-400'
-            } border focus:outline-none focus:ring-1`}
-            style={{ 
-              '--tw-ring-color': themeColor 
-            } as React.CSSProperties}
-          />
-        )}
+            <div className="px-2 space-y-3">
+              {question.fieldType === 'radio' && question.fieldOptions && (
+                <div className="space-y-3">
+                  {question.fieldOptions.values.map((item, idx) => {
+                    const isSelected = formData[question.key] === item.option;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleAnswer(item.option)}
+                        className={`w-full p-4 rounded-2xl text-left transition-all active:scale-[0.98] flex justify-between items-center border-2 ${isSelected
+                            ? isDark ? 'bg-zinc-800 border-transparent shadow-lg' : 'bg-white border-transparent shadow-lg'
+                            : isDark
+                              ? 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700'
+                              : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
+                          }`}
+                        style={isSelected ? { borderColor: themeColor } : {}}
+                      >
+                        <span className={`font-bold text-base ${isSelected ? (isDark ? 'text-zinc-100' : 'text-zinc-900') : (isDark ? 'text-zinc-400' : 'text-zinc-600')}`}>
+                          {item.option}
+                        </span>
+                        {isSelected && (
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: themeColor }}>
+                            <Check size={14} strokeWidth={3} />
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
 
-        <div className="mt-6 flex gap-2.5">
-          {currentQuestion > 0 && (
-            <button
-              onClick={handlePrevious}
-              className={`flex-1 ${
-                isDark ? 'bg-white/10 text-white' : 'bg-slate-200 text-slate-900'
-              } font-semibold py-3 px-4 text-sm rounded-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]`}
-            >
-              Назад
-            </button>
-          )}
-          <button
-            onClick={handleNext}
-            disabled={!canProceed()}
-            className={`flex-1 font-semibold py-3 px-4 text-sm rounded-xl transition-all duration-200 ${
-              canProceed()
-                ? 'text-white shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]'
-                : isDark
-                  ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              {question.fieldType === 'dropdown' && question.fieldOptions && (
+                <div className="relative">
+                  <select
+                    value={formData[question.key] as string || ''}
+                    onChange={(e) => handleAnswer(e.target.value)}
+                    className={`w-full p-5 text-lg font-bold rounded-2xl appearance-none outline-none transition-all border-2 ${isDark
+                        ? 'bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-zinc-600'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-zinc-400'
+                      }`}
+                  >
+                    <option value="" disabled>Обери варіант</option>
+                    {question.fieldOptions.values.map((item, idx) => (
+                      <option key={idx} value={item.option}>
+                        {item.option}
+                      </option>
+                    ))}
+                  </select>
+                  <div className={`absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    ▼
+                  </div>
+                </div>
+              )}
+
+              {question.fieldType === 'number' && (
+                <div className="relative flex justify-center">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder={question.placeholder}
+                    value={formData[question.key] as number || ''}
+                    onChange={(e) => handleAnswer(Number(e.target.value))}
+                    className={`w-full max-w-[200px] text-center p-6 text-4xl font-black rounded-3xl outline-none transition-all border-2 ${isDark
+                        ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-700 focus:border-zinc-600 focus:bg-zinc-800/50'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder-zinc-300 focus:border-zinc-400 focus:bg-white'
+                      }`}
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="fixed bottom-6 left-0 right-0 px-6 z-50">
+        <button
+          onClick={handleNext}
+          disabled={!canProceed()}
+          className={`w-full max-w-sm mx-auto flex items-center justify-center gap-2 font-bold py-4 px-6 text-base rounded-2xl transition-all duration-300 active:scale-[0.98] ${canProceed()
+              ? 'text-white shadow-xl hover:shadow-2xl'
+              : isDark
+                ? 'bg-zinc-900 text-zinc-600 border border-zinc-800'
+                : 'bg-zinc-100 text-zinc-400 border border-zinc-200'
             }`}
-            style={canProceed() ? {
-              background: `linear-gradient(135deg, ${themeColor}, #6366f1)`
-            } : {}}
-          >
-            {currentQuestion === questions.length - 1 ? 'Завершити' : 'Далі'}
-          </button>
-        </div>
+          style={canProceed() ? {
+            background: themeColor
+          } : {}}
+        >
+          {currentQuestion === questions.length - 1 ? (
+            <><Check size={20} strokeWidth={3} /> Завершити</>
+          ) : (
+            <>Далі <ChevronRight size={20} strokeWidth={3} /></>
+          )}
+        </button>
       </div>
     </div>
   );

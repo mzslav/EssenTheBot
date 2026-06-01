@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ToastProps {
   message: string;
@@ -27,7 +28,9 @@ export const Toast = ({ message, type, onClose }: ToastProps) => {
           animation: 'toastSlideDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
-        <span className="text-xl flex-shrink-0">{type === 'success' ? '✅' : '⚠️'}</span>
+        <span className="flex-shrink-0">
+          {type === 'success' ? <CheckCircle2 size={18} className="text-white" /> : <AlertCircle size={18} className="text-white" />}
+        </span>
         <span className="flex-1 leading-snug">{message}</span>
         <button
           onClick={onClose}

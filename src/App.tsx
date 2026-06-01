@@ -11,6 +11,8 @@ import supabase from './supabase/supabase-client';
 import type { AppScreen, FormData } from './types/types';
 import { FridgeScreen } from './screens/FridgeScreen';
 import { WorkoutScreen } from './screens/workout/WorkoutScreen';
+import { AppProvider } from './context/AppContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const AccessDeniedScreen = ({ isDark }: { isDark: boolean }) => (
   <div className={`min-h-screen flex flex-col items-center justify-center p-6 text-center ${
@@ -117,16 +119,12 @@ useEffect(() => {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col relative overflow-hidden pt-4 ${
-      isDark ? 'bg-gradient-to-br from-slate-950 via-[#1a1a2e] to-slate-950' : 'bg-gradient-to-br from-slate-100 via-purple-100 to-slate-100'
+    <div className={`min-h-[100dvh] flex flex-col relative overflow-hidden pt-4 ${
+      isDark ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'
     }`}>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay" 
+           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}>
       </div>
-
-      <div className="absolute inset-0 opacity-[0.01] pointer-events-none bg-noise"></div>
 
       <main className={`flex-1 flex ${currentScreen === 'workout' ? 'items-start' : 'items-center'} justify-center p-4 transition-all duration-300 ${showNavigation ? 'pb-24' : ''}`}>
         
@@ -193,23 +191,16 @@ useEffect(() => {
           themeColor={themeColor}
         />
       )}
-
-      <style>{`
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 3s ease-in-out infinite;
-        }
-        .delay-500 { animation-delay: 500ms; }
-        .delay-1000 { animation-delay: 1000ms; }
-        .bg-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
-        }
-      `}</style>
     </div>
   );
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <ErrorBoundary>
+      <AppProvider>
+        <App />
+      </AppProvider>
+    </ErrorBoundary>
+  );
+}

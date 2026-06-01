@@ -157,3 +157,31 @@ export interface ExerciseFormData {
   rir: string;
   notes?: string;
 }
+
+export interface UserData {
+  id: number;
+  telegram_user_id: number;
+  first_name: string;
+  username?: string;
+  gender?: string;
+  age?: number;
+  weight?: number;
+  height?: number;
+  goal?: string;
+  multiplier: number;
+  notification?: boolean;
+  notify_water?: boolean;
+  notify_meals?: boolean;
+  streak_days?: number;
+  TDEE_Normal: number;
+  TDEE: number;
+  protein_Normal: number;
+  protein: number;
+  fat_Normal: number;
+  fat: number;
+  carbs_Normal: number;
+  carbs: number;
+  waterPerDay: number;
+  BMI: number;
+  BMICategory: string;
+}
