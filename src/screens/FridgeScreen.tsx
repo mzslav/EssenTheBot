@@ -4,6 +4,9 @@ import { InputSection } from '../components/InputSection';
 import { AIResponseSection } from '../components/AIResponseSection';
 import { RecentItemsList } from '../components/RecentItemsList';
 import { AllMealsScreen } from './AllMealsScreen';
+import { FavoriteMeals } from '../components/FavoriteMeals';
+import { ManualMealBuilder } from '../components/ManualMealBuilder';
+import { BarcodeScanner } from '../components/BarcodeScanner';
 import { Toast, useToast } from '../components/Toast';
 import {
   analyzeTextInput,
@@ -17,6 +20,9 @@ import {
   addMealToToday,
   type MealRecord,
 } from '../utils/supabaseService';
+import { addFavorite } from '../utils/favoritesService';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronRight, Calculator, ScanLine, AlertCircle, X, History } from 'lucide-react';
 
 export const FridgeScreen = ({
   user,
@@ -29,6 +35,8 @@ export const FridgeScreen = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAllMeals, setShowAllMeals] = useState(false);
+  const [showManual, setShowManual] = useState(false);
+  const [showBarcode, setShowBarcode] = useState(false);
 
   const [todayMeals, setTodayMeals] = useState<MealRecord[]>([]);
   const [isLoadingRecent, setIsLoadingRecent] = useState(true);
@@ -173,17 +181,17 @@ export const FridgeScreen = ({
   };
 
   const handleAddToToday = async (meal: MealRecord) => {
-      if (!user?.id) return;
-      try {
-        const saved = await addMealToToday(user.id, meal, meal.emoji);
-        const todayStr = new Date().toISOString().split('T')[0];
-        const newMeal = { ...saved, _date: todayStr };
-        setTodayMeals(prev => [newMeal, ...prev]);
-        showToast(`${meal.name} додано знову!`, 'success');
-      } catch (err) {
-        showToast('Помилка додавання', 'error');
-      }
-    };
+    if (!user?.id) return;
+    try {
+      const saved = await addMealToToday(user.id, meal, meal.emoji);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const newMeal = { ...saved, _date: todayStr };
+      setTodayMeals(prev => [newMeal, ...prev]);
+      showToast(`${meal.name} додано знову!`, 'success');
+    } catch (err) {
+      showToast('Помилка додавання', 'error');
+    }
+  };
 
   const resetAll = () => {
     setAiResponse(null);
@@ -196,6 +204,44 @@ export const FridgeScreen = ({
     setInputMode(mode);
     setAiResponse(null);
     setError(null);
+  };
+
+  const handleDirectSave = async (meal: { name: string; calories: number; protein: number; fat: number; carbs: number }) => {
+    if (!user?.id) { showToast('Потрібна авторизація', 'error'); return; }
+    try {
+      const saved = await saveMeal(user.id, meal, 'text');
+      setTodayMeals(prev => [saved, ...prev]);
+      showToast(`${meal.name} додано!`, 'success');
+      setShowManual(false);
+      setShowBarcode(false);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Помилка', 'error');
+    }
+  };
+
+  const handleFavoriteMeal = async (meal: MealRecord) => {
+    if (!user?.id) return;
+    try {
+      await addFavorite(user.id, { name: meal.name, calories: meal.calories, protein: meal.protein, fat: meal.fat, carbs: meal.carbs, emoji: meal.emoji });
+      showToast(`${meal.name} додано до обраних`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Помилка', 'error');
+    }
+  };
+
+  const handleQuickAddFavorite = async (meal: { name: string; calories: number; protein: number; fat: number; carbs: number; emoji?: string }) => {
+    if (!user?.id) return;
+    try {
+      const saved = await addMealToToday(user.id, meal, meal.emoji);
+      setTodayMeals(prev => [saved, ...prev]);
+      showToast(`${meal.name} додано!`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Помилка', 'error');
+    }
+  };
+
+  const handleMealUpdate = (updatedMeal: MealRecord) => {
+    setTodayMeals(prev => prev.map(m => m.id === updatedMeal.id ? updatedMeal : m));
   };
 
   if (showAllMeals) {
@@ -214,79 +260,75 @@ export const FridgeScreen = ({
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
-      <div className="flex justify-between items-center px-1 pt-2">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center px-1 pt-2">
         <div>
-          <h1
-            className={`text-xl font-bold leading-tight ${
-              isDark ? 'text-white' : 'text-slate-900'
-            }`}
-          >
-            Мій холодильник 🥗
+          <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
+            Мій холодильник
           </h1>
-          <p
-            className={`text-xs mt-0.5 font-medium ${
-              isDark ? 'text-white/50' : 'text-slate-500'
-            }`}
-          >
+          <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
             Додай страву будь-яким способом
           </p>
         </div>
         <button
           onClick={() => setShowAllMeals(true)}
-          className="text-xs font-semibold transition-all hover:underline flex items-center gap-1"
+          className="text-xs font-semibold transition-all active:scale-95 hover:underline flex items-center gap-1 bg-transparent px-2 py-1 rounded-lg"
           style={{ color: themeColor }}
         >
-          Історія
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+          <History size={14} /> Історія <ChevronRight size={14} />
         </button>
-      </div>
-      {error && (
-        <div
-          className={`rounded-2xl p-4 border ${
-            isDark
-              ? 'bg-red-500/10 border-red-500/20'
-              : 'bg-red-50 border-red-200'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <span className="text-xl">⚠️</span>
-            <div className="flex-1">
-              <h4
-                className={`text-sm font-bold mb-1 ${
-                  isDark ? 'text-red-400' : 'text-red-900'
-                }`}
-              >
-                Помилка
-              </h4>
-              <p
-                className={`text-xs ${isDark ? 'text-red-300' : 'text-red-700'}`}
-              >
-                {error}
-              </p>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className={`text-xs font-medium ${
-                isDark ? 'text-red-400' : 'text-red-600'
-              }`}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+      </motion.div>
+
+      <FavoriteMeals user={user} isDark={isDark} themeColor={themeColor} onQuickAdd={handleQuickAddFavorite} />
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex gap-2">
+        <button onClick={() => { setShowManual(!showManual); setShowBarcode(false); }}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-semibold transition-all active:scale-[0.98] ${showManual ? 'text-white shadow-md' : isDark ? 'bg-zinc-900/50 text-zinc-400 border border-white/5' : 'bg-zinc-100 text-zinc-600 border border-zinc-200/50'}`}
+          style={showManual ? { background: themeColor } : {}}>
+          <Calculator size={14} /> Ручний ввід
+        </button>
+        <button onClick={() => { setShowBarcode(!showBarcode); setShowManual(false); }}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-semibold transition-all active:scale-[0.98] ${showBarcode ? 'text-white shadow-md' : isDark ? 'bg-zinc-900/50 text-zinc-400 border border-white/5' : 'bg-zinc-100 text-zinc-600 border border-zinc-200/50'}`}
+          style={showBarcode ? { background: themeColor } : {}}>
+          <ScanLine size={14} /> Штрих-код
+        </button>
+      </motion.div>
+
+      {showManual && (
+        <ManualMealBuilder isDark={isDark} themeColor={themeColor} onSubmit={handleInputSubmit} isProcessing={isProcessing} onSaveDirect={handleDirectSave} />
       )}
+
+      {showBarcode && (
+        <BarcodeScanner isDark={isDark} themeColor={themeColor} onProductFound={handleDirectSave} onClose={() => setShowBarcode(false)} />
+      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className={`rounded-2xl p-4 border overflow-hidden ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200'
+              }`}
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className={`flex-shrink-0 ${isDark ? 'text-red-400' : 'text-red-500'}`} size={20} />
+              <div className="flex-1">
+                <h4 className={`text-xs font-bold mb-0.5 ${isDark ? 'text-red-400' : 'text-red-900'}`}>
+                  Помилка
+                </h4>
+                <p className={`text-[10px] font-medium leading-relaxed ${isDark ? 'text-red-300' : 'text-red-700'}`}>
+                  {error}
+                </p>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className={`text-xs font-medium opacity-70 hover:opacity-100 ${isDark ? 'text-red-400' : 'text-red-600'}`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <InputSection
         isDark={isDark}
@@ -308,7 +350,7 @@ export const FridgeScreen = ({
         />
       )}
 
-      {!aiResponse && (
+      {!aiResponse && !showManual && !showBarcode && (
         <RecentItemsList
           meals={todayMeals}
           isLoading={isLoadingRecent}
@@ -317,16 +359,11 @@ export const FridgeScreen = ({
           onViewToday={() => setShowAllMeals(true)}
           onDelete={handleDeleteRecent}
           onAddToToday={handleAddToToday}
+          onFavorite={handleFavoriteMeal}
+          onUpdate={handleMealUpdate}
         />
       )}
 
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0);    }
-        }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-      `}</style>
     </div>
   );
 };

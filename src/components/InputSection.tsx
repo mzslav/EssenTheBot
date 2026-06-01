@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { InputMode } from '../types/types';
+import { Camera, Mic, Type, Image as ImageIcon, Play, Pause, Trash2 } from 'lucide-react';
 
 interface InputSectionProps {
   isDark: boolean;
@@ -24,50 +25,50 @@ export const InputSection = ({
         <button
           onClick={() => setInputMode('photo')}
           disabled={isProcessing}
-          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 ${
             inputMode === 'photo'
               ? isDark 
-                ? 'bg-white/15 text-white border-2' 
-                : 'bg-slate-200 text-slate-900 border-2'
+                ? 'bg-zinc-800 text-zinc-100 shadow-sm' 
+                : 'bg-zinc-100 text-zinc-900 shadow-sm'
               : isDark 
-                ? 'bg-white/5 hover:bg-white/10 text-white/70' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                ? 'bg-zinc-900/50 hover:bg-zinc-800 text-zinc-500' 
+                : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-500 border border-zinc-100'
           }`}
-          style={inputMode === 'photo' ? { borderColor: themeColor } : {}}
+          style={inputMode === 'photo' ? { color: themeColor } : {}}
         >
-          📸 Фото
+          <Camera size={14} /> Фото
         </button>
         <button
           onClick={() => setInputMode('voice')}
           disabled={isProcessing}
-          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 ${
             inputMode === 'voice'
               ? isDark 
-                ? 'bg-white/15 text-white border-2' 
-                : 'bg-slate-200 text-slate-900 border-2'
+                ? 'bg-zinc-800 text-zinc-100 shadow-sm' 
+                : 'bg-zinc-100 text-zinc-900 shadow-sm'
               : isDark 
-                ? 'bg-white/5 hover:bg-white/10 text-white/70' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                ? 'bg-zinc-900/50 hover:bg-zinc-800 text-zinc-500' 
+                : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-500 border border-zinc-100'
           }`}
-          style={inputMode === 'voice' ? { borderColor: themeColor } : {}}
+          style={inputMode === 'voice' ? { color: themeColor } : {}}
         >
-          🎤 Голос
+          <Mic size={14} /> Голос
         </button>
         <button
           onClick={() => setInputMode('text')}
           disabled={isProcessing}
-          className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 ${
             inputMode === 'text'
               ? isDark 
-                ? 'bg-white/15 text-white border-2' 
-                : 'bg-slate-200 text-slate-900 border-2'
+                ? 'bg-zinc-800 text-zinc-100 shadow-sm' 
+                : 'bg-zinc-100 text-zinc-900 shadow-sm'
               : isDark 
-                ? 'bg-white/5 hover:bg-white/10 text-white/70' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                ? 'bg-zinc-900/50 hover:bg-zinc-800 text-zinc-500' 
+                : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-500 border border-zinc-100'
           }`}
-          style={inputMode === 'text' ? { borderColor: themeColor } : {}}
+          style={inputMode === 'text' ? { color: themeColor } : {}}
         >
-          ⌨️ Текст
+          <Type size={14} /> Текст
         </button>
       </div>
 
@@ -197,36 +198,38 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
   if (photoSource === 'none') {
     return (
       <div className="w-full p-6 space-y-4">
-        <div className="text-center mb-4">
-          <div className="text-5xl mb-3">📸</div>
-          <h3 className={`text-sm font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+        <div className="text-center mb-6">
+          <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-3 ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100'}`}>
+            <Camera size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
+          </div>
+          <h3 className={`text-sm font-bold mb-1 ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
             Обери джерело фото
           </h3>
-          <p className={`text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
+          <p className={`text-[10px] uppercase font-semibold tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
             Зроби фото або завантаж з галереї
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <button
             onClick={() => setPhotoSource('camera')}
             disabled={isProcessing}
-            className={`w-full py-3 px-4 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 ${
-              isDark ? 'bg-white/10 hover:bg-white/15 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 ${
+              isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
             }`}
           >
-            📷 Зробити фото
+            <Camera size={16} /> Зробити фото
           </button>
           <button
             onClick={() => {
               fileInputRef.current?.click();
             }}
             disabled={isProcessing}
-            className={`w-full py-3 px-4 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 ${
-              isDark ? 'bg-white/10 hover:bg-white/15 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50 ${
+              isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
             }`}
           >
-            🖼️ Вибрати з галереї
+            <ImageIcon size={16} /> Вибрати з галереї
           </button>
           <input
             ref={fileInputRef}
@@ -260,9 +263,9 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-3">🖼️</div>
-                <p className="text-white/70 text-sm">Завантаження фото...</p>
+              <div className="text-center flex flex-col items-center">
+                <ImageIcon size={40} className="mb-3 text-zinc-500 opacity-50" />
+                <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">Завантаження...</p>
               </div>
             </div>
           )
@@ -438,16 +441,12 @@ const handleTranscribe = async (blob: Blob) => {
     <div className="w-full p-6 space-y-4">
       {!audioBlob ? (
         <>
-          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center transition-all shadow-sm ${
             isRecording 
-              ? 'bg-red-500/20 animate-pulse' 
-              : isDark ? 'bg-white/10' : 'bg-slate-100'
+              ? 'bg-red-500/20 text-red-500 animate-pulse' 
+              : isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-400'
           }`}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isRecording ? 'text-red-500' : isDark ? 'text-white/50' : 'text-slate-400'}>
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-              <line x1="12" x2="12" y1="19" y2="22"/>
-            </svg>
+            <Mic size={32} />
           </div>
           
           {isRecording && (
@@ -498,14 +497,9 @@ const handleTranscribe = async (blob: Blob) => {
               style={{ backgroundColor: themeColor }}
             >
               {isPlayingAudio ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
-                  <rect x="6" y="4" width="4" height="16"/>
-                  <rect x="14" y="4" width="4" height="16"/>
-                </svg>
+                <Pause size={18} fill="white" className="text-white" />
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
+                <Play size={18} fill="white" className="text-white ml-1" />
               )}
             </button>
             
@@ -536,11 +530,7 @@ const handleTranscribe = async (blob: Blob) => {
                 isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
-                <path d="M3 6h18"/>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-              </svg>
+              <Trash2 size={16} className="text-red-500" />
             </button>
           </div>
 

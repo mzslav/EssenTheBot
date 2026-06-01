@@ -4,6 +4,8 @@ import { ProgressTabSkeleton } from '../../components/Skeleton';
 import { useFadeIn } from '../../utils/useFadeIn';
 import { getPlans, getPlanExercises, getExerciseHistory } from '../../utils/workoutService';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { motion } from 'motion/react';
+import { TrendingUp, Activity, BarChart2, Dumbbell, History, LineChart as LineChartIcon } from 'lucide-react';
 
 interface ProgressTabProps {
   user?: TelegramUser;
@@ -65,14 +67,16 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
   const bestVolume = history.length ? Math.max(...history.map(h => h.total_volume)) : 0;
   const totalSessions = history.length;
 
-  const selectClass = `w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all ${isDark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`;
+  const selectClass = `w-full px-4 py-3.5 rounded-2xl text-sm font-bold appearance-none outline-none transition-all border ${isDark ? 'bg-zinc-900 border-zinc-800 text-white focus:border-zinc-600 focus:bg-zinc-800' : 'bg-white border-zinc-200 text-zinc-900 focus:border-zinc-300 shadow-sm'}`;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className={`px-3 py-2 rounded-xl shadow-lg text-xs ${isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900 border border-slate-100'}`}>
-        <p className="font-semibold mb-1">{label}</p>
-        <p style={{ color: themeColor }}>{METRIC_LABELS[metric]}: <b>{payload[0].value}</b></p>
+      <div className={`px-4 py-3 rounded-2xl shadow-xl text-xs border ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-zinc-100 text-zinc-900'}`}>
+        <p className={`font-bold mb-1.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>{label}</p>
+        <p className="font-black text-sm flex items-center gap-1.5" style={{ color: themeColor }}>
+           <Activity size={14} /> {METRIC_LABELS[metric]}: {payload[0].value}
+        </p>
       </div>
     );
   };
@@ -80,85 +84,125 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
   if (plansLoading) return <ProgressTabSkeleton isDark={isDark} />;
 
   return (
-    <div className="space-y-3">
-      <div style={fadeIn.style(0)}>
-        <label className={`block text-[10px] font-semibold uppercase tracking-wider mb-1 ${isDark ? 'text-white/50' : 'text-slate-400'}`}>План</label>
-        <select className={selectClass} value={selectedPlanId ?? ''} onChange={e => handleSelectPlan(Number(e.target.value))}>
-          <option value="">Обери план…</option>
-          {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-      </div>
+    <div className="space-y-4 pb-20">
+      
+      {/* Selection Area */}
+      <div style={fadeIn.style(0)} className={`rounded-3xl p-5 border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200 shadow-sm'}`}>
+        <div className="space-y-4">
+          <div>
+            <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Обери план тренувань</label>
+            <div className="relative">
+              <select className={selectClass} value={selectedPlanId ?? ''} onChange={e => handleSelectPlan(Number(e.target.value))}>
+                <option value="">Обери план…</option>
+                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+                ▼
+              </div>
+            </div>
+          </div>
 
-      {selectedPlanId && exercises.length > 0 && (
-        <div style={fadeIn.style(1)}>
-          <label className={`block text-[10px] font-semibold uppercase tracking-wider mb-1 ${isDark ? 'text-white/50' : 'text-slate-400'}`}>Вправа</label>
-          <select className={selectClass} value={selectedExerciseId ?? ''} onChange={e => handleSelectExercise(Number(e.target.value))}>
-            <option value="">Обери вправу…</option>
-            {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-          </select>
+          {selectedPlanId && exercises.length > 0 && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Обери вправу</label>
+              <div className="relative">
+                <select className={selectClass} value={selectedExerciseId ?? ''} onChange={e => handleSelectExercise(Number(e.target.value))}>
+                  <option value="">Обери вправу…</option>
+                  {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+                  ▼
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
-      )}
+      </div>
 
       {loading ? (
         <ProgressTabSkeleton isDark={isDark} />
       ) : selectedExerciseId && history.length === 0 ? (
-        <div style={fadeIn.style(2)} className={`rounded-2xl p-8 text-center ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-          <span className="text-4xl block mb-3">📉</span>
-          <p className={`text-sm ${isDark ? 'text-white/50' : 'text-slate-400'}`}>Немає даних. Виконай хоча б одне тренування!</p>
+        <div style={fadeIn.style(2)} className={`rounded-3xl p-10 flex flex-col items-center justify-center text-center border border-dashed ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-300'}`}>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
+             <TrendingUp size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
+          </div>
+          <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Немає даних</p>
+          <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Виконай цю вправу хоча б один раз на тренуванні, щоб побачити графік.</p>
         </div>
       ) : history.length > 0 ? (
         <>
+          {/* Key Stats */}
           <div style={dataFadeIn.style(0)} className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Тренувань', value: totalSessions },
-              { label: 'Макс. вага', value: `${bestWeight} кг` },
-              { label: "Макс. об'єм", value: `${bestVolume} кг` },
+              { label: 'Тренувань', value: totalSessions, icon: <History size={14} /> },
+              { label: 'Макс. вага', value: `${bestWeight} кг`, icon: <Dumbbell size={14} /> },
+              { label: "Макс. об'єм", value: `${bestVolume} кг`, icon: <BarChart2 size={14} /> },
             ].map(stat => (
-              <div key={stat.label} className={`rounded-2xl p-3 text-center ${isDark ? 'bg-white/5' : 'bg-white border border-slate-100 shadow-sm'}`}>
-                <p className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{stat.value}</p>
-                <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{stat.label}</p>
+              <div key={stat.label} className={`rounded-3xl p-4 flex flex-col items-center justify-center text-center border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+                <div className={`p-1.5 rounded-lg mb-2 ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
+                  {stat.icon}
+                </div>
+                <p className={`text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>{stat.value}</p>
+                <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{stat.label}</p>
               </div>
             ))}
           </div>
 
-          <div style={dataFadeIn.style(1)} className={`rounded-xl p-1 flex gap-1 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+          {/* Metric Selector */}
+          <div style={dataFadeIn.style(1)} className={`rounded-2xl p-1.5 flex gap-1.5 border ${isDark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-zinc-100 border-zinc-200'}`}>
             {(Object.keys(METRIC_LABELS) as ProgressMetric[]).map(m => (
               <button key={m} onClick={() => setMetric(m)}
-                className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${metric === m ? 'text-white' : isDark ? 'text-white/50' : 'text-slate-500'}`}
+                className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all ${metric === m ? 'text-white shadow-md' : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'}`}
                 style={metric === m ? { background: themeColor } : {}}>
-                {m === 'max_weight' ? 'Вага' : m === 'total_volume' ? "Об'єм" : 'Повт'}
+                {m === 'max_weight' ? 'Макс. вага' : m === 'total_volume' ? "Загальний об'єм" : 'Всі повтори'}
               </button>
             ))}
           </div>
 
-          <div style={dataFadeIn.style(2)} className={`rounded-2xl p-4 ${isDark ? 'bg-white/5' : 'bg-white border border-slate-100 shadow-sm'}`}>
-            <p className={`text-xs font-semibold mb-3 ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
-              {selectedExercise?.name} — {METRIC_LABELS[metric]}
-            </p>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={history} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
-                <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 9, fill: isDark ? 'rgba(255,255,255,0.4)' : '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: isDark ? 'rgba(255,255,255,0.4)' : '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey={metric} stroke={themeColor} strokeWidth={2.5}
-                  dot={{ fill: themeColor, r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: themeColor }} />
+          {/* Chart Area */}
+          <div style={dataFadeIn.style(2)} className={`rounded-3xl p-5 border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+            <div className="flex items-center gap-2 mb-6">
+              <LineChartIcon size={18} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} />
+              <p className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
+                {selectedExercise?.name}: {METRIC_LABELS[metric]}
+              </p>
+            </div>
+            
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
+                <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 10, fill: isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} />
+                <YAxis tick={{ fontSize: 10, fill: isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} dx={-10} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', strokeWidth: 2 }} />
+                <Line 
+                  type="monotone" 
+                  dataKey={metric} 
+                  stroke={themeColor} 
+                  strokeWidth={3.5}
+                  dot={{ fill: isDark ? '#18181b' : '#ffffff', stroke: themeColor, strokeWidth: 2, r: 4 }} 
+                  activeDot={{ r: 6, fill: themeColor, stroke: isDark ? '#18181b' : '#ffffff', strokeWidth: 2 }} 
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div style={dataFadeIn.style(3)} className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100 shadow-sm'}`}>
-            <div className={`px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-slate-100'}`}>
-              <p className={`text-xs font-semibold ${isDark ? 'text-white/70' : 'text-slate-600'}`}>Історія</p>
+          {/* History List */}
+          <div style={dataFadeIn.style(3)} className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+            <div className={`px-5 py-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
+              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Історія результатів</p>
             </div>
-            <div className="divide-y divide-white/5">
+            <div className={`divide-y ${isDark ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
               {[...history].reverse().map((entry, i) => (
-                <div key={i} className="px-4 py-2.5 flex items-center justify-between">
-                  <p className={`text-xs font-medium ${isDark ? 'text-white/70' : 'text-slate-600'}`}>{new Date(entry.date).toLocaleDateString('uk-UA')}</p>
-                  <div className="flex gap-3">
-                    <span className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{entry.max_weight} кг</span>
-                    <span className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'}`}>{entry.total_reps} повт</span>
-                    <span className={`text-[10px] font-semibold ${isDark ? 'text-white/70' : 'text-slate-600'}`}>{entry.total_volume} кг</span>
+                <div key={i} className={`px-5 py-3.5 flex items-center justify-between transition-colors ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
+                       <History size={14} />
+                    </div>
+                    <p className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{new Date(entry.date).toLocaleDateString('uk-UA')}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className={`text-[11px] font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{entry.max_weight} кг <span className="font-normal opacity-50 text-[10px]">макс</span></span>
+                    <span className={`text-[10px] font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{entry.total_reps} повт · {entry.total_volume} кг об'єм</span>
                   </div>
                 </div>
               ))}
@@ -167,9 +211,12 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
         </>
       ) : (
         !selectedExerciseId && (
-          <div style={fadeIn.style(2)} className={`rounded-2xl p-8 text-center ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-            <span className="text-4xl block mb-3">📈</span>
-            <p className={`text-sm ${isDark ? 'text-white/50' : 'text-slate-400'}`}>Обери план та вправу щоб побачити прогрес</p>
+          <div style={fadeIn.style(2)} className={`rounded-3xl p-10 flex flex-col items-center justify-center text-center border border-dashed ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-300'}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
+               <LineChartIcon size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
+            </div>
+            <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Обери вправу</p>
+            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Вибери план і вправу вище, щоб побачити графік та історію прогресу.</p>
           </div>
         )
       )}

@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import type { TelegramUser } from '../types/types';
+import { useState, useEffect } from 'react';
+import type { TelegramUser, UserData } from '../types/types';
 import supabase from '../supabase/supabase-client';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, RadialBarChart, RadialBar
 } from 'recharts';
+import { motion, AnimatePresence } from 'motion/react';
+import { Utensils, Droplet, Dumbbell, User, Activity } from 'lucide-react';
 
 interface StatsSectionProps {
   user?: TelegramUser;
@@ -61,22 +63,10 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
   const [activeTab, setActiveTab] = useState<Tab>('nutrition');
   const [range, setRange] = useState<'7' | '30'>('7');
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   const [nutritionData, setNutritionData] = useState<DayStats[]>([]);
   const [workoutData, setWorkoutData] = useState<WorkoutStat[]>([]);
-
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.1 }
-    );
-    if (sectionRef.current) obs.observe(sectionRef.current);
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -188,11 +178,11 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
   };
 
   const avgCalories = nutritionData.length
-    ? Math.round(nutritionData.reduce((s, d) => s + d.calories, 0) / nutritionData.filter(d => d.calories > 0).length || 0)
+    ? Math.round(nutritionData.reduce((s, d) => s + d.calories, 0) / (nutritionData.filter(d => d.calories > 0).length || 1))
     : 0;
 
   const avgWater = nutritionData.length
-    ? Math.round(nutritionData.reduce((s, d) => s + d.water, 0) / nutritionData.filter(d => d.water > 0).length || 0)
+    ? Math.round(nutritionData.reduce((s, d) => s + d.water, 0) / (nutritionData.filter(d => d.water > 0).length || 1))
     : 0;
 
   const totalWorkouts = workoutData.filter(d => d.sessions > 0).length;
@@ -203,394 +193,314 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
 
   const tc = themeColor;
   const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
-  const tickColor = isDark ? 'rgba(255,255,255,0.35)' : '#94a3b8';
+  const tickColor = isDark ? 'rgba(255,255,255,0.35)' : '#a1a1aa';
 
-  const cardBg = isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100 shadow-sm';
-  const textMuted = isDark ? 'text-white/50' : 'text-slate-400';
-  const textMain = isDark ? 'text-white' : 'text-slate-900';
+  const cardBg = isDark ? 'bg-zinc-900/40 border-white/5 shadow-sm' : 'bg-white border-zinc-100 shadow-sm';
+  const textMuted = isDark ? 'text-zinc-500' : 'text-zinc-400';
+  const textMain = isDark ? 'text-zinc-100' : 'text-zinc-900';
 
   const CustomTip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className={`px-3 py-2 rounded-xl shadow-xl text-xs ${isDark ? 'bg-slate-800 border border-white/10 text-white' : 'bg-white border border-slate-100 text-slate-800'}`}>
-        <p className="font-bold mb-1">{label}</p>
+      <div className={`px-3 py-2 rounded-xl shadow-xl text-xs backdrop-blur-md ${isDark ? 'bg-zinc-800/90 border border-white/10 text-white' : 'bg-white/90 border border-zinc-100 text-zinc-800'}`}>
+        <p className="font-bold mb-1 tracking-tight">{label}</p>
         {payload.map((p: any, i: number) => (
-          <p key={i} style={{ color: p.color }}>{p.name}: <b>{p.value}</b></p>
+          <p key={i} style={{ color: p.color }} className="font-medium">{p.name}: <b>{p.value}</b></p>
         ))}
       </div>
     );
   };
 
-  const TABS: { id: Tab; label: string; icon: string }[] = [
-    { id: 'nutrition', label: 'Харчування', icon: '🥗' },
-    { id: 'water', label: 'Вода', icon: '💧' },
-    { id: 'workouts', label: 'Тренування', icon: '🏋️' },
-    { id: 'body', label: 'Тіло', icon: '⚖️' },
+  const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'nutrition', label: 'Харчування', icon: <Utensils size={14} /> },
+    { id: 'water', label: 'Вода', icon: <Droplet size={14} /> },
+    { id: 'workouts', label: 'Тренування', icon: <Dumbbell size={14} /> },
+    { id: 'body', label: 'Тіло', icon: <User size={14} /> },
   ];
 
   return (
-    <div
-      ref={sectionRef}
-      className="mt-6 space-y-4"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: 'opacity 0.5s ease, transform 0.5s ease',
-      }}
-    >
+    <div className="mt-6 space-y-4">
       <div className="flex items-center gap-3 px-1">
         <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, ${tc}40, transparent)` }} />
-        <span className={`text-xs font-bold uppercase tracking-widest ${textMuted}`}>Статистика</span>
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${textMuted}`}>Аналітика</span>
         <div className="flex-1 h-px" style={{ background: `linear-gradient(to left, ${tc}40, transparent)` }} />
       </div>
 
-      <div className={`flex gap-1 p-1 rounded-2xl overflow-x-auto ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}
+      {/* Tabs */}
+      <div className={`flex gap-1 p-1 rounded-2xl overflow-x-auto ${isDark ? 'bg-zinc-900/60 border border-white/5' : 'bg-zinc-100 border border-zinc-200/50'}`}
         style={{ scrollbarWidth: 'none' }}>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold transition-all duration-300 ${
-              activeTab === tab.id
-                ? 'text-white shadow-lg'
-                : isDark ? 'text-white/50 hover:text-white/70' : 'text-slate-500 hover:text-slate-700'
-            }`}
-            style={activeTab === tab.id ? { background: tc } : {}}
-          >
-            <span>{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
+        {TABS.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors duration-300 ${
+                isActive ? 'text-white' : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="activeStatsTab"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ backgroundColor: tc }}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                {tab.icon}
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {activeTab !== 'body' && (
         <div className="flex justify-end">
-          <div className={`flex gap-0.5 p-0.5 rounded-xl ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
-            {(['7', '30'] as const).map(r => (
-              <button
-                key={r}
-                onClick={() => setRange(r)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                  range === r
-                    ? 'text-white shadow'
-                    : isDark ? 'text-white/40' : 'text-slate-400'
-                }`}
-                style={range === r ? { background: tc } : {}}
-              >
-                {r === '7' ? '7 днів' : '30 днів'}
-              </button>
-            ))}
+          <div className={`flex gap-1 p-1 rounded-xl ${isDark ? 'bg-zinc-900/50' : 'bg-zinc-100'}`}>
+            {(['7', '30'] as const).map(r => {
+              const isActive = range === r;
+              return (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  className={`relative px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                    isActive ? 'text-white' : isDark ? 'text-zinc-500' : 'text-zinc-400'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div layoutId="activeRange" className="absolute inset-0 rounded-lg shadow-sm" style={{ backgroundColor: tc }} />
+                  )}
+                  <span className="relative z-10">{r === '7' ? '7 днів' : '30 днів'}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${tc}40`, borderTopColor: tc }} />
-        </div>
-      ) : (
-        <>
-          {activeTab === 'nutrition' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div className={`rounded-2xl p-3.5 border ${cardBg}`}>
-                  <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Середні калорії</p>
-                  <p className={`text-2xl font-black mt-1 ${textMain}`}>{avgCalories || '—'}</p>
-                  <p className={`text-[10px] mt-0.5 ${textMuted}`}>ціль: {tdee} ккал</p>
-                  <div className={`mt-2 h-1 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min((avgCalories / tdee) * 100, 100)}%`, background: tc }} />
-                  </div>
-                </div>
-                <div className={`rounded-2xl p-3.5 border ${cardBg}`}>
-                  <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Активних днів</p>
-                  <p className={`text-2xl font-black mt-1 ${textMain}`}>{nutritionData.filter(d => d.calories > 0).length}</p>
-                  <p className={`text-[10px] mt-0.5 ${textMuted}`}>з {nutritionData.length} днів</p>
-                  <div className={`mt-2 h-1 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                    <div className="h-full rounded-full" style={{
-                      width: `${(nutritionData.filter(d => d.calories > 0).length / nutritionData.length) * 100}%`,
-                      background: '#10b981'
-                    }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <p className={`text-xs font-semibold ${textMain}`}>Калорії по днях</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'} ${textMuted}`}>ккал</span>
-                </div>
-                <ResponsiveContainer width="100%" height={150}>
-                  <AreaChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={tc} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={tc} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTip />} />
-                    <Area type="monotone" dataKey="calories" stroke={tc} strokeWidth={2.5}
-                      fill="url(#calGrad)" dot={{ fill: tc, r: 3, strokeWidth: 0 }}
-                      name="ккал" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <p className={`text-xs font-semibold mb-3 ${textMain}`}>Макронутрієнти (г)</p>
-                <ResponsiveContainer width="100%" height={130}>
-                  <BarChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }} barSize={range === '7' ? 18 : 8}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTip />} />
-                    <Bar dataKey="protein" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} name="Білки" />
-                    <Bar dataKey="fat" stackId="a" fill="#f59e0b" name="Жири" />
-                    <Bar dataKey="carbs" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Вуглеводи" />
-                  </BarChart>
-                </ResponsiveContainer>
-                <div className="flex gap-3 mt-2 justify-center">
-                  {[['#10b981', 'Білки'], ['#f59e0b', 'Жири'], ['#3b82f6', 'Вуглеводи']].map(([color, label]) => (
-                    <div key={label} className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full" style={{ background: color }} />
-                      <span className={`text-[9px] ${textMuted}`}>{label}</span>
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div 
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex justify-center py-10"
+          >
+            <Activity className="w-6 h-6 animate-spin" style={{ color: tc }} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key={activeTab + range}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-3"
+          >
+            {activeTab === 'nutrition' && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Середні калорії</p>
+                    <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>{avgCalories || '—'}</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>ціль: {tdee} ккал</p>
+                    <div className={`mt-3 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-100'}`}>
+                      <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min((avgCalories / tdee) * 100, 100)}%` }} transition={{ duration: 1 }} style={{ background: tc }} />
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'water' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div className={`rounded-2xl p-3.5 border ${cardBg}`}>
-                  <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Середньо/день</p>
-                  <p className={`text-2xl font-black mt-1 ${textMain}`}>{avgWater ? (avgWater / 1000).toFixed(1) : '—'}</p>
-                  <p className={`text-[10px] mt-0.5 ${textMuted}`}>л · ціль: {(targetWater / 1000).toFixed(1)} л</p>
-                  <div className={`mt-2 h-1 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                    <div className="h-full rounded-full" style={{ width: `${Math.min((avgWater / targetWater) * 100, 100)}%`, background: '#3b82f6' }} />
                   </div>
-                </div>
-                <div className={`rounded-2xl p-3.5 border ${cardBg}`}>
-                  <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Ціль досягнута</p>
-                  <p className={`text-2xl font-black mt-1 ${textMain}`}>
-                    {nutritionData.filter(d => d.water >= targetWater * 0.9).length}
-                  </p>
-                  <p className={`text-[10px] mt-0.5 ${textMuted}`}>
-                    з {nutritionData.filter(d => d.water > 0).length} активних
-                  </p>
-                </div>
-              </div>
-
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <p className={`text-xs font-semibold ${textMain}`}>Вода по днях</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'} ${textMuted}`}>мл</span>
-                </div>
-                <ResponsiveContainer width="100%" height={150}>
-                  <AreaChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTip />} />
-                    <Area type="monotone" dataKey="water" stroke="#3b82f6" strokeWidth={2.5}
-                      fill="url(#waterGrad)" dot={{ fill: '#3b82f6', r: 3, strokeWidth: 0 }} name="мл" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className={`rounded-2xl overflow-hidden border ${cardBg}`}>
-                <div className={`px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-slate-100'}`}>
-                  <p className={`text-xs font-semibold ${textMain}`}>Деталі по днях</p>
-                </div>
-                <div className="divide-y divide-white/5 max-h-48 overflow-y-auto">
-                  {[...nutritionData].reverse().filter(d => d.water > 0).map((d, i) => {
-                    const pct = Math.min((d.water / targetWater) * 100, 100);
-                    return (
-                      <div key={i} className="px-4 py-2.5 flex items-center gap-3">
-                        <p className={`text-xs font-medium w-16 flex-shrink-0 ${textMuted}`}>{d.label}</p>
-                        <div className={`flex-1 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 90 ? '#10b981' : '#3b82f6' }} />
-                        </div>
-                        <p className={`text-xs font-bold w-14 text-right flex-shrink-0 ${textMain}`}>
-                          {(d.water / 1000).toFixed(1)} л
-                        </p>
-                        {pct >= 90 && <span className="text-sm">✅</span>}
-                      </div>
-                    );
-                  })}
-                  {nutritionData.filter(d => d.water > 0).length === 0 && (
-                    <div className="px-4 py-6 text-center">
-                      <p className={`text-xs ${textMuted}`}>Ще немає даних</p>
+                  <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Активних днів</p>
+                    <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>{nutritionData.filter(d => d.calories > 0).length}</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>з {nutritionData.length} днів</p>
+                    <div className={`mt-3 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-100'}`}>
+                      <motion.div className="h-full rounded-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${(nutritionData.filter(d => d.calories > 0).length / nutritionData.length) * 100}%` }} transition={{ duration: 1 }} />
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'workouts' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Тренувань', value: totalWorkouts, sub: `з ${workoutData.length} днів` },
-                  { label: 'Об\'єм', value: totalVolume > 0 ? `${(totalVolume / 1000).toFixed(1)}т` : '—', sub: 'загальний' },
-                  { label: 'Активність', value: `${Math.round((totalWorkouts / workoutData.length) * 100)}%`, sub: 'днів' },
-                ].map(stat => (
-                  <div key={stat.label} className={`rounded-2xl p-3 border text-center ${cardBg}`}>
-                    <p className={`text-xl font-black ${textMain}`}>{stat.value}</p>
-                    <p className={`text-[9px] uppercase font-bold tracking-wider mt-0.5 ${textMuted}`}>{stat.label}</p>
-                    <p className={`text-[9px] ${textMuted} mt-0.5`}>{stat.sub}</p>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <p className={`text-xs font-semibold mb-3 ${textMain}`}>Об'єм тренувань (кг)</p>
-                <ResponsiveContainer width="100%" height={150}>
-                  <BarChart data={workoutData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }} barSize={range === '7' ? 20 : 9}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 9, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTip />} />
-                    <Bar dataKey="volume" fill={tc} radius={[4, 4, 0, 0]} name="Об'єм (кг)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {range === '7' && (
                 <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                  <p className={`text-xs font-semibold mb-3 ${textMain}`}>Активність цього тижня</p>
-                  <div className="grid grid-cols-7 gap-1.5">
-                    {workoutData.map((d, i) => (
-                      <div key={i} className="flex flex-col items-center gap-1">
-                        <div
-                          className="w-full aspect-square rounded-xl flex items-center justify-center text-xs font-bold transition-all"
-                          style={{
-                            background: d.sessions > 0 ? `${tc}${d.sessions > 1 ? 'ff' : '80'}` : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                            color: d.sessions > 0 ? 'white' : tickColor,
-                          }}
-                        >
-                          {d.sessions > 0 ? '🏋️' : ''}
-                        </div>
-                        <span style={{ fontSize: 9, color: tickColor }}>{d.label}</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className={`text-xs font-bold ${textMain}`}>Тенденція калорій</p>
+                  </div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <AreaChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={tc} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={tc} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTip />} cursor={{ stroke: gridColor, strokeWidth: 2 }} />
+                      <Area type="monotone" dataKey="calories" stroke={tc} strokeWidth={3}
+                        fill="url(#calGrad)" dot={{ fill: tc, r: 4, strokeWidth: 2, stroke: isDark ? '#18181b' : '#fff' }}
+                        activeDot={{ r: 6, strokeWidth: 0 }} name="ккал" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Макронутрієнти (г)</p>
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }} barSize={range === '7' ? 12 : 6}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} />
+                      <Bar dataKey="protein" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} name="Білки" />
+                      <Bar dataKey="fat" stackId="a" fill="#f59e0b" name="Жири" />
+                      <Bar dataKey="carbs" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Вуглеводи" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="flex gap-4 mt-3 justify-center">
+                    {[['#10b981', 'Білки'], ['#f59e0b', 'Жири'], ['#3b82f6', 'Вуглеводи']].map(([color, label]) => (
+                      <div key={label} className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ background: color }} />
+                        <span className={`text-[10px] font-semibold ${textMuted}`}>{label}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </>
+            )}
 
-          {activeTab === 'body' && userData && (
-            <div className="space-y-3">
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <p className={`text-xs font-semibold mb-3 ${textMain}`}>Індекс маси тіла (BMI)</p>
-                <div className="flex items-center gap-4">
-                  <div className="relative w-28 h-28 flex-shrink-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadialBarChart cx="50%" cy="50%" innerRadius="65%" outerRadius="85%"
-                        startAngle={180} endAngle={0}
-                        data={[{ value: Math.min(((userData.BMI - 15) / (40 - 15)) * 100, 100), fill: tc }]}
-                      >
-                        <RadialBar dataKey="value" cornerRadius={8} />
-                      </RadialBarChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingTop: 16 }}>
-                      <span className={`text-2xl font-black ${textMain}`}>{userData.BMI}</span>
-                      <span className={`text-[9px] ${textMuted}`}>BMI</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <div>
-                      <p className={`text-[10px] ${textMuted}`}>Категорія</p>
-                      <p className={`text-sm font-bold ${userData.BMI >= 25 ? 'text-orange-500' : userData.BMI < 18.5 ? 'text-blue-500' : 'text-emerald-500'}`}>
-                        {userData.BMICategory}
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-[10px] ${textMuted}`}>Ідеальна вага</p>
-                      <p className={`text-sm font-bold ${textMain}`}>
-                        ~{Math.round(22 * Math.pow(userData.height / 100, 2))} кг
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-[10px] ${textMuted}`}>Поточна</p>
-                      <p className={`text-sm font-bold ${textMain}`}>{userData.weight} кг</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <p className={`text-xs font-semibold mb-3 ${textMain}`}>Розподіл калорій</p>
-                <div className="space-y-2.5">
-                  {[
-                    { label: 'BMR (базовий метаболізм)', value: Math.round(userData.TDEE_Normal / (userData.multiplier || 1.2)), max: userData.TDEE_Normal, color: '#6366f1' },
-                    { label: 'TDEE (з активністю)', value: userData.TDEE_Normal, max: userData.TDEE_Normal, color: tc },
-                    { label: 'Ціль (з коригуванням)', value: userData.TDEE, max: userData.TDEE_Normal, color: '#10b981' },
-                  ].map(item => (
-                    <div key={item.label}>
-                      <div className="flex justify-between mb-1">
-                        <span className={`text-[10px] ${textMuted}`}>{item.label}</span>
-                        <span className={`text-[10px] font-bold ${textMain}`}>{item.value} ккал</span>
-                      </div>
-                      <div className={`h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                        <div className="h-full rounded-full" style={{ width: `${(item.value / item.max) * 100}%`, background: item.color }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <p className={`text-xs font-semibold mb-3 ${textMain}`}>Цільові макронутрієнти</p>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { label: 'Білки', value: userData.protein, unit: 'г', color: '#10b981', cal: userData.protein * 4 },
-                    { label: 'Жири', value: userData.fat, unit: 'г', color: '#f59e0b', cal: userData.fat * 9 },
-                    { label: 'Вуглеводи', value: userData.carbs, unit: 'г', color: '#3b82f6', cal: userData.carbs * 4 },
-                  ].map(m => (
-                    <div key={m.label} className={`rounded-xl p-2.5 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-                      <div className="w-6 h-1 rounded-full mx-auto mb-2" style={{ background: m.color }} />
-                      <p className={`text-lg font-black ${textMain}`}>{m.value}</p>
-                      <p className={`text-[9px] ${textMuted}`}>{m.unit}</p>
-                      <p className={`text-[9px] mt-1 ${textMuted}`}>{m.cal} ккал</p>
-                      <p className={`text-[10px] font-semibold mt-0.5`} style={{ color: m.color }}>{m.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                <p className={`text-xs font-semibold mb-3 ${textMain}`}>Фізичні параметри</p>
+            {activeTab === 'water' && (
+              <>
                 <div className="grid grid-cols-2 gap-2">
+                  <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Середньо/день</p>
+                    <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>{avgWater ? (avgWater / 1000).toFixed(1) : '—'}</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>л · ціль: {(targetWater / 1000).toFixed(1)} л</p>
+                    <div className={`mt-3 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-100'}`}>
+                      <motion.div className="h-full rounded-full bg-blue-500" initial={{ width: 0 }} animate={{ width: `${Math.min((avgWater / targetWater) * 100, 100)}%` }} transition={{ duration: 1 }} />
+                    </div>
+                  </div>
+                  <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Ціль досягнута</p>
+                    <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>
+                      {nutritionData.filter(d => d.water >= targetWater * 0.9).length}
+                    </p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>
+                      з {nutritionData.filter(d => d.water > 0).length} активних
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Вода по днях</p>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <AreaChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTip />} cursor={{ stroke: gridColor, strokeWidth: 2 }} />
+                      <Area type="step" dataKey="water" stroke="#3b82f6" strokeWidth={3}
+                        fill="url(#waterGrad)" dot={{ fill: '#3b82f6', r: 4, strokeWidth: 2, stroke: isDark ? '#18181b' : '#fff' }} name="мл" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'workouts' && (
+              <>
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'Вік', value: `${userData.age} р.` },
-                    { label: 'Зріст', value: `${userData.height} см` },
-                    { label: 'Вага', value: `${userData.weight} кг` },
-                    { label: 'Стать', value: userData.gender?.includes('Жінка') ? '👩 Жінка' : '👨 Чоловік' },
+                    { label: 'Тренувань', value: totalWorkouts, sub: `з ${workoutData.length} днів` },
+                    { label: 'Об\'єм', value: totalVolume > 0 ? `${(totalVolume / 1000).toFixed(1)}т` : '—', sub: 'загальний' },
+                    { label: 'Активність', value: `${Math.round((totalWorkouts / workoutData.length) * 100)}%`, sub: 'днів' },
                   ].map(stat => (
-                    <div key={stat.label} className={`rounded-xl p-3 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-                      <p className={`text-[9px] uppercase tracking-wider ${textMuted}`}>{stat.label}</p>
-                      <p className={`text-sm font-bold mt-0.5 ${textMain}`}>{stat.value}</p>
+                    <div key={stat.label} className={`rounded-2xl p-4 border text-center ${cardBg}`}>
+                      <p className={`text-2xl font-black tracking-tighter ${textMain}`}>{stat.value}</p>
+                      <p className={`text-[9px] uppercase font-bold tracking-widest mt-1 ${textMuted}`}>{stat.label}</p>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+
+                <div className={`rounded-2xl p-4 border ${cardBg}`}>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Об'єм тренувань (кг)</p>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <BarChart data={workoutData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }} barSize={range === '7' ? 16 : 8}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} />
+                      <Bar dataKey="volume" fill={tc} radius={[4, 4, 0, 0]} name="Об'єм (кг)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'body' && userData && (
+              <>
+                <div className={`rounded-2xl p-5 border ${cardBg}`}>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Індекс маси тіла (BMI)</p>
+                  <div className="flex items-center gap-6">
+                    <div className="relative w-32 h-32 flex-shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="90%"
+                          startAngle={180} endAngle={0}
+                          data={[{ value: Math.min(((userData.BMI - 15) / (40 - 15)) * 100, 100), fill: tc }]}
+                        >
+                          <RadialBar dataKey="value" cornerRadius={10} />
+                        </RadialBarChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingTop: 16 }}>
+                        <span className={`text-3xl font-black tracking-tighter ${textMain}`}>{userData.BMI}</span>
+                        <span className={`text-[10px] font-semibold tracking-widest uppercase ${textMuted}`}>BMI</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textMuted}`}>Категорія</p>
+                        <p className={`text-sm font-bold ${userData.BMI >= 25 ? 'text-orange-500' : userData.BMI < 18.5 ? 'text-blue-500' : 'text-emerald-500'}`}>
+                          {userData.BMICategory}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textMuted}`}>Ідеальна вага</p>
+                        <p className={`text-sm font-bold ${textMain}`}>
+                          ~{Math.round(22 * Math.pow((userData.height || 170) / 100, 2))} кг
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-2xl p-5 border ${cardBg}`}>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Цільові макронутрієнти</p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                      { label: 'Білки', value: userData.protein, unit: 'г', color: '#10b981', cal: userData.protein * 4 },
+                      { label: 'Жири', value: userData.fat, unit: 'г', color: '#f59e0b', cal: userData.fat * 9 },
+                      { label: 'Вуглеводи', value: userData.carbs, unit: 'г', color: '#3b82f6', cal: userData.carbs * 4 },
+                    ].map(m => (
+                      <div key={m.label} className={`rounded-2xl p-3 border ${isDark ? 'bg-zinc-800/30 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
+                        <div className="w-8 h-1 rounded-full mx-auto mb-2" style={{ background: m.color }} />
+                        <p className={`text-xl font-black tracking-tighter ${textMain}`}>{m.value}</p>
+                        <p className={`text-[10px] font-medium ${textMuted}`}>{m.unit}</p>
+                        <p className={`text-[10px] font-bold mt-1`} style={{ color: m.color }}>{m.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

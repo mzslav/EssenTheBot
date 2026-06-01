@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { AIResponse } from '../types/types';
+import { CheckCircle2 } from 'lucide-react';
 
 interface AIResponseSectionProps {
   aiResponse: AIResponse;
@@ -165,7 +166,7 @@ export const AIResponseSection = ({
         }}
       >
         <div className="flex items-center justify-center gap-3">
-          <span className="text-3xl">✅</span>
+          <CheckCircle2 size={24} className="text-white" />
           <span className="text-base font-bold text-white">
             {isProcessing ? 'Додаємо...' : 'Додати в холодильник'}
           </span>

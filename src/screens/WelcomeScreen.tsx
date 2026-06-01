@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { TelegramUser } from '../types/types';
 import supabase from '../supabase/supabase-client';
 import { useFadeIn } from '../utils/useFadeIn';
+import { Star, Rocket, CheckCircle2 } from 'lucide-react';
 
 interface WelcomeScreenProps {
   user?: TelegramUser;
@@ -57,7 +58,7 @@ export const WelcomeScreen = ({ user, isDark, themeColor = '#8b5cf6', onStart }:
             </div>
             {isPremium && (
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-xs">⭐</span>
+                <Star size={12} className="text-white fill-yellow-400" />
               </div>
             )}
           </div>
@@ -79,14 +80,14 @@ export const WelcomeScreen = ({ user, isDark, themeColor = '#8b5cf6', onStart }:
           <div className="w-12 h-0.5 rounded-full opacity-40" style={{ background: themeColor }} />
         </div>
 
-        <p style={fadeIn.style(4)} className={`text-center ${isDark ? 'text-white/70' : 'text-slate-700'} text-sm leading-relaxed`}>
-          {isRegistered ? 'Ваш обліковий запис успішно знайдено в нашій базі даних.' : 'Раді бачити вас у нашому додатку! 🚀'}
+        <p style={fadeIn.style(4)} className={`text-center ${isDark ? 'text-white/70' : 'text-slate-700'} text-sm leading-relaxed flex items-center justify-center gap-1.5`}>
+          {isRegistered ? 'Ваш обліковий запис успішно знайдено в нашій базі даних.' : <>Раді бачити вас у нашому додатку! <Rocket size={16} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} /></>}
         </p>
 
         <div style={fadeIn.style(5)} className="mt-6">
           {isRegistered ? (
             <div className={`w-full py-3 px-5 rounded-xl border flex items-center justify-center gap-2 ${isDark ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600'}`}>
-              <span>✅</span>
+              <CheckCircle2 size={18} />
               <span className="font-semibold">Ви вже зареєстровані</span>
             </div>
           ) : (

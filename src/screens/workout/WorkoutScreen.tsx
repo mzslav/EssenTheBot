@@ -3,6 +3,8 @@ import type { TelegramUser } from '../../types/types';
 import { JournalTab } from './JournalTab';
 import { PlansTab } from './PlansTab';
 import { ProgressTab } from './ProgressTab';
+import { motion, AnimatePresence } from 'motion/react';
+import { Dumbbell, ClipboardList, Target, TrendingUp } from 'lucide-react';
 
 interface WorkoutScreenProps {
   user?: TelegramUser;
@@ -15,50 +17,69 @@ type WorkoutTab = 'journal' | 'plans' | 'progress';
 export const WorkoutScreen = ({ user, isDark, themeColor = '#8b5cf6' }: WorkoutScreenProps) => {
   const [activeTab, setActiveTab] = useState<WorkoutTab>('journal');
 
-  const tabs: { id: WorkoutTab; label: string; icon: string }[] = [
-    { id: 'journal', label: 'Журнал', icon: '📋' },
-    { id: 'plans', label: 'Плани', icon: '📝' },
-    { id: 'progress', label: 'Прогрес', icon: '📈' },
+  const tabs: { id: WorkoutTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'journal', label: 'Журнал', icon: <ClipboardList size={14} /> },
+    { id: 'plans', label: 'Плани', icon: <Target size={14} /> },
+    { id: 'progress', label: 'Прогрес', icon: <TrendingUp size={14} /> },
   ];
 
   return (
     <div className="w-full max-w-md px-2 pt-2" style={{ alignSelf: 'flex-start' }}>
-      <div className="flex justify-between items-center px-1 mb-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center px-1 mb-4">
         <div>
-          <h1 className={`text-xl font-bold leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Тренування 💪
+          <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
+            Тренування
           </h1>
-          <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
+          <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
             Відстежуй свій прогрес
           </p>
         </div>
-        <div
-          className="w-2.5 h-2.5 rounded-full animate-pulse shadow-lg"
-          style={{ backgroundColor: themeColor, boxShadow: `0 0 10px ${themeColor}` }}
-        />
-      </div>
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100'}`}>
+          <Dumbbell size={20} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} />
+        </div>
+      </motion.div>
 
-      <div className={`rounded-2xl p-1 flex gap-1 mb-4 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
-              activeTab === tab.id
-                ? 'text-white shadow-md'
-                : isDark ? 'text-white/50 hover:text-white/80' : 'text-slate-500 hover:text-slate-700'
-            }`}
-            style={activeTab === tab.id ? { background: themeColor } : {}}
-          >
-            <span>{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`rounded-2xl p-1 flex gap-1 mb-4 ${isDark ? 'bg-zinc-900/60 border border-white/5' : 'bg-zinc-100 border border-zinc-200/50'}`}>
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-colors duration-300 flex items-center justify-center gap-1.5 ${
+                isActive ? 'text-white' : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="workoutTab"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ backgroundColor: themeColor }}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                {tab.icon}
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </motion.div>
 
-      {activeTab === 'journal'  && <JournalTab  user={user} isDark={isDark} themeColor={themeColor} />}
-      {activeTab === 'plans'    && <PlansTab    user={user} isDark={isDark} themeColor={themeColor} />}
-      {activeTab === 'progress' && <ProgressTab user={user} isDark={isDark} themeColor={themeColor} />}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeTab === 'journal'  && <JournalTab  user={user} isDark={isDark} themeColor={themeColor} />}
+          {activeTab === 'plans'    && <PlansTab    user={user} isDark={isDark} themeColor={themeColor} />}
+          {activeTab === 'progress' && <ProgressTab user={user} isDark={isDark} themeColor={themeColor} />}
+        </motion.div>
+      </AnimatePresence>
 
       <div className="h-8" />
     </div>
