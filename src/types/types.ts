@@ -22,11 +22,13 @@ export type FieldType = 'radio' | 'dropdown' | 'number';
 
 export interface Question {
   fieldLabel: string;
+  labelKey?: string;
   fieldType: FieldType;
   placeholder?: string;
+  placeholderKey?: string;
   requiredField: boolean;
   fieldOptions?: {
-    values: { option: string }[];
+    values: { option: string; optionKey?: string }[];
   };
   key: keyof FormData;
 }
@@ -151,9 +153,9 @@ export interface PlanFormData {
 export interface ExerciseFormData {
   name: string;
   video_url?: string;
-  sets: number;
+  sets: number | '';
   reps: string;
-  weight: number;
+  weight: number | '';
   rir: string;
   notes?: string;
 }

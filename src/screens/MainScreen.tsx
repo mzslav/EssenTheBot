@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 import type { TelegramUser, UserData } from '../types/types';
 import supabase from '../supabase/supabase-client';
 import { getTotalsByDate, getWaterByDate, updateTodayWater } from '../utils/supabaseService';
+import { useTranslation } from 'react-i18next';
 import { StatsSection } from '../components/StatsSection';
 import { MainScreenSkeleton } from '../components/Skeleton';
-import { WeeklyReport } from '../components/WeeklyReport';
-import { Droplet, Flame, Target, ChevronLeft, ChevronRight, Activity, BarChart2 } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { Droplet, Flame, Target, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface MainScreenProps {
   user?: TelegramUser;
@@ -14,18 +14,18 @@ interface MainScreenProps {
   themeColor?: string;
 }
 
-function getActivityLabel(multiplier: number): string {
-  if (multiplier >= 1.725) return 'Висока активність';
-  if (multiplier >= 1.55) return 'Середня активність';
-  if (multiplier >= 1.375) return 'Легка активність';
-  return 'Малорухливий';
+function getActivityLabel(multiplier: number, t: any): string {
+  if (multiplier >= 1.725) return t('results.activities.high.label');
+  if (multiplier >= 1.55) return t('results.activities.moderate.label');
+  if (multiplier >= 1.375) return t('results.activities.light.label');
+  return t('results.activities.sedentary.label');
 }
 
-function getGoalLabel(goalStr: string): string {
-  if (!goalStr) return 'Підтримка ваги';
-  if (goalStr.includes('Схуднути') || goalStr.includes('Схуднення')) return 'Схуднення';
-  if (goalStr.includes('Набрати') || goalStr.includes('Набір')) return 'Набір маси';
-  return 'Підтримка ваги';
+function getGoalLabel(goalStr: string, t: any): string {
+  if (!goalStr) return t('results.goals.maintain.label');
+  if (goalStr.includes('Схуднути') || goalStr.includes('Схуднення')) return t('results.goals.lose.label');
+  if (goalStr.includes('Набрати') || goalStr.includes('Набір')) return t('results.goals.gain.label');
+  return t('results.goals.maintain.label');
 }
 
 function toDateStr(d: Date): string {
@@ -40,16 +40,14 @@ function addDays(d: Date, n: number): Date {
   return copy;
 }
 
-function formatDisplayDate(date: Date): string {
-  const days = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота'];
-  const months = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
-  return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
+function formatDisplayDate(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenProps) => {
+  const { t, i18n } = useTranslation();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showReport, setShowReport] = useState(false);
 
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -118,7 +116,7 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
   };
 
   if (loading) return <MainScreenSkeleton isDark={isDark} />;
-  if (!userData) return <div className="text-center p-8 opacity-50">Дані відсутні, збережи профіль перед початком використання додатку</div>;
+  if (!userData) return <div className="text-center p-8 opacity-50">{t('main.no_data')}</div>;
 
   const tdee = userData.TDEE || 2000;
   const targetProt = userData.protein || 100;
@@ -181,7 +179,7 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
       <motion.div variants={itemVariants} className="flex justify-between items-center pt-2">
         <div>
           <h1 className={`text-2xl font-bold tracking-tight flex items-center gap-2 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
-            Привіт, {userData.first_name || 'Користувач'}
+            {t('main.hi')}, {userData.first_name || t('main.user_default')}
             {userData.streak_days && userData.streak_days > 0 ? (
               <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 font-bold tracking-normal flex items-center gap-1">
                 <Flame size={12} strokeWidth={3} /> {userData.streak_days}
@@ -189,22 +187,10 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
             ) : null}
           </h1>
           <p className={`text-xs mt-0.5 font-medium flex items-center gap-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            <Target size={12} /> {getGoalLabel(userData.goal || '')}
+            <Target size={12} /> {getGoalLabel(userData.goal || '', t)}
           </p>
         </div>
-        <button
-          onClick={() => setShowReport(!showReport)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-[0.96] ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'}`}
-        >
-          <BarChart2 size={14} /> Звіт
-        </button>
       </motion.div>
-
-      <AnimatePresence>
-        {showReport && (
-          <WeeklyReport user={user} isDark={isDark} themeColor={themeColor} onClose={() => setShowReport(false)} />
-        )}
-      </AnimatePresence>
 
       <motion.div variants={itemVariants} className={`rounded-2xl p-2 flex items-center justify-between border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-100 shadow-sm'}`}>
         <button
@@ -214,10 +200,12 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
           <ChevronLeft size={20} />
         </button>
         <div className="text-center flex-1">
-          <p className={`text-sm font-semibold tracking-tight ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{formatDisplayDate(viewDate)}</p>
+          <p className={`text-sm font-semibold tracking-tight ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
+            {formatDisplayDate(viewDate, i18n.language === 'en' ? 'en-US' : i18n.language === 'pl' ? 'pl-PL' : i18n.language === 'ru' ? 'ru-RU' : 'uk-UA')}
+          </p>
           {isToday && (
             <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block" style={{ color: themeColor, backgroundColor: `${themeColor}15` }}>
-              Сьогодні
+              {t('main.today')}
             </span>
           )}
         </div>
@@ -239,7 +227,7 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
           <div className="absolute top-0 right-0 w-32 h-32 opacity-20 blur-3xl pointer-events-none rounded-full" style={{ backgroundColor: themeColor }} />
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Спожито калорій</p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('main.consumed_calories')}</p>
               <div className="flex items-baseline gap-1.5">
                 <span className={`text-5xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-zinc-900'}`}>{calories}</span>
                 <span className={`text-sm font-semibold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>/ {tdee}</span>
@@ -265,9 +253,9 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
           </div>
         </div>
 
-        <MacroRing label="Білки" consumed={protein} target={targetProt} color="#10b981" delay={0.1} />
-        <MacroRing label="Жири" consumed={fat} target={targetFat} color="#f59e0b" delay={0.2} />
-        <MacroRing label="Вуглеводи" consumed={carbs} target={targetCarbs} color="#3b82f6" delay={0.3} />
+        <MacroRing label={t('stats.protein')} consumed={protein} target={targetProt} color="#10b981" delay={0.1} />
+        <MacroRing label={t('stats.fat')} consumed={fat} target={targetFat} color="#f59e0b" delay={0.2} />
+        <MacroRing label={t('stats.carbs')} consumed={carbs} target={targetCarbs} color="#3b82f6" delay={0.3} />
 
         <div className={`col-span-3 rounded-3xl p-5 border relative overflow-hidden ${isDark ? 'bg-zinc-900/80 border-white/5' : 'bg-white border-zinc-100 shadow-md'}`}>
           <div className="absolute top-0 right-0 w-32 h-32 opacity-10 blur-3xl pointer-events-none rounded-full bg-blue-500" />
@@ -277,13 +265,13 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
                 <Droplet size={20} strokeWidth={2.5} />
               </div>
               <div>
-                <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Вода</p>
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('main.water')}</p>
                 <div className="flex items-baseline gap-1">
                   <span className={`text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                     {(waterConsumed / 1000).toFixed(1)}
                   </span>
                   <span className={`text-xs font-semibold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                    / {(targetWater / 1000).toFixed(1)} л
+                    / {(targetWater / 1000).toFixed(1)} {t('main.l')}
                   </span>
                 </div>
               </div>
@@ -308,13 +296,13 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
                   onClick={() => handleAddWater(ml)}
                   className={`py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.96] ${isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-50 border border-zinc-100 hover:bg-zinc-100 text-zinc-700'}`}
                 >
-                  +{ml} мл
+                  +{ml} {t('main.ml')}
                 </button>
               ))}
             </div>
           ) : (
             <p className={`text-center text-xs ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
-              Дані за минулий день (тільки перегляд)
+              {t('main.past_day_data')}
             </p>
           )}
         </div>
@@ -325,8 +313,10 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
               <Activity size={20} strokeWidth={2.5} />
             </div>
             <div>
-              <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Активність (BMR: {bmr})</p>
-              <p className={`text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{getActivityLabel(userData.multiplier)}</p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                {t('main.activity_bmr', { bmr })}
+              </p>
+              <p className={`text-sm font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{getActivityLabel(userData.multiplier, t)}</p>
             </div>
           </div>
         </div>

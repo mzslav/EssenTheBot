@@ -6,6 +6,7 @@ import { getPlans, getPlanExercises, getExerciseHistory } from '../../utils/work
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
 import { TrendingUp, Activity, BarChart2, Dumbbell, History, LineChart as LineChartIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ProgressTabProps {
   user?: TelegramUser;
@@ -15,13 +16,15 @@ interface ProgressTabProps {
 
 type ProgressMetric = 'max_weight' | 'total_volume' | 'total_reps';
 
-const METRIC_LABELS: Record<ProgressMetric, string> = {
-  max_weight: 'Макс. вага (кг)',
-  total_volume: "Об'єм (кг)",
-  total_reps: 'Повторення',
-};
-
 export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTabProps) => {
+  const { t } = useTranslation();
+  
+  const METRIC_LABELS: Record<ProgressMetric, string> = {
+    max_weight: t('workout.progress_tab.max_weight', 'Макс. вага (кг)'),
+    total_volume: t('workout.progress_tab.total_volume', 'Об\'єм (кг)'),
+    total_reps: t('workout.progress_tab.total_reps', 'Повторення'),
+  };
+
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [exercises, setExercises] = useState<PlanExercise[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
@@ -90,10 +93,10 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
       <div style={fadeIn.style(0)} className={`rounded-3xl p-5 border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200 shadow-sm'}`}>
         <div className="space-y-4">
           <div>
-            <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Обери план тренувань</label>
+            <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_plan', 'Обери план тренувань')}</label>
             <div className="relative">
               <select className={selectClass} value={selectedPlanId ?? ''} onChange={e => handleSelectPlan(Number(e.target.value))}>
-                <option value="">Обери план…</option>
+                <option value="">{t('workout.progress_tab.choose_plan_placeholder', 'Обери план…')}</option>
                 {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
@@ -104,10 +107,10 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
 
           {selectedPlanId && exercises.length > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Обери вправу</label>
+              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_exercise', 'Обери вправу')}</label>
               <div className="relative">
                 <select className={selectClass} value={selectedExerciseId ?? ''} onChange={e => handleSelectExercise(Number(e.target.value))}>
-                  <option value="">Обери вправу…</option>
+                  <option value="">{t('workout.progress_tab.choose_exercise_placeholder', 'Обери вправу…')}</option>
                   {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
@@ -126,17 +129,17 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
              <TrendingUp size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
           </div>
-          <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Немає даних</p>
-          <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Виконай цю вправу хоча б один раз на тренуванні, щоб побачити графік.</p>
+          <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.progress_tab.no_data', 'Немає даних')}</p>
+          <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.no_data_desc', 'Виконай цю вправу хоча б один раз на тренуванні, щоб побачити графік.')}</p>
         </div>
       ) : history.length > 0 ? (
         <>
           {/* Key Stats */}
           <div style={dataFadeIn.style(0)} className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Тренувань', value: totalSessions, icon: <History size={14} /> },
-              { label: 'Макс. вага', value: `${bestWeight} кг`, icon: <Dumbbell size={14} /> },
-              { label: "Макс. об'єм", value: `${bestVolume} кг`, icon: <BarChart2 size={14} /> },
+              { label: t('workout.progress_tab.workouts', 'Тренувань'), value: totalSessions, icon: <History size={14} /> },
+              { label: t('workout.progress_tab.max_weight_short', 'Макс. вага'), value: `${bestWeight} ${t('workout.progress_tab.kg_tag', 'кг')}`, icon: <Dumbbell size={14} /> },
+              { label: t('workout.progress_tab.max_volume', 'Макс. об\'єм'), value: `${bestVolume} ${t('workout.progress_tab.kg_tag', 'кг')}`, icon: <BarChart2 size={14} /> },
             ].map(stat => (
               <div key={stat.label} className={`rounded-3xl p-4 flex flex-col items-center justify-center text-center border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
                 <div className={`p-1.5 rounded-lg mb-2 ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
@@ -154,7 +157,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
               <button key={m} onClick={() => setMetric(m)}
                 className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all ${metric === m ? 'text-white shadow-md' : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'}`}
                 style={metric === m ? { background: themeColor } : {}}>
-                {m === 'max_weight' ? 'Макс. вага' : m === 'total_volume' ? "Загальний об'єм" : 'Всі повтори'}
+                {m === 'max_weight' ? t('workout.progress_tab.max_weight_short', 'Макс. вага') : m === 'total_volume' ? t('workout.progress_tab.total_volume_short', "Загальний об'єм") : t('workout.progress_tab.all_reps', 'Всі повтори')}
               </button>
             ))}
           </div>
@@ -189,7 +192,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
           {/* History List */}
           <div style={dataFadeIn.style(3)} className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
             <div className={`px-5 py-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
-              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Історія результатів</p>
+              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.progress_tab.history', 'Історія результатів')}</p>
             </div>
             <div className={`divide-y ${isDark ? 'divide-zinc-800' : 'divide-zinc-100'}`}>
               {[...history].reverse().map((entry, i) => (
@@ -201,8 +204,8 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
                     <p className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{new Date(entry.date).toLocaleDateString('uk-UA')}</p>
                   </div>
                   <div className="flex flex-col items-end gap-0.5">
-                    <span className={`text-[11px] font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{entry.max_weight} кг <span className="font-normal opacity-50 text-[10px]">макс</span></span>
-                    <span className={`text-[10px] font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{entry.total_reps} повт · {entry.total_volume} кг об'єм</span>
+                    <span className={`text-[11px] font-black ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{entry.max_weight} {t('workout.progress_tab.kg_tag', 'кг')} <span className="font-normal opacity-50 text-[10px]">{t('workout.progress_tab.max_tag', 'макс')}</span></span>
+                    <span className={`text-[10px] font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{entry.total_reps} {t('workout.progress_tab.reps_tag', 'повт')} · {entry.total_volume} {t('workout.progress_tab.kg_tag', 'кг')} {t('workout.progress_tab.volume_tag', 'об\'єм')}</span>
                   </div>
                 </div>
               ))}
@@ -215,8 +218,8 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
                <LineChartIcon size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
             </div>
-            <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Обери вправу</p>
-            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Вибери план і вправу вище, щоб побачити графік та історію прогресу.</p>
+            <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.progress_tab.choose_exercise', 'Обери вправу')}</p>
+            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_exercise_desc', 'Вибери план і вправу вище, щоб побачити графік та історію прогресу.')}</p>
           </div>
         )
       )}

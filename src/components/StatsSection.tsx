@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { Utensils, Droplet, Dumbbell, User, Activity } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface StatsSectionProps {
   user?: TelegramUser;
@@ -60,7 +61,8 @@ function last30Days(): string[] {
 }
 
 export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSectionProps) => {
-  const [activeTab, setActiveTab] = useState<Tab>('nutrition');
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<Tab>('body');
   const [range, setRange] = useState<'7' | '30'>('7');
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -85,11 +87,11 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
     try {
       const days = range === '7' ? last7Days() : last30Days();
 
-      if (activeTab === 'nutrition' || activeTab === 'water') {
-        const { data: uData } = await supabase
-          .from('users').select('id').eq('telegram_user_id', user.id).single();
-        if (!uData) return;
+      const { data: uData } = await supabase
+        .from('users').select('id').eq('telegram_user_id', user.id).single();
+      if (!uData) return;
 
+      if (activeTab === 'nutrition' || activeTab === 'water') {
         const { data: logs } = await supabase
           .from('daily_logs')
           .select('date, water_ml')
@@ -130,7 +132,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
         const { data: sessions } = await supabase
           .from('workout_sessions')
           .select('date, id, status')
-          .eq('user_id', user.id)
+          .eq('user_id', uData.id)
           .gte('date', days[0])
           .lte('date', days[days.length - 1])
           .eq('status', 'completed');
@@ -212,17 +214,17 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
   };
 
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'nutrition', label: 'Харчування', icon: <Utensils size={14} /> },
-    { id: 'water', label: 'Вода', icon: <Droplet size={14} /> },
-    { id: 'workouts', label: 'Тренування', icon: <Dumbbell size={14} /> },
-    { id: 'body', label: 'Тіло', icon: <User size={14} /> },
+    { id: 'body', label: t('stats.tabs.body'), icon: <User size={14} /> },
+    { id: 'nutrition', label: t('stats.tabs.nutrition'), icon: <Utensils size={14} /> },
+    { id: 'workouts', label: t('stats.tabs.workouts'), icon: <Dumbbell size={14} /> },
+    { id: 'water', label: t('stats.tabs.water'), icon: <Droplet size={14} /> },
   ];
 
   return (
     <div className="mt-6 space-y-4">
       <div className="flex items-center gap-3 px-1">
         <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, ${tc}40, transparent)` }} />
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${textMuted}`}>Аналітика</span>
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${textMuted}`}>{t('stats.analytics')}</span>
         <div className="flex-1 h-px" style={{ background: `linear-gradient(to left, ${tc}40, transparent)` }} />
       </div>
 
@@ -272,7 +274,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                   {isActive && (
                     <motion.div layoutId="activeRange" className="absolute inset-0 rounded-lg shadow-sm" style={{ backgroundColor: tc }} />
                   )}
-                  <span className="relative z-10">{r === '7' ? '7 днів' : '30 днів'}</span>
+                  <span className="relative z-10">{r === '7' ? t('stats.days_7') : t('stats.days_30')}</span>
                 </button>
               );
             })}
@@ -304,17 +306,17 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
               <>
                 <div className="grid grid-cols-2 gap-2">
                   <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Середні калорії</p>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>{t('stats.avg_calories')}</p>
                     <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>{avgCalories || '—'}</p>
-                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>ціль: {tdee} ккал</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>{t('stats.goal_kcal', { tdee })}</p>
                     <div className={`mt-3 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-100'}`}>
                       <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min((avgCalories / tdee) * 100, 100)}%` }} transition={{ duration: 1 }} style={{ background: tc }} />
                     </div>
                   </div>
                   <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Активних днів</p>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>{t('stats.active_days')}</p>
                     <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>{nutritionData.filter(d => d.calories > 0).length}</p>
-                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>з {nutritionData.length} днів</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>{t('stats.out_of_days', { total: nutritionData.length })}</p>
                     <div className={`mt-3 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-100'}`}>
                       <motion.div className="h-full rounded-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: `${(nutritionData.filter(d => d.calories > 0).length / nutritionData.length) * 100}%` }} transition={{ duration: 1 }} />
                     </div>
@@ -323,7 +325,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
 
                 <div className={`rounded-2xl p-4 border ${cardBg}`}>
                   <div className="flex items-center justify-between mb-4">
-                    <p className={`text-xs font-bold ${textMain}`}>Тенденція калорій</p>
+                    <p className={`text-xs font-bold ${textMain}`}>{t('stats.calorie_trend')}</p>
                   </div>
                   <ResponsiveContainer width="100%" height={160}>
                     <AreaChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
@@ -339,26 +341,26 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                       <Tooltip content={<CustomTip />} cursor={{ stroke: gridColor, strokeWidth: 2 }} />
                       <Area type="monotone" dataKey="calories" stroke={tc} strokeWidth={3}
                         fill="url(#calGrad)" dot={{ fill: tc, r: 4, strokeWidth: 2, stroke: isDark ? '#18181b' : '#fff' }}
-                        activeDot={{ r: 6, strokeWidth: 0 }} name="ккал" />
+                        activeDot={{ r: 6, strokeWidth: 0 }} name={t('stats.kcal')} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Макронутрієнти (г)</p>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>{t('stats.macros_g')}</p>
                   <ResponsiveContainer width="100%" height={140}>
                     <BarChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }} barSize={range === '7' ? 12 : 6}>
                       <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} />
-                      <Bar dataKey="protein" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} name="Білки" />
-                      <Bar dataKey="fat" stackId="a" fill="#f59e0b" name="Жири" />
-                      <Bar dataKey="carbs" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Вуглеводи" />
+                      <Bar dataKey="protein" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} name={t('stats.protein')} />
+                      <Bar dataKey="fat" stackId="a" fill="#f59e0b" name={t('stats.fat')} />
+                      <Bar dataKey="carbs" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} name={t('stats.carbs')} />
                     </BarChart>
                   </ResponsiveContainer>
                   <div className="flex gap-4 mt-3 justify-center">
-                    {[['#10b981', 'Білки'], ['#f59e0b', 'Жири'], ['#3b82f6', 'Вуглеводи']].map(([color, label]) => (
+                    {[['#10b981', t('stats.protein')], ['#f59e0b', t('stats.fat')], ['#3b82f6', t('stats.carbs')]].map(([color, label]) => (
                       <div key={label} className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ background: color }} />
                         <span className={`text-[10px] font-semibold ${textMuted}`}>{label}</span>
@@ -373,26 +375,26 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
               <>
                 <div className="grid grid-cols-2 gap-2">
                   <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Середньо/день</p>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>{t('stats.avg_per_day')}</p>
                     <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>{avgWater ? (avgWater / 1000).toFixed(1) : '—'}</p>
-                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>л · ціль: {(targetWater / 1000).toFixed(1)} л</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>{t('stats.goal_l', { target: (targetWater / 1000).toFixed(1) })}</p>
                     <div className={`mt-3 h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-100'}`}>
                       <motion.div className="h-full rounded-full bg-blue-500" initial={{ width: 0 }} animate={{ width: `${Math.min((avgWater / targetWater) * 100, 100)}%` }} transition={{ duration: 1 }} />
                     </div>
                   </div>
                   <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>Ціль досягнута</p>
+                    <p className={`text-[9px] uppercase tracking-widest font-semibold ${textMuted}`}>{t('stats.goal_reached')}</p>
                     <p className={`text-3xl font-black mt-1 tracking-tighter ${textMain}`}>
                       {nutritionData.filter(d => d.water >= targetWater * 0.9).length}
                     </p>
                     <p className={`text-[10px] mt-0.5 font-medium ${textMuted}`}>
-                      з {nutritionData.filter(d => d.water > 0).length} активних
+                      {t('stats.out_of_active', { active: nutritionData.filter(d => d.water > 0).length })}
                     </p>
                   </div>
                 </div>
 
                 <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Вода по днях</p>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>{t('stats.water_by_days')}</p>
                   <ResponsiveContainer width="100%" height={160}>
                     <AreaChart data={nutritionData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
                       <defs>
@@ -406,7 +408,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                       <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTip />} cursor={{ stroke: gridColor, strokeWidth: 2 }} />
                       <Area type="step" dataKey="water" stroke="#3b82f6" strokeWidth={3}
-                        fill="url(#waterGrad)" dot={{ fill: '#3b82f6', r: 4, strokeWidth: 2, stroke: isDark ? '#18181b' : '#fff' }} name="мл" />
+                        fill="url(#waterGrad)" dot={{ fill: '#3b82f6', r: 4, strokeWidth: 2, stroke: isDark ? '#18181b' : '#fff' }} name={t('main.ml')} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -417,9 +419,9 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
               <>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'Тренувань', value: totalWorkouts, sub: `з ${workoutData.length} днів` },
-                    { label: 'Об\'єм', value: totalVolume > 0 ? `${(totalVolume / 1000).toFixed(1)}т` : '—', sub: 'загальний' },
-                    { label: 'Активність', value: `${Math.round((totalWorkouts / workoutData.length) * 100)}%`, sub: 'днів' },
+                    { label: t('stats.workouts_count'), value: totalWorkouts, sub: t('stats.out_of_days', { total: workoutData.length }) },
+                    { label: t('stats.volume'), value: totalVolume > 0 ? `${(totalVolume / 1000).toFixed(1)}т` : '—', sub: t('stats.volume_total') },
+                    { label: t('stats.activity_pct'), value: `${Math.round((totalWorkouts / workoutData.length) * 100)}%`, sub: t('stats.days_pct') },
                   ].map(stat => (
                     <div key={stat.label} className={`rounded-2xl p-4 border text-center ${cardBg}`}>
                       <p className={`text-2xl font-black tracking-tighter ${textMain}`}>{stat.value}</p>
@@ -429,14 +431,14 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                 </div>
 
                 <div className={`rounded-2xl p-4 border ${cardBg}`}>
-                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Об'єм тренувань (кг)</p>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>{t('stats.workout_volume_kg')}</p>
                   <ResponsiveContainer width="100%" height={160}>
                     <BarChart data={workoutData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }} barSize={range === '7' ? 16 : 8}>
                       <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 9, fill: tickColor, fontWeight: 600 }} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} />
-                      <Bar dataKey="volume" fill={tc} radius={[4, 4, 0, 0]} name="Об'єм (кг)" />
+                      <Bar dataKey="volume" fill={tc} radius={[4, 4, 0, 0]} name={t('stats.workout_volume_kg')} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -446,7 +448,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
             {activeTab === 'body' && userData && (
               <>
                 <div className={`rounded-2xl p-5 border ${cardBg}`}>
-                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Індекс маси тіла (BMI)</p>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>{t('stats.bmi_title')}</p>
                   <div className="flex items-center gap-6">
                     <div className="relative w-32 h-32 flex-shrink-0">
                       <ResponsiveContainer width="100%" height="100%">
@@ -464,15 +466,15 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                     </div>
                     <div className="flex-1 space-y-3">
                       <div>
-                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textMuted}`}>Категорія</p>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textMuted}`}>{t('stats.category')}</p>
                         <p className={`text-sm font-bold ${userData.BMI >= 25 ? 'text-orange-500' : userData.BMI < 18.5 ? 'text-blue-500' : 'text-emerald-500'}`}>
-                          {userData.BMICategory}
+                          {userData.BMI < 18.5 ? t('stats.bmi.underweight') : userData.BMI < 25 ? t('stats.bmi.normal') : userData.BMI < 30 ? t('stats.bmi.overweight') : t('stats.bmi.obesity')}
                         </p>
                       </div>
                       <div>
-                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textMuted}`}>Ідеальна вага</p>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textMuted}`}>{t('stats.ideal_weight')}</p>
                         <p className={`text-sm font-bold ${textMain}`}>
-                          ~{Math.round(22 * Math.pow((userData.height || 170) / 100, 2))} кг
+                          ~{Math.round(22 * Math.pow((userData.height || 170) / 100, 2))} {t('results.kg')}
                         </p>
                       </div>
                     </div>
@@ -480,12 +482,12 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                 </div>
 
                 <div className={`rounded-2xl p-5 border ${cardBg}`}>
-                  <p className={`text-xs font-bold mb-4 ${textMain}`}>Цільові макронутрієнти</p>
+                  <p className={`text-xs font-bold mb-4 ${textMain}`}>{t('stats.target_macros')}</p>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {[
-                      { label: 'Білки', value: userData.protein, unit: 'г', color: '#10b981', cal: userData.protein * 4 },
-                      { label: 'Жири', value: userData.fat, unit: 'г', color: '#f59e0b', cal: userData.fat * 9 },
-                      { label: 'Вуглеводи', value: userData.carbs, unit: 'г', color: '#3b82f6', cal: userData.carbs * 4 },
+                      { label: t('stats.protein'), value: userData.protein, unit: t('stats.g'), color: '#10b981', cal: userData.protein * 4 },
+                      { label: t('stats.fat'), value: userData.fat, unit: t('stats.g'), color: '#f59e0b', cal: userData.fat * 9 },
+                      { label: t('stats.carbs'), value: userData.carbs, unit: t('stats.g'), color: '#3b82f6', cal: userData.carbs * 4 },
                     ].map(m => (
                       <div key={m.label} className={`rounded-2xl p-3 border ${isDark ? 'bg-zinc-800/30 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
                         <div className="w-8 h-1 rounded-full mx-auto mb-2" style={{ background: m.color }} />

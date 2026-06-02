@@ -61,7 +61,7 @@ export async function convertBlobToWav(inputBlob: Blob): Promise<Blob> {
     audioBuffer = await offlineContext.startRendering();
     return new Blob([audioBufferToWav(audioBuffer)], { type: 'audio/wav' });
   } catch {
-    throw new Error('Не вдалося обробити аудіо');
+    throw new Error('error_audio_processing');
   }
 }
 
@@ -88,11 +88,11 @@ async function uploadAudio(audioBlob: Blob): Promise<string> {
   return data.upload_url;
 }
 
-async function createTranscription(audioUrl: string): Promise<string> {
+async function createTranscription(audioUrl: string, languageCode: string): Promise<string> {
   const requestBody = {
     audio_url: audioUrl,
     speech_models: ['universal-3-pro', 'universal-2'],
-    language_code: 'uk',
+    language_code: languageCode,
     punctuate: true,
     format_text: true,
   };
@@ -126,21 +126,22 @@ async function checkTranscriptionStatus(transcriptId: string): Promise<{ status:
 
 export async function transcribeAudio(
   rawAudioBlob: Blob,
+  languageCode: string,
   onProgress?: (status: string) => void
 ): Promise<string> {
   try {
-    onProgress?.('Обробка аудіо...');
+    onProgress?.('processing_audio');
     const audioBlob = await convertBlobToWav(rawAudioBlob);
 
     if (audioBlob.size < 2000) {
-      throw new Error('Запис занадто короткий або порожній (говорити 3+ сек)');
+      throw new Error('error_audio_too_short');
     }
 
-    onProgress?.('Завантаження...');
+    onProgress?.('uploading');
     const audioUrl = await uploadAudio(audioBlob);
 
-    onProgress?.('Розпізнавання...');
-    const transcriptId = await createTranscription(audioUrl);
+    onProgress?.('recognizing');
+    const transcriptId = await createTranscription(audioUrl, languageCode);
 
     let attempts = 0;
     while (attempts < 60) {
@@ -149,20 +150,20 @@ export async function transcribeAudio(
 
       if (result.status === 'completed') {
         if (!result.text?.trim()) {
-          throw new Error('Не вдалося розпізнати голос. Говоріть чіткіше або довше.');
+          throw new Error('error_voice_not_recognized');
         }
         return result.text.trim();
       }
 
       if (result.status === 'error') {
-        throw new Error(result.error || 'Помилка API');
+        throw new Error(result.error || 'error_api');
       }
 
       attempts++;
-      onProgress?.(`Розпізнавання... ${attempts * 2.5}с`);
+      onProgress?.('recognizing');
     }
 
-    throw new Error('Таймаут обробки');
+    throw new Error('error_timeout');
   } catch (error) {
     throw error;
   }

@@ -2,7 +2,33 @@ import { useState } from 'react';
 import type { FormData } from '../types/types';
 import { questions } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { 
+  ChevronRight, ChevronLeft, Check, Flame, Dumbbell, Target, 
+  Laptop, Footprints, Activity, Zap, User, Mars, Venus
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+const getIconForOption = (key: string | undefined, isSelected: boolean, isDark: boolean) => {
+  if (!key) return null;
+  const iconProps = { 
+    size: 20, 
+    className: `mr-3 ${isSelected ? (isDark ? 'text-zinc-100' : 'text-zinc-900') : (isDark ? 'text-zinc-500' : 'text-zinc-400')}`
+  };
+  
+  if (key.includes('gender.options.male')) return <Mars {...iconProps} />;
+  if (key.includes('gender.options.female')) return <Venus {...iconProps} />;
+  
+  if (key.includes('goal.options.lose')) return <Flame {...iconProps} />;
+  if (key.includes('goal.options.gain')) return <Dumbbell {...iconProps} />;
+  if (key.includes('goal.options.maintain')) return <Target {...iconProps} />;
+  
+  if (key.includes('activity.options.sedentary')) return <Laptop {...iconProps} />;
+  if (key.includes('activity.options.light')) return <Footprints {...iconProps} />;
+  if (key.includes('activity.options.moderate')) return <Activity {...iconProps} />;
+  if (key.includes('activity.options.high')) return <Zap {...iconProps} />;
+  
+  return null;
+};
 
 interface FormScreenProps {
   isDark: boolean;
@@ -13,6 +39,7 @@ interface FormScreenProps {
 }
 
 export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDataChange, onComplete }: FormScreenProps) => {
+  const { t } = useTranslation();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -73,7 +100,7 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
             <ChevronLeft size={20} />
           </button>
           <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            Крок {currentQuestion + 1} з {questions.length}
+            {t('form.step')} {currentQuestion + 1} {t('form.from')} {questions.length}
           </p>
           <div className="w-10" />
         </div>
@@ -102,10 +129,10 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
               x: { type: "spring", stiffness: 300, damping: 30 },
               opacity: { duration: 0.2 }
             }}
-            className="absolute inset-0 w-full"
+            className="w-full pb-28"
           >
             <h2 className={`text-2xl font-black leading-tight tracking-tight px-4 mb-8 text-center ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
-              {question.fieldLabel}
+              {t(question.labelKey || question.fieldLabel)}
             </h2>
 
             <div className="px-2 space-y-3">
@@ -125,9 +152,12 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
                           }`}
                         style={isSelected ? { borderColor: themeColor } : {}}
                       >
-                        <span className={`font-bold text-base ${isSelected ? (isDark ? 'text-zinc-100' : 'text-zinc-900') : (isDark ? 'text-zinc-400' : 'text-zinc-600')}`}>
-                          {item.option}
-                        </span>
+                        <div className="flex items-center">
+                          {getIconForOption(item.optionKey, isSelected, isDark)}
+                          <span className={`font-bold text-base ${isSelected ? (isDark ? 'text-zinc-100' : 'text-zinc-900') : (isDark ? 'text-zinc-400' : 'text-zinc-600')}`}>
+                            {t(item.optionKey || item.option)}
+                          </span>
+                        </div>
                         {isSelected && (
                           <div className="w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: themeColor }}>
                             <Check size={14} strokeWidth={3} />
@@ -149,10 +179,10 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
                         : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-zinc-400'
                       }`}
                   >
-                    <option value="" disabled>Обери варіант</option>
+                    <option value="" disabled>{t('form.choose_option')}</option>
                     {question.fieldOptions.values.map((item, idx) => (
                       <option key={idx} value={item.option}>
-                        {item.option}
+                        {t(item.optionKey || item.option)}
                       </option>
                     ))}
                   </select>
@@ -167,11 +197,11 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
                   <input
                     type="number"
                     inputMode="decimal"
-                    placeholder={question.placeholder}
+                    placeholder={question.placeholderKey ? t(question.placeholderKey) : question.placeholder}
                     value={formData[question.key] as number || ''}
                     onChange={(e) => handleAnswer(Number(e.target.value))}
-                    className={`w-full max-w-[200px] text-center p-6 text-4xl font-black rounded-3xl outline-none transition-all border-2 ${isDark
-                        ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-700 focus:border-zinc-600 focus:bg-zinc-800/50'
+                    className={`w-full max-w-[240px] text-center p-6 text-4xl font-black rounded-3xl outline-none transition-all border-2 placeholder:text-3xl placeholder:font-bold ${isDark
+                        ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-700/50 focus:border-zinc-600 focus:bg-zinc-800/50'
                         : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder-zinc-300 focus:border-zinc-400 focus:bg-white'
                       }`}
                   />
@@ -197,9 +227,9 @@ export const FormScreen = ({ isDark, themeColor = '#8b5cf6', formData, onFormDat
           } : {}}
         >
           {currentQuestion === questions.length - 1 ? (
-            <><Check size={20} strokeWidth={3} /> Завершити</>
+            <><Check size={20} strokeWidth={3} /> {t('form.finish')}</>
           ) : (
-            <>Далі <ChevronRight size={20} strokeWidth={3} /></>
+            <>{t('form.next')} <ChevronRight size={20} strokeWidth={3} /></>
           )}
         </button>
       </div>

@@ -5,6 +5,7 @@ import { PlansTab } from './PlansTab';
 import { ProgressTab } from './ProgressTab';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dumbbell, ClipboardList, Target, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WorkoutScreenProps {
   user?: TelegramUser;
@@ -15,12 +16,13 @@ interface WorkoutScreenProps {
 type WorkoutTab = 'journal' | 'plans' | 'progress';
 
 export const WorkoutScreen = ({ user, isDark, themeColor = '#8b5cf6' }: WorkoutScreenProps) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<WorkoutTab>('journal');
 
   const tabs: { id: WorkoutTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'journal', label: 'Журнал', icon: <ClipboardList size={14} /> },
-    { id: 'plans', label: 'Плани', icon: <Target size={14} /> },
-    { id: 'progress', label: 'Прогрес', icon: <TrendingUp size={14} /> },
+    { id: 'journal', label: t('workout.journal', 'Журнал'), icon: <ClipboardList size={14} /> },
+    { id: 'plans', label: t('workout.plans', 'Плани'), icon: <Target size={14} /> },
+    { id: 'progress', label: t('workout.progress', 'Прогрес'), icon: <TrendingUp size={14} /> },
   ];
 
   return (
@@ -28,10 +30,10 @@ export const WorkoutScreen = ({ user, isDark, themeColor = '#8b5cf6' }: WorkoutS
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center px-1 mb-4">
         <div>
           <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
-            Тренування
+            {t('workout.title', 'Тренування')}
           </h1>
           <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            Відстежуй свій прогрес
+            {t('workout.subtitle', 'Відстежуй свій прогрес')}
           </p>
         </div>
         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100'}`}>

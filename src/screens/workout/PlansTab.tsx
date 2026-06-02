@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, ChevronLeft, Pencil, Trash2, Copy, FileText, Dumbbell, Video, Save, X, List
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PlansTabProps {
   user?: TelegramUser;
@@ -28,6 +29,7 @@ const openVideo = (url: string) => {
 };
 
 export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps) => {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<WorkoutPlanWithExercises | null>(null);
@@ -77,7 +79,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
   };
 
   const handleDeletePlan = async (planId: number) => {
-    if (!confirm('Видалити цей план?')) return;
+    if (!confirm(t('workout.plans_tab.delete_plan_confirm', 'Видалити цей план?'))) return;
     try {
       await deletePlan(planId);
       if (selectedPlan?.id === planId) setSelectedPlan(null);
@@ -102,7 +104,10 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
     if (!selectedPlan || !exerciseForm.name.trim()) return;
     setSaving(true);
     try {
-      const dataToSend = { ...exerciseForm };
+      const dataToSend: any = { ...exerciseForm };
+      
+      dataToSend.sets = Number(dataToSend.sets) || 1;
+      dataToSend.weight = Number(dataToSend.weight) || 0;
       
       if (!dataToSend.video_url || dataToSend.video_url.trim() === '') {
         dataToSend.video_url = undefined;
@@ -159,43 +164,43 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
                   <div className={`rounded-3xl border p-5 space-y-4 mb-4 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'}`}>
                     <div className="flex items-center gap-2 mb-2">
                        <Dumbbell size={18} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} />
-                       <p className={`font-bold text-base ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{editingExerciseId ? 'Редагувати вправу' : 'Нова вправа'}</p>
+                       <p className={`font-bold text-base ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{editingExerciseId ? t('workout.plans_tab.edit_exercise', 'Редагувати вправу') : t('workout.plans_tab.new_exercise', 'Нова вправа')}</p>
                     </div>
                     
                     <div>
-                      <label className={labelClass}>Назва *</label>
-                      <input className={inputClass} placeholder="Наприклад: Жим лежачи" value={exerciseForm.name} onChange={e => setExerciseForm(p => ({ ...p, name: e.target.value }))} />
+                      <label className={labelClass}>{t('workout.plans_tab.exercise_name', 'Назва *')}</label>
+                      <input className={inputClass} placeholder={t('workout.plans_tab.exercise_name_placeholder', 'Наприклад: Жим лежачи')} value={exerciseForm.name} onChange={e => setExerciseForm(p => ({ ...p, name: e.target.value }))} />
                     </div>
                     
                     <div>
-                      <label className={labelClass}>Відео інструкція (YouTube)</label>
-                      <input className={inputClass} placeholder="https://youtube.com/..." value={exerciseForm.video_url} onChange={e => setExerciseForm(p => ({ ...p, video_url: e.target.value }))} />
+                      <label className={labelClass}>{t('workout.plans_tab.video_instruction', 'Відео інструкція (YouTube)')}</label>
+                      <input className={inputClass} placeholder={t('workout.plans_tab.video_placeholder', 'https://youtube.com/...')} value={exerciseForm.video_url} onChange={e => setExerciseForm(p => ({ ...p, video_url: e.target.value }))} />
                     </div>
                     
                     <div className="grid grid-cols-3 gap-3">
-                      <div><label className={labelClass}>Підходи</label><input type="number" className={inputClass} value={exerciseForm.sets} onChange={e => setExerciseForm(p => ({ ...p, sets: parseInt(e.target.value) || 1 }))} /></div>
-                      <div><label className={labelClass}>Повтори</label><input className={inputClass} placeholder="8-10" value={exerciseForm.reps} onChange={e => setExerciseForm(p => ({ ...p, reps: e.target.value }))} /></div>
-                      <div><label className={labelClass}>Вага (кг)</label><input type="number" className={inputClass} value={exerciseForm.weight} onChange={e => setExerciseForm(p => ({ ...p, weight: parseFloat(e.target.value) || 0 }))} /></div>
+                      <div><label className={labelClass}>{t('workout.plans_tab.sets', 'Підходи')}</label><input type="number" className={inputClass} value={exerciseForm.sets} onChange={e => setExerciseForm(p => ({ ...p, sets: e.target.value === '' ? '' : parseInt(e.target.value) || 0 }))} /></div>
+                      <div><label className={labelClass}>{t('workout.plans_tab.reps', 'Повтори')}</label><input className={inputClass} placeholder="8-10" value={exerciseForm.reps} onChange={e => setExerciseForm(p => ({ ...p, reps: e.target.value }))} /></div>
+                      <div><label className={labelClass}>{t('workout.plans_tab.weight', 'Вага (кг)')}</label><input type="number" className={inputClass} value={exerciseForm.weight} onChange={e => setExerciseForm(p => ({ ...p, weight: e.target.value === '' ? '' : parseFloat(e.target.value) || 0 }))} /></div>
                     </div>
                     
                     <div>
-                      <label className={labelClass}>RIR (Повторення в резерві)</label>
+                      <label className={labelClass}>{t('workout.plans_tab.rir', 'RIR (Повторення в резерві)')}</label>
                       <select className={`${inputClass} appearance-none`} value={exerciseForm.rir} onChange={e => setExerciseForm(p => ({ ...p, rir: e.target.value }))}>
                         {['0', '1', '1-2', '2', '2-3', '3'].map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </div>
                     
                     <div>
-                      <label className={labelClass}>Нотатка</label>
-                      <textarea rows={2} className={`${inputClass} resize-none`} placeholder="Важливі деталі техніки..." value={exerciseForm.notes} onChange={e => setExerciseForm(p => ({ ...p, notes: e.target.value }))} />
+                      <label className={labelClass}>{t('workout.plans_tab.notes', 'Нотатка')}</label>
+                      <textarea rows={2} className={`${inputClass} resize-none`} placeholder={t('workout.plans_tab.notes_placeholder', 'Важливі деталі техніки...')} value={exerciseForm.notes} onChange={e => setExerciseForm(p => ({ ...p, notes: e.target.value }))} />
                     </div>
                     
                     <div className="flex gap-3 pt-2">
                       <button onClick={() => { setShowExerciseForm(false); setEditingExerciseId(null); }} className={`flex-1 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${isDark ? 'bg-zinc-900 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>
-                         <X size={16} /> Скасувати
+                         <X size={16} /> {t('workout.plans_tab.cancel', 'Скасувати')}
                       </button>
                       <button onClick={handleSaveExercise} disabled={saving} className="flex-1 py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2" style={{ background: themeColor }}>
-                         <Save size={16} /> {saving ? 'Збереження...' : 'Зберегти'}
+                         <Save size={16} /> {saving ? t('workout.plans_tab.saving', 'Збереження...') : t('workout.plans_tab.save', 'Зберегти')}
                       </button>
                     </div>
                   </div>
@@ -208,10 +213,10 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
                    <List size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
                 </div>
-                <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Немає вправ</p>
-                <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Додай першу вправу, щоб почати формувати тренування</p>
+                <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.plans_tab.no_exercises', 'Немає вправ')}</p>
+                <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.plans_tab.add_first_exercise', 'Додай першу вправу, щоб почати формувати тренування')}</p>
                 <button onClick={() => { setShowExerciseForm(true); setEditingExerciseId(null); setExerciseForm(EMPTY_EXERCISE); }} className="mt-4 px-6 py-3 rounded-xl text-sm font-bold text-white shadow-md transition-all active:scale-95" style={{ background: themeColor }}>
-                  + Додати вправу
+                  {t('workout.plans_tab.add_exercise', '+ Додати вправу')}
                 </button>
               </div>
             ) : (
@@ -240,7 +245,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
                         
                         {ex.video_url && (
                           <button onClick={() => openVideo(ex.video_url!)} className="inline-flex items-center gap-1.5 mt-2 ml-10 text-[11px] font-bold text-red-500 hover:text-red-400 transition-colors bg-red-500/10 px-2.5 py-1 rounded-lg">
-                            <Video size={14} /> Дивитись техніку
+                            <Video size={14} /> {t('workout.plans_tab.watch_technique', 'Дивитись техніку')}
                           </button>
                         )}
                       </div>
@@ -272,7 +277,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
       <div style={fadeIn.style(0)}>
         <button onClick={() => { setShowNewPlanForm(true); setEditingPlanId(null); setPlanForm({ name: '', muscle_group: '' }); }}
           className="w-full py-4 rounded-3xl text-sm font-bold text-white transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-2" style={{ background: themeColor }}>
-          <Plus size={18} strokeWidth={3} /> Створити новий план
+          <Plus size={18} strokeWidth={3} /> {t('workout.plans_tab.create_new_plan', 'Створити новий план')}
         </button>
       </div>
 
@@ -282,25 +287,25 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
             <div className={`rounded-3xl border p-5 space-y-4 mb-4 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'}`}>
               <div className="flex items-center gap-2 mb-2">
                  <FileText size={18} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} />
-                 <p className={`font-bold text-base ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{editingPlanId ? 'Редагувати план' : 'Новий план тренувань'}</p>
+                 <p className={`font-bold text-base ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{editingPlanId ? t('workout.plans_tab.edit_plan', 'Редагувати план') : t('workout.plans_tab.new_plan', 'Новий план тренувань')}</p>
               </div>
               
               <div>
-                <label className={labelClass}>Назва плану *</label>
-                <input className={inputClass} placeholder="Наприклад: Full Body, День ніг..." value={planForm.name} onChange={e => setPlanForm(p => ({ ...p, name: e.target.value }))} />
+                <label className={labelClass}>{t('workout.plans_tab.plan_name', 'Назва плану *')}</label>
+                <input className={inputClass} placeholder={t('workout.plans_tab.plan_name_placeholder', 'Наприклад: Full Body, День ніг...')} value={planForm.name} onChange={e => setPlanForm(p => ({ ...p, name: e.target.value }))} />
               </div>
               
               <div>
-                <label className={labelClass}>Група м'язів (необов'язково)</label>
-                <input className={inputClass} placeholder="Наприклад: Спина + Біцепс" value={planForm.muscle_group} onChange={e => setPlanForm(p => ({ ...p, muscle_group: e.target.value }))} />
+                <label className={labelClass}>{t('workout.plans_tab.muscle_group', 'Група м\'язів (необов\'язково)')}</label>
+                <input className={inputClass} placeholder={t('workout.plans_tab.muscle_group_placeholder', 'Наприклад: Спина + Біцепс')} value={planForm.muscle_group} onChange={e => setPlanForm(p => ({ ...p, muscle_group: e.target.value }))} />
               </div>
               
               <div className="flex gap-3 pt-2">
                 <button onClick={() => { setShowNewPlanForm(false); setEditingPlanId(null); }} className={`flex-1 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${isDark ? 'bg-zinc-900 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>
-                   <X size={16} /> Скасувати
+                   <X size={16} /> {t('workout.plans_tab.cancel', 'Скасувати')}
                 </button>
                 <button onClick={handleSavePlan} disabled={saving} className="flex-1 py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2" style={{ background: themeColor }}>
-                   <Save size={16} /> {saving ? 'Збереження...' : 'Зберегти'}
+                   <Save size={16} /> {saving ? t('workout.plans_tab.saving', 'Збереження...') : t('workout.plans_tab.save', 'Зберегти')}
                 </button>
               </div>
             </div>
@@ -313,8 +318,8 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
              <Dumbbell size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
           </div>
-          <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Немає планів</p>
-          <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>Створи свій перший план тренувань, щоб додати в нього вправи.</p>
+          <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.plans_tab.no_plans', 'Немає планів')}</p>
+          <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.plans_tab.create_first_plan', 'Створи свій перший план тренувань, щоб додати в нього вправи.')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -324,7 +329,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
                 <div className="flex-1">
                   <h3 className={`font-black text-lg ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{plan.name}</h3>
                   {plan.muscle_group && <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{plan.muscle_group}</p>}
-                  <p className={`text-[10px] font-semibold mt-2 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>Оновлено: {new Date(plan.updated_at).toLocaleDateString('uk-UA')}</p>
+                  <p className={`text-[10px] font-semibold mt-2 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{t('workout.plans_tab.updated_at', 'Оновлено:')} {new Date(plan.updated_at).toLocaleDateString('uk-UA')}</p>
                 </div>
                 <div className="flex gap-2 ml-4">
                   <button onClick={(e) => handleEditPlan(plan, e)} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-300' : 'bg-zinc-50 text-zinc-500 hover:text-zinc-700 border border-zinc-100'}`}>
