@@ -7,8 +7,9 @@ import { WeightTracker } from '../components/WeightTracker';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   User as UserIcon, Activity, Target, Droplets, Utensils,
-  ChevronRight, Pencil, Scale, Flame, Check
+  ChevronRight, Pencil, Scale, Flame, Check, Globe, Trash2
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ResultsScreenProps {
   isDark: boolean;
@@ -19,25 +20,26 @@ interface ResultsScreenProps {
 }
 
 const GOAL_OPTIONS = [
-  { id: 'lose', label: 'Схуднення', desc: '-300–500 ккал', fullValue: 'Схуднути (-300–500 ккал) 🔥', icon: <Target size={18} /> },
-  { id: 'maintain', label: 'Підтримка', desc: '±100 ккал', fullValue: 'Підтримувати форму (±100 ккал)', icon: <Scale size={18} /> },
-  { id: 'gain', label: 'Набір маси', desc: '+300–500 ккал', fullValue: "Набрати м'язи (+300–500 ккал) 💪", icon: <Flame size={18} /> },
+  { id: 'lose', labelKey: 'results.goals.lose.label', descKey: 'results.goals.lose.desc', fullValue: 'Схуднути (-300–500 ккал) 🔥', icon: <Target size={18} /> },
+  { id: 'maintain', labelKey: 'results.goals.maintain.label', descKey: 'results.goals.maintain.desc', fullValue: 'Підтримувати форму (±100 ккал)', icon: <Scale size={18} /> },
+  { id: 'gain', labelKey: 'results.goals.gain.label', descKey: 'results.goals.gain.desc', fullValue: "Набрати м'язи (+300–500 ккал) 💪", icon: <Flame size={18} /> },
 ];
 
 const ACTIVITY_OPTIONS = [
-  { id: 'sedentary', label: 'Сидячий', desc: 'Офіс, мало руху', fullValue: 'Сидячий (офіс, мало руху) 🪑', icon: <UserIcon size={18} /> },
-  { id: 'light', label: 'Легка', desc: '1–3 трен/тиждень', fullValue: 'Легка активність (1–3 трен/тиждень) 🚶', icon: <Activity size={18} /> },
-  { id: 'moderate', label: 'Середня', desc: '3–5 тренувань', fullValue: 'Середня (3–5 тренувань) 🏃', icon: <Activity size={18} /> },
-  { id: 'high', label: 'Висока', desc: '6–7 тренувань', fullValue: 'Висока (6–7 тренувань) 🔥', icon: <Flame size={18} /> },
+  { id: 'sedentary', labelKey: 'results.activities.sedentary.label', descKey: 'results.activities.sedentary.desc', fullValue: 'Сидячий (офіс, мало руху) 🪑', icon: <UserIcon size={18} /> },
+  { id: 'light', labelKey: 'results.activities.light.label', descKey: 'results.activities.light.desc', fullValue: 'Легка активність (1–3 трен/тиждень) 🚶', icon: <Activity size={18} /> },
+  { id: 'moderate', labelKey: 'results.activities.moderate.label', descKey: 'results.activities.moderate.desc', fullValue: 'Середня (3–5 тренувань) 🏃', icon: <Activity size={18} /> },
+  { id: 'high', labelKey: 'results.activities.high.label', descKey: 'results.activities.high.desc', fullValue: 'Висока (6–7 тренувань) 🔥', icon: <Flame size={18} /> },
 ];
 
 export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initialData, user, onComplete }: ResultsScreenProps) => {
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState<FormData>(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [notifyWater, setNotifyWater] = useState(false);
   const [notifyMeals, setNotifyMeals] = useState(false);
-  const [activeModal, setActiveModal] = useState<'physical' | 'goal' | 'activity' | null>(null);
+  const [activeModal, setActiveModal] = useState<'physical' | 'goal' | 'activity' | 'language' | 'delete_account' | null>(null);
 
   const fadeIn = useFadeIn(!isLoadingData);
 
@@ -175,22 +177,36 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from('users').delete().eq('telegram_user_id', user.id);
+      if (error) throw error;
+      window.location.reload();
+    } catch (err: any) {
+      alert(`Помилка: ${err.message}`);
+    } finally {
+      setIsSaving(false);
+      setActiveModal(null);
+    }
+  };
+
   useEffect(() => {
     if (!isLoadingData && user?.id) {
       handleSave();
     }
   }, [notifyWater, notifyMeals]);
 
-
   if (isLoadingData) return <ProfileScreenSkeleton isDark={isDark} />;
 
-  const SettingRow = ({ icon, label, value, onClick }: any) => (
+  const SettingRow = ({ icon, label, value, onClick, textClass }: any) => (
     <button onClick={onClick} className={`w-full flex items-center justify-between p-4 bg-transparent border-b last:border-b-0 ${isDark ? 'border-zinc-800/50 hover:bg-zinc-800/30' : 'border-zinc-100 hover:bg-zinc-50'} transition-colors`}>
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
           {icon}
         </div>
-        <span className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{label}</span>
+        <span className={`text-sm font-medium ${textClass ? textClass : (isDark ? 'text-zinc-200' : 'text-zinc-700')}`}>{label}</span>
       </div>
       <div className="flex items-center gap-2">
         <span className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{value}</span>
@@ -244,45 +260,64 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
       <div className="space-y-6">
 
         <div style={fadeIn.style(1)}>
-          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Особисті дані</h2>
+          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.personal_data')}</h2>
           <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-200/50 shadow-sm'}`}>
             <SettingRow
               icon={<UserIcon size={18} />}
-              label="Фізичні показники"
-              value={`${formData.weight} кг, ${formData.height} см`}
+              label={t('results.physical_metrics')}
+              value={`${formData.weight} ${t('results.kg')}, ${formData.height} ${t('results.cm')}`}
               onClick={() => setActiveModal('physical')}
             />
             <SettingRow
               icon={<Target size={18} />}
-              label="Поточна мета"
-              value={GOAL_OPTIONS.find(g => formData.goal?.includes(g.label))?.label || 'Підтримка'}
+              label={t('results.current_goal')}
+              value={t(GOAL_OPTIONS.find(g => formData.goal?.includes(g.fullValue.replace(/ .*/, '')))?.labelKey || 'results.goals.maintain.label')}
               onClick={() => setActiveModal('goal')}
             />
             <SettingRow
               icon={<Activity size={18} />}
-              label="Активність"
-              value={ACTIVITY_OPTIONS.find(a => formData.activity?.includes(a.label))?.label || 'Сидяча'}
+              label={t('results.activity')}
+              value={t(ACTIVITY_OPTIONS.find(a => formData.activity?.includes(a.fullValue.replace(/ \(.*/, '')))?.labelKey || 'results.activities.sedentary.label')}
               onClick={() => setActiveModal('activity')}
             />
           </div>
         </div>
 
         <div style={fadeIn.style(2)}>
-          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Сповіщення</h2>
+          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.notifications')}</h2>
           <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-200/50 shadow-sm'}`}>
             <ToggleRow
               icon={<Droplets size={18} />}
-              label="Нагадування про воду"
-              desc="Кожні 3 години (9:00–21:00)"
+              label={t('results.water_reminder')}
+              desc={t('results.water_reminder_desc')}
               state={notifyWater}
               toggle={() => setNotifyWater(!notifyWater)}
             />
             <ToggleRow
               icon={<Utensils size={18} />}
-              label="Нагадування про їжу"
-              desc="Обід (13:00) та вечеря (19:00)"
+              label={t('results.meal_reminder')}
+              desc={t('results.meal_reminder_desc')}
               state={notifyMeals}
               toggle={() => setNotifyMeals(!notifyMeals)}
+            />
+          </div>
+        </div>
+
+        <div style={fadeIn.style(2.5)}>
+          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')} & {t('results.account')}</h2>
+          <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-200/50 shadow-sm'}`}>
+            <SettingRow
+              icon={<Globe size={18} />}
+              label={t('results.language')}
+              value={i18n.language.toUpperCase()}
+              onClick={() => setActiveModal('language')}
+            />
+            <SettingRow
+              icon={<Trash2 size={18} className="text-red-500" />}
+              label={t('results.delete_account')}
+              value=""
+              textClass="text-red-500"
+              onClick={() => setActiveModal('delete_account')}
             />
           </div>
         </div>
@@ -301,7 +336,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
               className="w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg transition-transform active:scale-95 hover:shadow-xl"
               style={{ background: `linear-gradient(135deg, ${themeColor}, #6366f1)` }}
             >
-              Почати роботу
+              {t('results.start_work')}
             </button>
           </div>
         )}
@@ -324,38 +359,38 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
 
               {activeModal === 'physical' && (
                 <div>
-                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Фізичні показники</h3>
+                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.physical_metrics')}</h3>
                   <div className="space-y-4 mb-8">
                     <div className="flex gap-4">
                       <div className="flex-1 space-y-1">
-                        <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Вік</label>
+                        <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.age')}</label>
                         <input type="number" value={formData.age as number} onChange={(e) => handleChange('age', e.target.value)}
                           className={`w-full p-4 rounded-2xl text-lg font-bold border focus:outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`} />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Вага (кг)</label>
+                        <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.weight_kg')}</label>
                         <input type="number" value={formData.weight as number} onChange={(e) => handleChange('weight', e.target.value)}
                           className={`w-full p-4 rounded-2xl text-lg font-bold border focus:outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`} />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Зріст (см)</label>
+                      <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.height_cm')}</label>
                       <input type="number" value={formData.height as number} onChange={(e) => handleChange('height', e.target.value)}
                         className={`w-full p-4 rounded-2xl text-lg font-bold border focus:outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`} />
                     </div>
                   </div>
                   <button onClick={() => handleSave(true)} disabled={isSaving} className="w-full py-4 rounded-2xl text-white font-bold transition-transform active:scale-95" style={{ backgroundColor: themeColor }}>
-                    {isSaving ? 'Збереження...' : 'Зберегти зміни'}
+                    {isSaving ? t('results.saving') : t('results.save_changes')}
                   </button>
                 </div>
               )}
 
               {activeModal === 'goal' && (
                 <div>
-                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Мета</h3>
+                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.current_goal')}</h3>
                   <div className="space-y-3 mb-8">
                     {GOAL_OPTIONS.map(opt => {
-                      const isSelected = (formData.goal as string)?.includes(opt.label);
+                      const isSelected = (formData.goal as string)?.includes(opt.fullValue.replace(/ .*/, ''));
                       return (
                         <button key={opt.id} onClick={() => { handleChange('goal', opt.fullValue); handleSave(true); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
@@ -363,8 +398,8 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                         >
                           <div className={`p-2 rounded-xl mr-4 ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`} style={isSelected ? { color: themeColor } : {}}>{opt.icon}</div>
                           <div className="text-left flex-1">
-                            <p className={`font-bold text-sm ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{opt.label}</p>
-                            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{opt.desc}</p>
+                            <p className={`font-bold text-sm ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t(opt.labelKey)}</p>
+                            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t(opt.descKey)}</p>
                           </div>
                           {isSelected && <Check size={20} style={{ color: themeColor }} />}
                         </button>
@@ -376,10 +411,10 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
 
               {activeModal === 'activity' && (
                 <div>
-                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Рівень активності</h3>
+                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.activity')}</h3>
                   <div className="space-y-3 mb-8">
                     {ACTIVITY_OPTIONS.map(opt => {
-                      const isSelected = (formData.activity as string)?.includes(opt.label);
+                      const isSelected = (formData.activity as string)?.includes(opt.fullValue.replace(/ \(.*/, ''));
                       return (
                         <button key={opt.id} onClick={() => { handleChange('activity', opt.fullValue); handleSave(true); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
@@ -387,13 +422,49 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                         >
                           <div className={`p-2 rounded-xl mr-4 ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`} style={isSelected ? { color: themeColor } : {}}>{opt.icon}</div>
                           <div className="text-left flex-1">
-                            <p className={`font-bold text-sm ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{opt.label}</p>
-                            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{opt.desc}</p>
+                            <p className={`font-bold text-sm ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t(opt.labelKey)}</p>
+                            <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t(opt.descKey)}</p>
                           </div>
                           {isSelected && <Check size={20} style={{ color: themeColor }} />}
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'language' && (
+                <div>
+                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.change_language')}</h3>
+                  <div className="space-y-3 mb-8">
+                    {['uk', 'en', 'pl', 'ru'].map(lang => {
+                      const isSelected = i18n.language === lang;
+                      const labels: Record<string, string> = { uk: 'Українська', en: 'English', pl: 'Polski', ru: 'Русский' };
+                      return (
+                        <button key={lang} onClick={() => { i18n.changeLanguage(lang); setActiveModal(null); }}
+                          className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
+                          style={isSelected ? { borderColor: themeColor } : {}}
+                        >
+                          <div className="text-left flex-1 font-bold text-sm" style={isSelected ? { color: themeColor } : { color: isDark ? '#f4f4f5' : '#18181b' }}>{labels[lang]}</div>
+                          {isSelected && <Check size={20} style={{ color: themeColor }} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'delete_account' && (
+                <div>
+                  <h3 className={`text-xl font-bold mb-4 text-red-500`}>{t('results.delete_account')}</h3>
+                  <p className={`text-sm mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>{t('results.delete_account_confirm')}</p>
+                  <div className="flex gap-4">
+                    <button onClick={() => setActiveModal(null)} className={`flex-1 py-4 rounded-2xl font-bold transition-transform active:scale-95 ${isDark ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-900'}`}>
+                      {t('results.cancel')}
+                    </button>
+                    <button onClick={handleDeleteAccount} disabled={isSaving} className="flex-1 py-4 rounded-2xl text-white font-bold transition-transform active:scale-95 bg-red-500">
+                      {isSaving ? t('results.saving') : t('results.delete')}
+                    </button>
                   </div>
                 </div>
               )}

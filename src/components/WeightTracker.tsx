@@ -3,6 +3,7 @@ import type { TelegramUser } from '../types/types';
 import { addWeightEntry, getWeightHistory, deleteWeightEntry, type WeightEntry } from '../utils/weightService';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Scale } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WeightTrackerProps {
   user?: TelegramUser;
@@ -11,6 +12,7 @@ interface WeightTrackerProps {
 }
 
 export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) => {
+  const { t, i18n } = useTranslation();
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newWeight, setNewWeight] = useState('');
@@ -59,10 +61,19 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
     }
   };
 
+  const getLocaleForDate = () => {
+    switch (i18n.language) {
+      case 'en': return 'en-US';
+      case 'pl': return 'pl-PL';
+      case 'ru': return 'ru-RU';
+      default: return 'uk-UA';
+    }
+  };
+
   const chartData = [...entries]
     .reverse()
     .map(e => ({
-      date: new Date(e.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }),
+      date: new Date(e.date).toLocaleDateString(getLocaleForDate(), { day: 'numeric', month: 'short' }),
       weight: e.weight,
     }));
 
@@ -81,14 +92,14 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Scale size={18} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
-          <h3 className={`text-sm font-bold ${textMain}`}>Трекінг ваги</h3>
+          <h3 className={`text-sm font-bold ${textMain}`}>{t('weight_tracking.title')}</h3>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95"
           style={{ background: `${themeColor}20`, color: themeColor }}
         >
-          {showForm ? 'Сховати' : '+ Записати'}
+          {showForm ? t('weight_tracking.hide') : t('weight_tracking.add_record')}
         </button>
       </div>
 
@@ -96,7 +107,7 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
         <div className={`rounded-2xl p-4 border space-y-3 ${cardBg}`}>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className={`block text-[10px] font-medium mb-1 ${textMuted}`}>Вага (кг)</label>
+              <label className={`block text-[10px] font-medium mb-1 ${textMuted}`}>{t('weight_tracking.weight_kg')}</label>
               <input
                 type="number"
                 step="0.1"
@@ -110,12 +121,12 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
               />
             </div>
             <div className="flex-1">
-              <label className={`block text-[10px] font-medium mb-1 ${textMuted}`}>Нотатка</label>
+              <label className={`block text-[10px] font-medium mb-1 ${textMuted}`}>{t('weight_tracking.note')}</label>
               <input
                 type="text"
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
-                placeholder="Після тренування"
+                placeholder={t('weight_tracking.note_placeholder')}
                 className={`w-full px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 ${isDark
                     ? 'bg-white/5 border border-white/10 text-white focus:ring-white/20'
                     : 'bg-slate-50 border border-slate-200 text-slate-900 focus:ring-purple-200'
@@ -129,7 +140,7 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
             className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-all active:scale-95"
             style={{ background: `linear-gradient(135deg, ${themeColor}, #6366f1)` }}
           >
-            {isSaving ? 'Зберігаю...' : 'Зберегти'}
+            {isSaving ? t('weight_tracking.saving') : t('weight_tracking.save')}
           </button>
         </div>
       )}
@@ -137,19 +148,19 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
       {entries.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           <div className={`rounded-2xl p-3 border text-center ${cardBg}`}>
-            <p className={`text-[9px] uppercase font-bold tracking-wider ${textMuted}`}>Поточна</p>
+            <p className={`text-[9px] uppercase font-bold tracking-wider ${textMuted}`}>{t('weight_tracking.current')}</p>
             <p className={`text-xl font-black mt-0.5 ${textMain}`}>{latest?.weight}</p>
-            <p className={`text-[9px] ${textMuted}`}>кг</p>
+            <p className={`text-[9px] ${textMuted}`}>{t('results.kg')}</p>
           </div>
           <div className={`rounded-2xl p-3 border text-center ${cardBg}`}>
-            <p className={`text-[9px] uppercase font-bold tracking-wider ${textMuted}`}>Зміна</p>
+            <p className={`text-[9px] uppercase font-bold tracking-wider ${textMuted}`}>{t('weight_tracking.change')}</p>
             <p className={`text-xl font-black mt-0.5 ${diff > 0 ? 'text-red-400' : diff < 0 ? 'text-green-400' : textMain}`}>
               {diff > 0 ? '+' : ''}{diff}
             </p>
-            <p className={`text-[9px] ${textMuted}`}>кг</p>
+            <p className={`text-[9px] ${textMuted}`}>{t('results.kg')}</p>
           </div>
           <div className={`rounded-2xl p-3 border text-center ${cardBg}`}>
-            <p className={`text-[9px] uppercase font-bold tracking-wider ${textMuted}`}>Діапазон</p>
+            <p className={`text-[9px] uppercase font-bold tracking-wider ${textMuted}`}>{t('weight_tracking.range')}</p>
             <p className={`text-xl font-black mt-0.5 ${textMain}`}>{(maxWeight - minWeight).toFixed(1)}</p>
             <p className={`text-[9px] ${textMuted}`}>{minWeight}–{maxWeight}</p>
           </div>
@@ -158,7 +169,7 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
 
       {chartData.length >= 2 && (
         <div className={`rounded-2xl p-4 border ${cardBg}`}>
-          <p className={`text-xs font-semibold mb-3 ${textMain}`}>Графік ваги</p>
+          <p className={`text-xs font-semibold mb-3 ${textMain}`}>{t('weight_tracking.chart_title')}</p>
           <ResponsiveContainer width="100%" height={150}>
             <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -25, bottom: 0 }}>
               <defs>
@@ -180,7 +191,7 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
                   return (
                     <div className={`px-3 py-2 rounded-xl shadow-xl text-xs ${isDark ? 'bg-slate-800 border border-white/10 text-white' : 'bg-white border border-slate-100 text-slate-800'}`}>
                       <p className="font-bold">{label}</p>
-                      <p style={{ color: themeColor }}>{payload[0].value} кг</p>
+                      <p style={{ color: themeColor }}>{payload[0].value} {t('results.kg')}</p>
                     </div>
                   );
                 }}
@@ -203,21 +214,21 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
           <div className="flex justify-center mb-3">
             <Scale size={32} className={isDark ? 'text-white/20' : 'text-slate-300'} />
           </div>
-          <p className={`text-sm font-semibold mb-2 ${textMain}`}>Немає даних про вагу</p>
-          <p className={`text-xs ${textMuted}`}>Ще нема записів ваги. Додай перший!</p>
+          <p className={`text-sm font-semibold mb-2 ${textMain}`}>{t('weight_tracking.no_data_title')}</p>
+          <p className={`text-xs ${textMuted}`}>{t('weight_tracking.no_data_desc')}</p>
         </div>
       ) : (
         <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
           <div className={`px-4 py-2.5 border-b ${isDark ? 'border-white/10' : 'border-slate-100'}`}>
-            <p className={`text-xs font-semibold ${textMain}`}>Історія ({entries.length})</p>
+            <p className={`text-xs font-semibold ${textMain}`}>{t('weight_tracking.history')} ({entries.length})</p>
           </div>
           <div className="max-h-48 overflow-y-auto divide-y divide-white/5">
             {entries.slice(0, 20).map(entry => (
               <div key={entry.id} className="px-4 py-2.5 flex items-center gap-3">
                 <div className="flex-1">
-                  <p className={`text-sm font-bold ${textMain}`}>{entry.weight} кг</p>
+                  <p className={`text-sm font-bold ${textMain}`}>{entry.weight} {t('results.kg')}</p>
                   <p className={`text-[10px] ${textMuted}`}>
-                    {new Date(entry.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}
+                    {new Date(entry.date).toLocaleDateString(getLocaleForDate(), { day: 'numeric', month: 'long' })}
                     {entry.note && ` · ${entry.note}`}
                   </p>
                 </div>

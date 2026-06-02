@@ -3,6 +3,7 @@ import type { TelegramUser } from '../types/types';
 import { exportMealsForPeriod, exportWorkoutsForPeriod, exportWeightLogs, generateTextReport, shareToTelegram, generateCSV, downloadCSV } from '../utils/exportService';
 import { motion } from 'motion/react';
 import { BarChart3, Check, Copy, Share, FileSpreadsheet, X, Calendar, Activity } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WeeklyReportProps {
   user?: TelegramUser;
@@ -12,6 +13,7 @@ interface WeeklyReportProps {
 }
 
 export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReportProps) => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<'7' | '30'>('7');
   const [report, setReport] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +27,7 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
       const startD = new Date();
       startD.setDate(startD.getDate() - (period === '7' ? 7 : 30));
       const start = startD.toISOString().split('T')[0];
-      const label = period === '7' ? 'Тижневий' : 'Місячний';
+      const label = period === '7' ? t('report.weekly') : t('report.monthly');
       const [meals, workouts, weights] = await Promise.all([
         exportMealsForPeriod(user.id, start, end),
         exportWorkoutsForPeriod(user.id, start, end),
@@ -33,7 +35,7 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
       ]);
       setReport(generateTextReport(meals, workouts, weights, `${label} (${start} — ${end})`));
     } catch (e: any) {
-      setReport('Помилка генерації звіту: ' + e.message);
+      setReport(t('report.error_generation', { error: e.message }));
     } finally { setIsLoading(false); }
   };
 
@@ -73,7 +75,7 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isDark ? 'bg-zinc-900 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>
               <BarChart3 size={20} strokeWidth={2.5} />
             </div>
-            <h3 className={`text-xl font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>Звіт активності</h3>
+            <h3 className={`text-xl font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('report.title')}</h3>
           </div>
           <button onClick={onClose} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900'}`}>
             <X size={16} strokeWidth={3} />
@@ -86,7 +88,7 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] ${period === r ? 'text-white shadow-md' : isDark ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-700'}`}
               style={period === r ? { background: themeColor } : {}}>
               <Calendar size={14} strokeWidth={2.5} />
-              {r === '7' ? '7 днів' : '30 днів'}
+              {r === '7' ? t('stats.days_7') : t('stats.days_30')}
             </button>
           ))}
         </div>
@@ -95,7 +97,7 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
           {isLoading ? (
             <div className={`absolute inset-0 flex flex-col items-center justify-center rounded-3xl border border-dashed ${isDark ? 'bg-zinc-900/30 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
               <Activity className="animate-pulse mb-3" size={32} style={{ color: themeColor }} />
-              <p className={`text-sm font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Генеруємо звіт...</p>
+              <p className={`text-sm font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('report.generating')}</p>
             </div>
           ) : report ? (
             <div className={`h-full border rounded-3xl p-5 overflow-y-auto custom-scrollbar ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
@@ -105,7 +107,7 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
             </div>
           ) : (
             <div className={`absolute inset-0 flex items-center justify-center rounded-3xl border border-dashed ${isDark ? 'bg-zinc-900/30 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
-               <p className={`text-sm font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Немає даних за цей період</p>
+               <p className={`text-sm font-bold ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('report.no_data')}</p>
             </div>
           )}
         </div>
@@ -113,13 +115,13 @@ export const WeeklyReport = ({ user, isDark, themeColor, onClose }: WeeklyReport
         <div className="grid grid-cols-3 gap-3 flex-shrink-0">
           <button onClick={handleCopy} disabled={!report || isLoading} className={`py-4 rounded-2xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 ${isDark ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}>
             {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-            {copied ? 'Скопійовано' : 'Копіювати'}
+            {copied ? t('report.copied') : t('report.copy')}
           </button>
           <button onClick={handleShare} disabled={!report || isLoading} className={`py-4 rounded-2xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 ${isDark ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}>
-            <Share size={18} /> Поділитись
+            <Share size={18} /> {t('report.share')}
           </button>
           <button onClick={handleExportCSV} disabled={!report || isLoading} className={`py-4 rounded-2xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 ${isDark ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'}`}>
-            <FileSpreadsheet size={18} /> Завант. CSV
+            <FileSpreadsheet size={18} /> {t('report.download_csv')}
           </button>
         </div>
       </motion.div>

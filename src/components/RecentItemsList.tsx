@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { MealRecord } from '../utils/supabaseService';
 import { MealDetailModal } from './MealDetailModal';
 import { Utensils, Camera, Mic, Keyboard, Lightbulb, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface RecentItemsListProps {
   meals: MealRecord[];
@@ -31,20 +32,21 @@ export const RecentItemsList = ({
   onFavorite,
   onUpdate,
 }: RecentItemsListProps) => {
+  const { t } = useTranslation();
   const [selectedMeal, setSelectedMeal] = useState<MealRecord | null>(null);
 
   return (
     <>
       <div className="flex justify-between items-center">
         <h2 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-          Додано нещодавно
+          {t('fridge.recently_added')}
         </h2>
         <button
           onClick={onViewToday}
           className="text-xs font-semibold transition-all hover:underline flex items-center gap-1"
           style={{ color: themeColor }}
         >
-          Всі за сьогодні
+          {t('fridge.all_today')}
           <ChevronRight size={14} />
         </button>
       </div>
@@ -68,7 +70,7 @@ export const RecentItemsList = ({
               </div>
             </div>
             <p className={`text-xs ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
-              Сьогодні ще нічого не додано.
+              {t('fridge.empty_today')}
             </p>
           </div>
         ) : (
@@ -85,10 +87,10 @@ export const RecentItemsList = ({
               <div className="flex items-center gap-3">
 
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
-                  style={{ background: `${themeColor}18` }}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-slate-100'}`}
+                  style={{ color: themeColor }}
                 >
-                  {meal.emoji && !['🍔','🍕','🥤','🍽️'].includes(meal.emoji) ? meal.emoji : <Utensils size={20} />}
+                  <Utensils size={20} strokeWidth={2.5} />
                 </div>
 
                 <div className="flex-1 min-w-0 text-left">
@@ -120,7 +122,7 @@ export const RecentItemsList = ({
                         isDark ? 'text-white/80' : 'text-slate-700'
                       }`}
                     >
-                      {meal.calories} ккал
+                      {meal.calories} {t('stats.kcal')}
                     </span>
                     <span
                       className={`text-[10px] ${isDark ? 'text-white/25' : 'text-slate-200'}`}
@@ -130,7 +132,7 @@ export const RecentItemsList = ({
                     <span
                       className={`text-[10px] ${isDark ? 'text-white/40' : 'text-slate-400'}`}
                     >
-                      Б:{meal.protein} Ж:{meal.fat} В:{meal.carbs}
+                      {t('history.p')}{meal.protein} {t('history.f')}{meal.fat} {t('history.c')}{meal.carbs}
                     </span>
                     <span
                       className={`text-[10px] ml-auto flex-shrink-0 ${
@@ -172,7 +174,7 @@ export const RecentItemsList = ({
           <Lightbulb size={18} />
         </div>
         <p className={`text-xs leading-relaxed font-medium mt-0.5 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-          Записуй всі прийоми їжі для точного підрахунку калорій
+          {t('fridge.log_hint')}
         </p>
       </div>
 

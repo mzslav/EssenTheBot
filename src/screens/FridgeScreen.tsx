@@ -23,12 +23,14 @@ import {
 import { addFavorite } from '../utils/favoritesService';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, Calculator, ScanLine, AlertCircle, X, History } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const FridgeScreen = ({
   user,
   isDark,
   themeColor = '#8b5cf6',
 }: FridgeScreenProps) => {
+  const { t } = useTranslation();
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [currentInputMode, setCurrentInputMode] = useState<InputMode>('text');
   const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
@@ -89,7 +91,7 @@ export const FridgeScreen = ({
       } else if (mode === 'voice' && typeof data === 'string') {
         response = await analyzeTextInput(data);
       } else {
-        setError('Невірний формат даних');
+        setError(t('fridge.invalid_format'));
         setIsProcessing(false);
         return;
       }
@@ -97,7 +99,7 @@ export const FridgeScreen = ({
       setAiResponse(response);
     } catch (err) {
       console.error('Помилка аналізу:', err);
-      setError(err instanceof Error ? err.message : 'Невідома помилка');
+      setError(err instanceof Error ? err.message : t('fridge.unknown_error'));
     } finally {
       setIsProcessing(false);
     }
@@ -136,7 +138,7 @@ export const FridgeScreen = ({
 
   const persistMeal = async (response: AIResponse) => {
     if (!user?.id) {
-      showToast('Потрібна авторизація для збереження', 'error');
+      showToast(t('fridge.auth_required'), 'error');
       resetAll();
       return;
     }
@@ -155,11 +157,11 @@ export const FridgeScreen = ({
       );
 
       setTodayMeals((prev) => [saved, ...prev]);
-      showToast(`${response.name} додано!`, 'success');
+      showToast(t('fridge.meal_added', { name: response.name }), 'success');
       resetAll();
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : 'Помилка збереження',
+        err instanceof Error ? err.message : t('fridge.error_saving'),
         'error'
       );
     }
@@ -174,9 +176,9 @@ export const FridgeScreen = ({
     try {
       await deleteMeal(mealId);
       setTodayMeals((prev) => prev.filter((m) => m.id !== mealId));
-      showToast('Запис видалено', 'success');
+      showToast(t('fridge.deleted'), 'success');
     } catch {
-      showToast('Помилка видалення', 'error');
+      showToast(t('fridge.error_deleting'), 'error');
     }
   };
 
@@ -187,9 +189,9 @@ export const FridgeScreen = ({
       const todayStr = new Date().toISOString().split('T')[0];
       const newMeal = { ...saved, _date: todayStr };
       setTodayMeals(prev => [newMeal, ...prev]);
-      showToast(`${meal.name} додано знову!`, 'success');
+      showToast(t('fridge.meal_added_again', { name: meal.name }), 'success');
     } catch (err) {
-      showToast('Помилка додавання', 'error');
+      showToast(t('fridge.error_adding'), 'error');
     }
   };
 
@@ -207,15 +209,15 @@ export const FridgeScreen = ({
   };
 
   const handleDirectSave = async (meal: { name: string; calories: number; protein: number; fat: number; carbs: number }) => {
-    if (!user?.id) { showToast('Потрібна авторизація', 'error'); return; }
+    if (!user?.id) { showToast(t('fridge.auth_required'), 'error'); return; }
     try {
       const saved = await saveMeal(user.id, meal, 'text');
       setTodayMeals(prev => [saved, ...prev]);
-      showToast(`${meal.name} додано!`, 'success');
+      showToast(t('fridge.meal_added', { name: meal.name }), 'success');
       setShowManual(false);
       setShowBarcode(false);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Помилка', 'error');
+      showToast(err instanceof Error ? err.message : t('fridge.error'), 'error');
     }
   };
 
@@ -223,9 +225,9 @@ export const FridgeScreen = ({
     if (!user?.id) return;
     try {
       await addFavorite(user.id, { name: meal.name, calories: meal.calories, protein: meal.protein, fat: meal.fat, carbs: meal.carbs, emoji: meal.emoji });
-      showToast(`${meal.name} додано до обраних`, 'success');
+      showToast(t('fridge.added_to_favorites', { name: meal.name }), 'success');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Помилка', 'error');
+      showToast(err instanceof Error ? err.message : t('fridge.error'), 'error');
     }
   };
 
@@ -234,9 +236,9 @@ export const FridgeScreen = ({
     try {
       const saved = await addMealToToday(user.id, meal, meal.emoji);
       setTodayMeals(prev => [saved, ...prev]);
-      showToast(`${meal.name} додано!`, 'success');
+      showToast(t('fridge.meal_added', { name: meal.name }), 'success');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Помилка', 'error');
+      showToast(err instanceof Error ? err.message : t('fridge.error'), 'error');
     }
   };
 
@@ -260,21 +262,21 @@ export const FridgeScreen = ({
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center px-1 pt-2">
-        <div>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center px-1 pt-2 gap-2">
+        <div className="flex-1 min-w-0">
           <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
-            Мій холодильник
+            {t('fridge.title')}
           </h1>
-          <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            Додай страву будь-яким способом
+          <p className={`text-xs mt-0.5 font-medium leading-tight ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+            {t('fridge.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setShowAllMeals(true)}
-          className="text-xs font-semibold transition-all active:scale-95 hover:underline flex items-center gap-1 bg-transparent px-2 py-1 rounded-lg"
+          className="text-xs font-semibold transition-all active:scale-95 hover:underline flex items-center gap-1 bg-transparent px-2 py-1 rounded-lg flex-shrink-0"
           style={{ color: themeColor }}
         >
-          <History size={14} /> Історія <ChevronRight size={14} />
+          <History size={14} /> {t('fridge.history')} <ChevronRight size={14} />
         </button>
       </motion.div>
 
@@ -284,12 +286,12 @@ export const FridgeScreen = ({
         <button onClick={() => { setShowManual(!showManual); setShowBarcode(false); }}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-semibold transition-all active:scale-[0.98] ${showManual ? 'text-white shadow-md' : isDark ? 'bg-zinc-900/50 text-zinc-400 border border-white/5' : 'bg-zinc-100 text-zinc-600 border border-zinc-200/50'}`}
           style={showManual ? { background: themeColor } : {}}>
-          <Calculator size={14} /> Ручний ввід
+          <Calculator size={14} /> {t('fridge.manual_input')}
         </button>
         <button onClick={() => { setShowBarcode(!showBarcode); setShowManual(false); }}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-semibold transition-all active:scale-[0.98] ${showBarcode ? 'text-white shadow-md' : isDark ? 'bg-zinc-900/50 text-zinc-400 border border-white/5' : 'bg-zinc-100 text-zinc-600 border border-zinc-200/50'}`}
           style={showBarcode ? { background: themeColor } : {}}>
-          <ScanLine size={14} /> Штрих-код
+          <ScanLine size={14} /> {t('fridge.barcode')}
         </button>
       </motion.div>
 
@@ -313,7 +315,7 @@ export const FridgeScreen = ({
               <AlertCircle className={`flex-shrink-0 ${isDark ? 'text-red-400' : 'text-red-500'}`} size={20} />
               <div className="flex-1">
                 <h4 className={`text-xs font-bold mb-0.5 ${isDark ? 'text-red-400' : 'text-red-900'}`}>
-                  Помилка
+                  {t('fridge.error')}
                 </h4>
                 <p className={`text-[10px] font-medium leading-relaxed ${isDark ? 'text-red-300' : 'text-red-700'}`}>
                   {error}

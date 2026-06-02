@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { InputMode } from '../types/types';
 import { motion } from 'motion/react';
 import { Calculator, Save } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ManualMealBuilderProps {
   isDark: boolean;
@@ -12,6 +13,7 @@ interface ManualMealBuilderProps {
 }
 
 export const ManualMealBuilder = ({ isDark, themeColor, onSaveDirect, isProcessing }: ManualMealBuilderProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -48,7 +50,7 @@ export const ManualMealBuilder = ({ isDark, themeColor, onSaveDirect, isProcessi
         <div className="flex items-center gap-2 mb-2">
           <Calculator size={18} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} />
           <h3 className={`text-base font-bold tracking-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
-            Ручний ввід
+            {t('fridge.manual_input')}
           </h3>
         </div>
 
@@ -56,7 +58,7 @@ export const ManualMealBuilder = ({ isDark, themeColor, onSaveDirect, isProcessi
           type="text"
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder="Назва страви (напр: Куряча грудка)"
+          placeholder={t('manual.name_placeholder')}
           className={inputClass}
           disabled={isProcessing}
         />
@@ -64,7 +66,7 @@ export const ManualMealBuilder = ({ isDark, themeColor, onSaveDirect, isProcessi
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              Калорії (ккал) *
+              {t('manual.calories')}
             </label>
             <input type="number" inputMode="decimal" value={calories} onChange={e => setCalories(e.target.value)}
               placeholder="350" className={`${inputClass} text-lg`} disabled={isProcessing} />
@@ -72,21 +74,21 @@ export const ManualMealBuilder = ({ isDark, themeColor, onSaveDirect, isProcessi
           
           <div>
             <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              Білки (г)
+              {t('manual.protein')}
             </label>
             <input type="number" inputMode="decimal" value={protein} onChange={e => setProtein(e.target.value)}
               placeholder="25" className={inputClass} disabled={isProcessing} />
           </div>
           <div>
             <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              Жири (г)
+              {t('manual.fat')}
             </label>
             <input type="number" inputMode="decimal" value={fat} onChange={e => setFat(e.target.value)}
               placeholder="12" className={inputClass} disabled={isProcessing} />
           </div>
           <div className="col-span-2">
             <label className={`block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              Вуглеводи (г)
+              {t('manual.carbs')}
             </label>
             <input type="number" inputMode="decimal" value={carbs} onChange={e => setCarbs(e.target.value)}
               placeholder="40" className={inputClass} disabled={isProcessing} />
@@ -99,7 +101,7 @@ export const ManualMealBuilder = ({ isDark, themeColor, onSaveDirect, isProcessi
           className="mt-2 w-full py-4 rounded-2xl text-sm font-bold text-white shadow-lg disabled:opacity-40 transition-all active:scale-95 flex items-center justify-center gap-2"
           style={{ background: themeColor }}
         >
-          {isProcessing ? 'Додавання...' : <><Save size={18} strokeWidth={3} /> Додати страву</>}
+          {isProcessing ? t('manual.adding') : <><Save size={18} strokeWidth={3} /> {t('manual.add_meal')}</>}
         </button>
       </div>
     </motion.div>

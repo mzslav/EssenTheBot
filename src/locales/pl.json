@@ -1,0 +1,311 @@
+{
+  "welcome": {
+    "greeting": "Witamy",
+    "glad_to_see": "Cieszymy się, że jesteś w naszej aplikacji!",
+    "account_found": "Twoje konto zostało pomyślnie znalezione w naszej bazie danych.",
+    "already_registered": "Jesteś już zarejestrowany",
+    "start": "Zacznij"
+  },
+  "form": {
+    "step": "Krok",
+    "from": "z",
+    "next": "Dalej",
+    "finish": "Zakończ",
+    "choose_option": "Wybierz opcję",
+    "fields": {
+      "gender": {
+        "label": "Płeć",
+        "options": {
+          "male": "Mężczyzna 👨",
+          "female": "Kobieta 👩"
+        }
+      },
+      "age": {
+        "label": "Ile masz lat?",
+        "placeholder": "Na przykład: 28"
+      },
+      "weight": {
+        "label": "Twoja obecna waga",
+        "placeholder": "W kilogramach (np. 78.5)"
+      },
+      "height": {
+        "label": "Twój wzrost",
+        "placeholder": "W centymetrach (np. 175)"
+      },
+      "goal": {
+        "label": "Jaki jest twój cel?",
+        "options": {
+          "lose": "Schudnąć (-300–500 kcal) 🔥",
+          "gain": "Zbudować mięśnie (+300–500 kcal) 💪",
+          "maintain": "Utrzymać wagę (±100 kcal)"
+        }
+      },
+      "activity": {
+        "label": "Poziom aktywności",
+        "options": {
+          "sedentary": "Siedzący (biuro, mało ruchu) 🪑",
+          "light": "Lekka aktywność (1-3 treningi/tydzień) 🚶",
+          "moderate": "Umiarkowana (3-5 treningów/tydzień) 🏃",
+          "high": "Wysoka (6-7 treningów/tydzień) 🔥"
+        }
+      }
+    }
+  },
+  "results": {
+    "personal_data": "Dane osobowe",
+    "physical_metrics": "Wskaźniki fizyczne",
+    "current_goal": "Obecny cel",
+    "activity": "Aktywność",
+    "notifications": "Powiadomienia",
+    "water_reminder": "Przypomnienie o wodzie",
+    "water_reminder_desc": "Co 3 godziny (9:00–21:00)",
+    "meal_reminder": "Przypomnienie o posiłku",
+    "meal_reminder_desc": "Obiad (13:00) i kolacja (19:00)",
+    "start_work": "Rozpocznij",
+    "saving": "Zapisywanie...",
+    "save_changes": "Zapisz zmiany",
+    "age": "Wiek",
+    "weight_kg": "Waga (kg)",
+    "height_cm": "Wzrost (cm)",
+    "language": "Język",
+    "change_language": "Zmień język",
+    "delete_account": "Usuń konto",
+    "delete_account_confirm": "Czy na pewno chcesz usunąć swoje konto? Wszystkie twoje dane zostaną bezpowrotnie utracone.",
+    "delete": "Usuń",
+    "cancel": "Anuluj",
+    "kg": "kg",
+    "cm": "cm",
+    "account": "Konto",
+    "goals": {
+      "lose": {
+        "label": "Schudnięcie",
+        "desc": "-300–500 kcal"
+      },
+      "maintain": {
+        "label": "Utrzymanie",
+        "desc": "±100 kcal"
+      },
+      "gain": {
+        "label": "Masa mięśniowa",
+        "desc": "+300–500 kcal"
+      }
+    },
+    "activities": {
+      "sedentary": {
+        "label": "Siedzący",
+        "desc": "Biuro, mało ruchu"
+      },
+      "light": {
+        "label": "Lekka",
+        "desc": "1–3 treningi/tydz."
+      },
+      "moderate": {
+        "label": "Umiarkowana",
+        "desc": "3–5 treningów/tydz."
+      },
+      "high": {
+        "label": "Wysoka",
+        "desc": "6–7 treningów/tydz."
+      }
+    }
+  },
+  "weight_tracking": {
+    "title": "Śledzenie wagi",
+    "hide": "Ukryj",
+    "add_record": "+ Zapisz",
+    "weight_kg": "Waga (kg)",
+    "note": "Notatka",
+    "note_placeholder": "Po treningu",
+    "saving": "Zapisywanie...",
+    "save": "Zapisz",
+    "current": "Obecna",
+    "change": "Zmiana",
+    "range": "Zakres",
+    "chart_title": "Wykres wagi",
+    "no_data_title": "Brak danych o wadze",
+    "no_data_desc": "Brak wpisów wagi. Dodaj pierwszy!",
+    "history": "Historia"
+  },
+  "main": {
+    "no_data": "Brak danych, zapisz profil przed użyciem aplikacji",
+    "hi": "Cześć",
+    "user_default": "Użytkownik",
+    "report": "Raport",
+    "today": "Dzisiaj",
+    "consumed_calories": "Spożyte kalorie",
+    "water": "Woda",
+    "l": "l",
+    "ml": "ml",
+    "past_day_data": "Dane z minionego dnia (tylko do odczytu)",
+    "activity_bmr": "Aktywność (BMR: {{bmr}})"
+  },
+  "stats": {
+    "analytics": "Analityka",
+    "tabs": {
+      "nutrition": "Odżywianie",
+      "water": "Woda",
+      "workouts": "Treningi",
+      "body": "Ciało"
+    },
+    "days_7": "7 dni",
+    "days_30": "30 dni",
+    "avg_calories": "Średnie kalorie",
+    "goal_kcal": "cel: {{tdee}} kcal",
+    "active_days": "Aktywne dni",
+    "out_of_days": "z {{total}} dni",
+    "calorie_trend": "Trend kalorii",
+    "macros_g": "Makroskładniki (g)",
+    "protein": "Białko",
+    "fat": "Tłuszcze",
+    "carbs": "Węglowodany",
+    "avg_per_day": "Średnio/dzień",
+    "goal_l": "l · cel: {{target}} l",
+    "goal_reached": "Cel osiągnięty",
+    "out_of_active": "z {{active}} aktywnych",
+    "water_by_days": "Woda na dni",
+    "workouts_count": "Treningi",
+    "volume": "Objętość",
+    "volume_total": "ogólnie",
+    "activity_pct": "Aktywność",
+    "days_pct": "dni",
+    "workout_volume_kg": "Objętość treningowa (kg)",
+    "bmi_title": "Wskaźnik masy ciała (BMI)",
+    "category": "Kategoria",
+    "ideal_weight": "Idealna waga",
+    "target_macros": "Docelowe makro",
+    "g": "g",
+    "kcal": "kcal",
+    "bmi": {
+      "underweight": "Niedowaga",
+      "normal": "Norma",
+      "overweight": "Nadwaga",
+      "obesity": "Otyłość"
+    }
+  },
+  "report": {
+    "weekly": "Tygodniowy",
+    "monthly": "Miesięczny",
+    "error_generation": "Błąd generowania raportu: {{error}}",
+    "title": "Raport aktywności",
+    "generating": "Generowanie raportu...",
+    "no_data": "Brak danych za ten okres",
+    "copied": "Skopiowano",
+    "copy": "Kopiuj",
+    "share": "Udostępnij",
+    "download_csv": "Pobierz CSV"
+  },
+  "fridge": {
+    "auth_required": "Autoryzacja wymagana do zapisu",
+    "meal_added": "Dodano {{name}}!",
+    "error_saving": "Błąd zapisywania",
+    "deleted": "Usunięto wpis",
+    "error_deleting": "Błąd usuwania",
+    "meal_added_again": "Dodano ponownie {{name}}!",
+    "error_adding": "Błąd dodawania",
+    "added_to_favorites": "Dodano {{name}} do ulubionych",
+    "error": "Błąd",
+    "title": "Moja Lodówka",
+    "subtitle": "Dodaj posiłek w dowolny sposób",
+    "history": "Historia",
+    "manual_input": "Wpisywanie ręczne",
+    "barcode": "Kod kreskowy",
+    "invalid_format": "Nieprawidłowy format danych",
+    "unknown_error": "Nieznany błąd",
+    "recently_added": "Ostatnio dodane",
+    "all_today": "Wszystkie dzisiaj",
+    "empty_today": "Nic jeszcze dzisiaj nie dodano.",
+    "log_hint": "Zapisuj wszystkie posiłki dla dokładnego liczenia kalorii",
+    "quick_add": "Szybkie dodawanie"
+  },
+  "input": {
+    "photo": "Zdjęcie",
+    "voice": "Głos",
+    "text": "Tekst",
+    "camera_error": "Nie udało się uzyskać dostępu do kamery",
+    "choose_photo_source": "Wybierz źródło zdjęcia",
+    "take_or_upload": "Zrób zdjęcie lub prześlij z galerii",
+    "take_photo": "Zrób zdjęcie",
+    "choose_from_gallery": "Wybierz z galerii",
+    "loading": "Ładowanie...",
+    "change_photo": "Zmień zdjęcie",
+    "add_description": "Dodaj opis (opcjonalnie)",
+    "processing": "Przetwarzanie...",
+    "recognize_meal": "Rozpoznaj posiłek",
+    "mic_error": "Nie udało się uzyskać dostępu do mikrofonu",
+    "preparing": "Przygotowywanie...",
+    "transcription_error": "Transkrypcja nie powiodła się: {{msg}}\nSpróbuj mówić wyraźniej, przez 3+ sekundy, sprawdź mikrofon.",
+    "recording": "Nagrywanie głosu...",
+    "tap_to_record": "Naciśnij, aby nagrać wiadomość głosową",
+    "stop_recording": "Zatrzymaj nagrywanie",
+    "start_recording": "Rozpocznij nagrywanie",
+    "recognized_text": "Rozpoznany tekst (możesz edytować):",
+    "enter_text": "Wpisz tekst ręcznie:",
+    "placeholder_voice": "Na przykład: Kurczak z ryżem 200g",
+    "placeholder_text": "Opisz co zjadłeś, na przykład:\nKurczak z ryżem 200g, sałatka warzywna...",
+    "ai_hint": "AI automatycznie rozpozna posiłek i obliczy kalorie"
+  },
+  "history": {
+    "today": "Dzisiaj",
+    "yesterday": "Wczoraj",
+    "error_loading": "Nie udało się pobrać rekordów",
+    "meal_added": "Dodano {{name}} do diety!",
+    "title": "Wszystkie rekordy",
+    "total_meals": "{{count}} posiłków ogółem",
+    "empty": "Brak rekordów.\nDodaj swój pierwszy posiłek!",
+    "add_to_today": "Dodaj na dzisiaj",
+    "p": "B:",
+    "f": "T:",
+    "c": "W:"
+  },
+  "manual": {
+    "name_placeholder": "Nazwa (np. Pierś z kurczaka)",
+    "calories": "Kalorie (kcal) *",
+    "protein": "Białko (g)",
+    "fat": "Tłuszcz (g)",
+    "carbs": "Węglowodany (g)",
+    "adding": "Dodawanie...",
+    "add_meal": "Dodaj posiłek"
+  },
+  "barcode": {
+    "camera_error": "Kamera niedostępna",
+    "not_found": "Nie znaleziono produktu",
+    "search_error": "Błąd wyszukiwania",
+    "default_product": "Produkt",
+    "title": "Skaner kodów kreskowych",
+    "hint": "Skieruj kamerę na kod kreskowy",
+    "scan_btn": "Skanuj",
+    "searching": "Szukam...",
+    "try_again": "Spróbuj ponownie",
+    "code_label": "Kod: ",
+    "kcal": "Kcal",
+    "protein": "Białko",
+    "fat": "Tłuszcz",
+    "carbs": "Węglow.",
+    "per_100g": "/100g",
+    "portion": "Porcja (g)",
+    "reset": "Zresetuj",
+    "add": "Dodaj"
+  },
+  "common": {
+    "cancel": "Anuluj",
+    "saving": "Zapisywanie...",
+    "save": "Zapisz",
+    "edit": "Edytuj",
+    "delete_record": "Usuń rekord",
+    "add_to_today_long": "Dodaj do dzisiejszej diety",
+    "add_favorite": "Do ulubionych",
+    "macros": "Makroskładniki",
+    "error_saving": "Błąd zapisywania",
+    "confirm_delete": "Na pewno usunąć?"
+  },
+  "ai_response": {
+    "recognized": "AI rozpoznało:",
+    "click_to_edit": "Naciśnij liczby, aby edytować",
+    "clarifying_questions": "Pytania doprecyzowujące (opcjonalnie)",
+    "answer_placeholder": "Twoja odpowiedź...",
+    "refining": "Doprecyzowywanie...",
+    "add_with_clarifications": "Dodaj z doprecyzowaniem",
+    "adding": "Dodawanie...",
+    "add_to_fridge": "Dodaj do lodówki"
+  }
+}

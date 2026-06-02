@@ -46,14 +46,14 @@ export const AIResponseSection = ({
       ...aiResponse,
       ...editedMacros
     };
-    
+
     console.log('Відправка з відредагованими даними:', updatedResponse);
     onSubmitWithout();
   };
 
   return (
     <div className="space-y-3 animate-fadeIn">
-      <div 
+      <div
         className="rounded-3xl p-5 text-white relative overflow-hidden shadow-xl"
         style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}
       >
@@ -65,7 +65,7 @@ export const AIResponseSection = ({
             AI розпізнав:
           </p>
           <h3 className="text-lg font-bold mb-4 text-white">{aiResponse.name}</h3>
-          
+
           <div className="grid grid-cols-4 gap-3 mb-2">
             <div className="text-center">
               <input
@@ -104,7 +104,7 @@ export const AIResponseSection = ({
               <div className="text-[9px] text-white/70 font-medium mt-0.5">вуглев.</div>
             </div>
           </div>
-          
+
           <p className="text-[9px] text-white/50 text-center mt-2">
             Натисни на цифри щоб змінити значення
           </p>
@@ -112,9 +112,8 @@ export const AIResponseSection = ({
       </div>
 
       {aiResponse.clarifyingQuestions.length > 0 && (
-        <div className={`rounded-2xl p-4 border space-y-3 ${
-          isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100 shadow-sm'
-        }`}>
+        <div className={`rounded-2xl p-4 border space-y-3 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100 shadow-sm'
+          }`}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-base">🤔</span>
             <h4 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -133,11 +132,10 @@ export const AIResponseSection = ({
                 onChange={(e) => handleClarifyingAnswer(index, e.target.value)}
                 placeholder="Твоя відповідь..."
                 disabled={isProcessing}
-                className={`w-full rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
-                  isDark 
-                    ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20' 
+                className={`w-full rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${isDark
+                    ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20'
                     : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
-                }`}
+                  }`}
               />
             </div>
           ))}
@@ -146,7 +144,7 @@ export const AIResponseSection = ({
             onClick={() => onSubmitWithClarifications(selectedAnswers)}
             disabled={isProcessing}
             className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
-            style={{ 
+            style={{
               background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)`,
               color: 'white'
             }}
@@ -160,7 +158,7 @@ export const AIResponseSection = ({
         onClick={handleSubmitWithEdits}
         disabled={isProcessing}
         className="w-full py-5 rounded-2xl transition-all active:scale-[0.98] shadow-lg disabled:opacity-50"
-        style={{ 
+        style={{
           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
           border: 'none'
         }}

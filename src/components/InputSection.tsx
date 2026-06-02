@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { InputMode } from '../types/types';
 import { Camera, Mic, Type, Image as ImageIcon, Play, Pause, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface InputSectionProps {
   isDark: boolean;
@@ -19,6 +20,7 @@ export const InputSection = ({
   onSubmit,
   isProcessing
 }: InputSectionProps) => {
+  const { t } = useTranslation();
   return (
     <>
       <div className="flex gap-2">
@@ -36,7 +38,7 @@ export const InputSection = ({
           }`}
           style={inputMode === 'photo' ? { color: themeColor } : {}}
         >
-          <Camera size={14} /> Фото
+          <Camera size={14} /> {t('input.photo')}
         </button>
         <button
           onClick={() => setInputMode('voice')}
@@ -52,7 +54,7 @@ export const InputSection = ({
           }`}
           style={inputMode === 'voice' ? { color: themeColor } : {}}
         >
-          <Mic size={14} /> Голос
+          <Mic size={14} /> {t('input.voice')}
         </button>
         <button
           onClick={() => setInputMode('text')}
@@ -68,7 +70,7 @@ export const InputSection = ({
           }`}
           style={inputMode === 'text' ? { color: themeColor } : {}}
         >
-          <Type size={14} /> Текст
+          <Type size={14} /> {t('input.text')}
         </button>
       </div>
 
@@ -114,6 +116,7 @@ interface InputComponentProps {
 }
 
 const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponentProps) => {
+  const { t } = useTranslation();
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [photoText, setPhotoText] = useState('');
   const [photoSource, setPhotoSource] = useState<'none' | 'camera' | 'gallery'>('none');
@@ -143,7 +146,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
       }
     } catch (error) {
       console.error('Помилка доступу до камери:', error);
-      alert('Не вдалося отримати доступ до камери');
+      alert(t('input.camera_error'));
       setPhotoSource('none');
     }
   };
@@ -203,10 +206,10 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
             <Camera size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
           </div>
           <h3 className={`text-sm font-bold mb-1 ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
-            Обери джерело фото
+            {t('input.choose_photo_source')}
           </h3>
           <p className={`text-[10px] uppercase font-semibold tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            Зроби фото або завантаж з галереї
+            {t('input.take_or_upload')}
           </p>
         </div>
 
@@ -218,7 +221,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
               isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
             }`}
           >
-            <Camera size={16} /> Зробити фото
+            <Camera size={16} /> {t('input.take_photo')}
           </button>
           <button
             onClick={() => {
@@ -229,7 +232,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
               isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
             }`}
           >
-            <ImageIcon size={16} /> Вибрати з галереї
+            <ImageIcon size={16} /> {t('input.choose_from_gallery')}
           </button>
           <input
             ref={fileInputRef}
@@ -265,7 +268,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center flex flex-col items-center">
                 <ImageIcon size={40} className="mb-3 text-zinc-500 opacity-50" />
-                <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">Завантаження...</p>
+                <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">{t('input.loading')}</p>
               </div>
             </div>
           )
@@ -281,7 +284,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
               disabled={isProcessing}
               className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-xs font-semibold disabled:opacity-50"
             >
-              Змінити фото
+              {t('input.change_photo')}
             </button>
           </>
         )}
@@ -292,7 +295,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
           type="text"
           value={photoText}
           onChange={(e) => setPhotoText(e.target.value)}
-          placeholder="Додай опис (опційно)"
+          placeholder={t('input.add_description')}
           disabled={isProcessing}
           className={`w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
             isDark 
@@ -307,7 +310,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
             className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95 shadow-lg disabled:opacity-50"
             style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}
           >
-            {isProcessing ? 'Обробка...' : 'Розпізнати страву'}
+            {isProcessing ? t('input.processing') : t('input.recognize_meal')}
           </button>
         )}
       </div>
@@ -317,6 +320,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
 };
 
 const VoiceInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponentProps) => {
+  const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -365,7 +369,7 @@ const VoiceInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
 
     } catch (error) {
       console.error('Помилка запису:', error);
-      alert('Не вдалося отримати доступ до мікрофона');
+      alert(t('input.mic_error'));
     }
   };
 
@@ -381,7 +385,7 @@ const VoiceInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
 
 const handleTranscribe = async (blob: Blob) => {
   setIsTranscribing(true);
-  setTranscriptionProgress('Підготовка...');
+  setTranscriptionProgress(t('input.preparing'));
   
   try {
     const { transcribeAudio } = await import('../utils/assemblyAIService');
@@ -391,9 +395,9 @@ const handleTranscribe = async (blob: Blob) => {
     setTranscribedText(text);
   } catch (error: any) {
     console.error('Помилка транскрипції:', error);
-    const msg = error.message || 'Невідома помилка';
+    const msg = error.message || t('fridge.unknown_error');
     setTranscriptionProgress('');
-    alert(`Транскрипція не вдалася: ${msg}\nСпробуй говорити чіткіше, 3+ сек, перевір мікрофон.`);
+    alert(t('input.transcription_error', { msg }));
     setTranscribedText('');
   } finally {
     setIsTranscribing(false);
@@ -471,7 +475,7 @@ const handleTranscribe = async (blob: Blob) => {
           )}
           
           <p className={`text-xs text-center ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
-            {isRecording ? 'Запис голосу...' : 'Натисни для запису голосового повідомлення'}
+            {isRecording ? t('input.recording') : t('input.tap_to_record')}
           </p>
           
           <button
@@ -482,7 +486,7 @@ const handleTranscribe = async (blob: Blob) => {
             }`}
             style={!isRecording ? { background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` } : {}}
           >
-            {isRecording ? 'Зупинити запис' : 'Почати запис'}
+            {isRecording ? t('input.stop_recording') : t('input.start_recording')}
           </button>
         </>
       ) : (
@@ -550,13 +554,13 @@ const handleTranscribe = async (blob: Blob) => {
               <div className={`rounded-xl p-3 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
                 <p className={`text-xs mb-2 font-semibold ${isDark ? 'text-white/70' : 'text-slate-600'}`}>
                   {transcribedText 
-                    ? 'Розпізнаний текст (можеш відредагувати):' 
-                    : 'Введіть текст вручну:'}
+                    ? t('input.recognized_text') 
+                    : t('input.enter_text')}
                 </p>
                 <textarea
                   value={transcribedText}
                   onChange={(e) => setTranscribedText(e.target.value)}
-                  placeholder="Наприклад: Курка з рисом 200г"
+                  placeholder={t('input.placeholder_voice')}
                   disabled={isProcessing}
                   className={`w-full h-24 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
                     isDark 
@@ -572,7 +576,7 @@ const handleTranscribe = async (blob: Blob) => {
                 className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95 shadow-lg disabled:opacity-50"
                 style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}
               >
-                {isProcessing ? 'Обробка...' : 'Розпізнати страву'}
+                {isProcessing ? t('input.processing') : t('input.recognize_meal')}
               </button>
             </>
           )}
@@ -583,6 +587,7 @@ const handleTranscribe = async (blob: Blob) => {
 };
 
 const TextInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponentProps) => {
+  const { t } = useTranslation();
   const [inputText, setInputText] = useState('');
 
   const handleSubmit = () => {
@@ -596,8 +601,7 @@ const TextInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponen
       <textarea
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
-        placeholder="Опиши що ти з'їв, наприклад:
-Курка з рисом 200г, овочевий салат..."
+        placeholder={t('input.placeholder_text')}
         disabled={isProcessing}
         className={`w-full h-24 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
           isDark 
@@ -611,10 +615,10 @@ const TextInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponen
         className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-all active:scale-95 shadow-lg"
         style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}
       >
-        {isProcessing ? 'Обробка...' : 'Розпізнати страву'}
+        {isProcessing ? t('input.processing') : t('input.recognize_meal')}
       </button>
       <p className={`text-[9px] text-center ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
-        AI розпізнає страву та порахує калорії автоматично
+        {t('input.ai_hint')}
       </p>
     </div>
   );

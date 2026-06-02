@@ -3,6 +3,7 @@ import type { TelegramUser } from '../types/types';
 import supabase from '../supabase/supabase-client';
 import { useFadeIn } from '../utils/useFadeIn';
 import { Star, Rocket, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WelcomeScreenProps {
   user?: TelegramUser;
@@ -12,6 +13,7 @@ interface WelcomeScreenProps {
 }
 
 export const WelcomeScreen = ({ user, isDark, themeColor = '#8b5cf6', onStart }: WelcomeScreenProps) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
 
@@ -65,7 +67,7 @@ export const WelcomeScreen = ({ user, isDark, themeColor = '#8b5cf6', onStart }:
         </div>
 
         <div style={fadeIn.style(2)} className="text-center">
-          <span className={`text-lg font-medium ${isDark ? 'text-gray-400' : 'text-slate-500'} mb-1 block`}>Вітаємо</span>
+          <span className={`text-lg font-medium ${isDark ? 'text-gray-400' : 'text-slate-500'} mb-1 block`}>{t('welcome.greeting')}</span>
           <h2 className="text-3xl font-black tracking-tight break-words leading-tight pb-1" style={{ color: themeColor }}>
             {firstName}!
           </h2>
@@ -81,14 +83,14 @@ export const WelcomeScreen = ({ user, isDark, themeColor = '#8b5cf6', onStart }:
         </div>
 
         <p style={fadeIn.style(4)} className={`text-center ${isDark ? 'text-white/70' : 'text-slate-700'} text-sm leading-relaxed flex items-center justify-center gap-1.5`}>
-          {isRegistered ? 'Ваш обліковий запис успішно знайдено в нашій базі даних.' : <>Раді бачити вас у нашому додатку! <Rocket size={16} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} /></>}
+          {isRegistered ? t('welcome.account_found') : <>{t('welcome.glad_to_see')} <Rocket size={16} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} /></>}
         </p>
 
         <div style={fadeIn.style(5)} className="mt-6">
           {isRegistered ? (
             <div className={`w-full py-3 px-5 rounded-xl border flex items-center justify-center gap-2 ${isDark ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-green-50 border-green-200 text-green-600'}`}>
               <CheckCircle2 size={18} />
-              <span className="font-semibold">Ви вже зареєстровані</span>
+              <span className="font-semibold">{t('welcome.already_registered')}</span>
             </div>
           ) : (
             <button
@@ -96,7 +98,7 @@ export const WelcomeScreen = ({ user, isDark, themeColor = '#8b5cf6', onStart }:
               className="w-full text-white font-semibold py-3 px-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
               style={{ background: `linear-gradient(135deg, ${themeColor}, #6366f1)` }}
             >
-              Почати
+              {t('welcome.start')}
             </button>
           )}
         </div>

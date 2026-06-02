@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 import type { MealRecord } from '../utils/supabaseService';
 import supabase from '../supabase/supabase-client';
 import { Utensils, X, Pencil, Star, Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import i18n from '../i18n';
 
 interface MealDetailModalProps {
   meal: MealRecord;
@@ -16,15 +19,15 @@ interface MealDetailModalProps {
   isToday?: boolean;
 }
 
-function formatDisplayDate(dateStr?: string): string {
+function formatDisplayDate(dateStr?: string, lang: string = 'uk'): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function formatDisplayTime(createdAt: string): string {
+function formatDisplayTime(createdAt: string, lang: string = 'uk'): string {
   const d = new Date(createdAt);
-  return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
 }
 
 const MacroBar = ({ label, value, total, color, isDark }: { label: string; value: number; total: number; color: string; isDark: boolean }) => {
@@ -45,6 +48,7 @@ const MacroBar = ({ label, value, total, color, isDark }: { label: string; value
 export const MealDetailModal = ({
   meal, isDark, themeColor, onClose, onDelete, onAddToToday, onFavorite, onUpdate,
 }: MealDetailModalProps) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     name: meal.name,
@@ -76,7 +80,7 @@ export const MealDetailModal = ({
       }
       setIsEditing(false);
     } catch (e: any) {
-      alert('Помилка збереження: ' + e.message);
+      alert(`${t('common.error_saving')}: ` + e.message);
     } finally {
       setIsSaving(false);
     }
@@ -93,15 +97,15 @@ export const MealDetailModal = ({
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-md rounded-t-3xl p-6 pb-10 space-y-4 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
+        className={`w-full max-w-md rounded-t-3xl p-5 pb-8 space-y-3.5 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
         style={{ animation: 'mealModalUp 0.35s cubic-bezier(0.34,1.4,0.64,1)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className={`w-10 h-1 rounded-full mx-auto ${isDark ? 'bg-white/20' : 'bg-slate-200'}`} />
 
         <div className="flex items-start gap-4">
-          <div className={`w-16 h-16 rounded-3xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`} style={{ color: themeColor }}>
-            {meal.emoji && !['🍔','🍕','🥤','🍽️'].includes(meal.emoji) ? <span className="text-3xl">{meal.emoji}</span> : <Utensils size={28} />}
+          <div className={`w-16 h-16 rounded-3xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-slate-100'}`} style={{ color: themeColor }}>
+            <Utensils size={28} strokeWidth={2.5} />
           </div>
           <div className="flex-1 min-w-0">
             {isEditing ? (
@@ -110,8 +114,8 @@ export const MealDetailModal = ({
             ) : (
               <h2 className={`text-lg font-black leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{meal.name}</h2>
             )}
-            <p className={`text-xs mt-1 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
-              {meal._date ? formatDisplayDate(meal._date) : ''} · {formatDisplayTime(meal.created_at)}
+            <p className={`text-[11px] mt-1 ${isDark ? 'text-white/50' : 'text-slate-400'}`}>
+              {meal._date ? formatDisplayDate(meal._date, i18n.language) : ''} · {formatDisplayTime(meal.created_at, i18n.language)}
             </p>
           </div>
           <button onClick={onClose} className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isDark ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-zinc-500 hover:text-zinc-900'}`}><X size={16} strokeWidth={3} /></button>
@@ -121,10 +125,10 @@ export const MealDetailModal = ({
           <div className="space-y-3">
             <div className="grid grid-cols-4 gap-2 text-center">
               {[
-                { key: 'calories' as const, label: 'ккал', color: themeColor },
-                { key: 'protein' as const, label: 'білки', color: '#10b981' },
-                { key: 'fat' as const, label: 'жири', color: '#f59e0b' },
-                { key: 'carbs' as const, label: 'вуглев.', color: '#3b82f6' },
+                { key: 'calories' as const, label: t('stats.kcal'), color: themeColor },
+                { key: 'protein' as const, label: t('stats.protein'), color: '#10b981' },
+                { key: 'fat' as const, label: t('stats.fat'), color: '#f59e0b' },
+                { key: 'carbs' as const, label: t('stats.carbs'), color: '#3b82f6' },
               ].map(f => (
                 <div key={f.key} className={`rounded-xl p-2 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
                   <input type="number" value={editData[f.key]}
@@ -135,67 +139,67 @@ export const MealDetailModal = ({
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setIsEditing(false)} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold ${isDark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-700'}`}>Скасувати</button>
+              <button onClick={() => setIsEditing(false)} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold ${isDark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-700'}`}>{t('common.cancel')}</button>
               <button onClick={handleSaveEdit} disabled={isSaving}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
                 style={{ background: `linear-gradient(135deg, ${themeColor}, #6366f1)` }}>
-                {isSaving ? 'Збереження...' : 'Зберегти'}
+                {isSaving ? t('common.saving') : t('common.save')}
               </button>
             </div>
           </div>
         ) : (
           <>
-            <div className="rounded-2xl p-4 text-center text-white" style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}>
-              <div className="text-5xl font-black tracking-tight">{meal.calories}</div>
-              <div className="text-sm font-semibold opacity-80 mt-1">ккал</div>
+            <div className="rounded-2xl p-3 text-center text-white" style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}>
+              <div className="text-4xl font-black tracking-tight">{meal.calories}</div>
+              <div className="text-xs font-semibold opacity-90 mt-0.5">{t('stats.kcal')}</div>
             </div>
 
-            <div className={`rounded-2xl p-4 space-y-3 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-              <p className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-white/40' : 'text-slate-400'}`}>Макронутрієнти</p>
-              <MacroBar label="Білки" value={meal.protein} total={totalMacros} color="#10b981" isDark={isDark} />
-              <MacroBar label="Жири" value={meal.fat} total={totalMacros} color="#f59e0b" isDark={isDark} />
-              <MacroBar label="Вуглеводи" value={meal.carbs} total={totalMacros} color="#6366f1" isDark={isDark} />
+            <div className={`rounded-2xl p-3 space-y-2 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${isDark ? 'text-white/50' : 'text-slate-400'}`}>{t('common.macros')}</p>
+              <MacroBar label={t('stats.protein')} value={meal.protein} total={totalMacros} color="#10b981" isDark={isDark} />
+              <MacroBar label={t('stats.fat')} value={meal.fat} total={totalMacros} color="#f59e0b" isDark={isDark} />
+              <MacroBar label={t('stats.carbs')} value={meal.carbs} total={totalMacros} color="#6366f1" isDark={isDark} />
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Білки', value: meal.protein, color: '#10b981', bg: isDark ? 'bg-green-500/10' : 'bg-green-50' },
-                { label: 'Жири', value: meal.fat, color: '#f59e0b', bg: isDark ? 'bg-yellow-500/10' : 'bg-yellow-50' },
-                { label: 'Вуглеводи', value: meal.carbs, color: '#6366f1', bg: isDark ? 'bg-purple-500/10' : 'bg-purple-50' },
+                { label: t('stats.protein'), value: meal.protein, color: '#10b981', bg: isDark ? 'bg-green-500/10' : 'bg-green-50' },
+                { label: t('stats.fat'), value: meal.fat, color: '#f59e0b', bg: isDark ? 'bg-yellow-500/10' : 'bg-yellow-50' },
+                { label: t('stats.carbs'), value: meal.carbs, color: '#6366f1', bg: isDark ? 'bg-purple-500/10' : 'bg-purple-50' },
               ].map(({ label, value, color, bg }) => (
-                <div key={label} className={`${bg} rounded-xl p-3 text-center`}>
-                  <div className="text-xl font-black" style={{ color }}>{value}г</div>
-                  <div className={`text-[10px] font-semibold mt-0.5 ${isDark ? 'text-white/50' : 'text-slate-500'}`}>{label}</div>
+                <div key={label} className={`${bg} rounded-xl p-2.5 text-center`}>
+                  <div className="text-lg font-black" style={{ color }}>{value}г</div>
+                  <div className={`text-[10px] font-semibold mt-0.5 ${isDark ? 'text-white/60' : 'text-slate-500'}`}>{label}</div>
                 </div>
               ))}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex gap-2">
                 <button onClick={() => setIsEditing(true)}
-                  className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
-                  <Pencil size={16} /> Редагувати
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>
+                  <Pencil size={14} /> {t('common.edit')}
                 </button>
                 {onFavorite && (
                   <button onClick={() => { onFavorite(meal); onClose(); }}
-                    className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${isDark ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'}`}>
-                    <Star size={16} /> В обрані
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${isDark ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'}`}>
+                    <Star size={14} /> {t('common.add_favorite')}
                   </button>
                 )}
               </div>
 
               {showAddToday && (
                 <button onClick={() => { onAddToToday && onAddToToday(meal); onClose(); }}
-                  className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                  className="w-full py-3 rounded-xl text-xs font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #6366f1 100%)` }}>
-                  <Plus size={18} strokeWidth={3} /> Додати до сьогоднішнього раціону
+                  <Plus size={16} strokeWidth={3} /> {t('common.add_to_today_long')}
                 </button>
               )}
 
               {onDelete && (
                 <button onClick={() => { onDelete(meal.id); onClose(); }}
-                  className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'}`}>
-                  <Trash2 size={16} /> Видалити запис
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'}`}>
+                  <Trash2 size={14} /> {t('common.delete_record')}
                 </button>
               )}
             </div>
