@@ -86,8 +86,8 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = async (closeModal = false) => {
-    if (!user?.id) return;
+  const handleSave = async (closeModal = false): Promise<boolean> => {
+    if (!user?.id) return false;
     setIsSaving(true);
     try {
       const weight = Number(formData.weight);
@@ -165,9 +165,11 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
 
       if (error) throw error;
       if (closeModal) setActiveModal(null);
+      return true;
 
     } catch (error: any) {
       alert(`Помилка: ${error.message}`);
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -292,7 +294,10 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
         {Object.keys(initialData).length > 0 && (
           <div style={fadeIn.style(4)} className="pt-4">
             <button
-              onClick={() => onComplete()}
+              onClick={async () => {
+                const success = await handleSave();
+                if (success) onComplete();
+              }}
               className="w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg transition-transform active:scale-95 hover:shadow-xl"
               style={{ background: `linear-gradient(135deg, ${themeColor}, #6366f1)` }}
             >
