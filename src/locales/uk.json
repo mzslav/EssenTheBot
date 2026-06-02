@@ -16,37 +16,37 @@
       "gender": {
         "label": "Стать",
         "options": {
-          "male": "Чоловік 👨",
-          "female": "Жінка 👩"
+          "male": "Чоловік",
+          "female": "Жінка"
         }
       },
       "age": {
         "label": "Скільки тобі років?",
-        "placeholder": "Наприклад: 28"
+        "placeholder": "28"
       },
       "weight": {
         "label": "Твоя вага зараз",
-        "placeholder": "У кілограмах (наприклад: 78.5)"
+        "placeholder": "78.5"
       },
       "height": {
         "label": "Твій зріст",
-        "placeholder": "У сантиметрах (наприклад: 175)"
+        "placeholder": "175"
       },
       "goal": {
         "label": "Яка твоя мета?",
         "options": {
-          "lose": "Схуднути (-300–500 ккал) 🔥",
-          "gain": "Набрати м'язи (+300–500 ккал) 💪",
+          "lose": "Схуднути (-300–500 ккал)",
+          "gain": "Набрати м'язи (+300–500 ккал)",
           "maintain": "Підтримувати форму (±100 ккал)"
         }
       },
       "activity": {
         "label": "Рівень активності",
         "options": {
-          "sedentary": "Сидячий (офіс, мало руху) 🪑",
-          "light": "Легка активність (1–3 трен/тиждень) 🚶",
-          "moderate": "Середня (3–5 тренувань) 🏃",
-          "high": "Висока (6–7 тренувань) 🔥"
+          "sedentary": "Сидячий (офіс, мало руху)",
+          "light": "Легка активність (1–3 трен/тиждень)",
+          "moderate": "Середня (3–5 тренувань)",
+          "high": "Висока (6–7 тренувань)"
         }
       }
     }
@@ -158,7 +158,7 @@
     "protein": "Білки",
     "fat": "Жири",
     "carbs": "Вуглеводи",
-    "avg_per_day": "Середньо/день",
+    "avg_per_day": "В сер. за день",
     "goal_l": "л · ціль: {{target}} л",
     "goal_reached": "Ціль досягнута",
     "out_of_active": "з {{active}} активних",
@@ -242,7 +242,15 @@
     "enter_text": "Введіть текст вручну:",
     "placeholder_voice": "Наприклад: Курка з рисом 200г",
     "placeholder_text": "Опиши що ти з'їв, наприклад:\nКурка з рисом 200г, овочевий салат...",
-    "ai_hint": "AI розпізнає страву та порахує калорії автоматично"
+    "ai_hint": "AI розпізнає страву та порахує калорії автоматично",
+    "processing_audio": "Обробка аудіо...",
+    "uploading": "Завантаження...",
+    "recognizing": "Розпізнавання...",
+    "error_audio_processing": "Не вдалося обробити аудіо",
+    "error_audio_too_short": "Запис занадто короткий або порожній (говорити 3+ сек)",
+    "error_voice_not_recognized": "Не вдалося розпізнати голос. Говоріть чіткіше або довше.",
+    "error_api": "Помилка API",
+    "error_timeout": "Таймаут обробки"
   },
   "history": {
     "today": "Сьогодні",
@@ -306,6 +314,115 @@
     "refining": "Уточнюємо...",
     "add_with_clarifications": "Додати з уточненнями",
     "adding": "Додаємо...",
-    "add_to_fridge": "Додати в холодильник"
+    "add_to_fridge": "Додати в холодильник",
+    "kcal": "ккал",
+    "protein": "білки",
+    "fat": "жири",
+    "carbs": "вуглев."
+  },
+  "workout": {
+    "title": "Тренування",
+    "subtitle": "Відстежуй свій прогрес",
+    "journal": "Журнал",
+    "plans": "Плани",
+    "progress": "Прогрес",
+    "journal_tab": {
+      "no_exercises_in_session": "Немає вправ у цьому тренуванні",
+      "back": "Назад",
+      "sets_count": "підх",
+      "exercise_index": "Вправа {{current}} з {{total}}",
+      "watch_technique": "Дивитись техніку",
+      "last_time": "Минулий раз",
+      "max_kg": "макс кг",
+      "reps_count": "повт",
+      "volume_kg": "об'єм кг",
+      "first_time": "Перше виконання вправи",
+      "sets": "Підходи",
+      "track_results": "Трекай свої результати",
+      "kg": "КГ",
+      "reps": "ПОВТ",
+      "rir": "RIR",
+      "prev": "← Назад",
+      "next": "Наступна →",
+      "finish": "Завершити",
+      "rest": "Відпочинок",
+      "no_exercises": "Немає вправ",
+      "choose_plan_title": "Обери план",
+      "no_plans_for_picker": "Немає планів. Створи їх у вкладці «Плани»",
+      "training_not_planned": "Тренування не заплановано",
+      "no_trainings": "Не було тренувань",
+      "choose_plan_desc": "Вибери готовий план та почни роботу",
+      "choose_plan_btn": "Обрати план",
+      "workout": "Тренування",
+      "completed": "Завершено",
+      "in_progress": "В процесі",
+      "planned": "План",
+      "exercise_list": "Список вправ",
+      "view_results": "Переглянути результати",
+      "continue": "Продовжити",
+      "start": "Розпочати",
+      "add_more_workouts": "Додати ще тренування",
+      "today": "Сьогодні"
+    },
+    "plans_tab": {
+      "delete_plan_confirm": "Видалити цей план?",
+      "edit_exercise": "Редагувати вправу",
+      "new_exercise": "Нова вправа",
+      "exercise_name": "Назва *",
+      "exercise_name_placeholder": "Наприклад: Жим лежачи",
+      "video_instruction": "Відео інструкція (YouTube)",
+      "video_placeholder": "https://youtube.com/...",
+      "sets": "Підходи",
+      "reps": "Повтори",
+      "weight": "Вага (кг)",
+      "rir": "RIR (Повторення в резерві)",
+      "notes": "Нотатка",
+      "notes_placeholder": "Важливі деталі техніки...",
+      "cancel": "Скасувати",
+      "saving": "Збереження...",
+      "save": "Зберегти",
+      "no_exercises": "Немає вправ",
+      "add_first_exercise": "Додай першу вправу, щоб почати формувати тренування",
+      "add_exercise": "+ Додати вправу",
+      "watch_technique": "Дивитись техніку",
+      "create_new_plan": "Створити новий план",
+      "edit_plan": "Редагувати план",
+      "new_plan": "Новий план тренувань",
+      "plan_name": "Назва плану *",
+      "plan_name_placeholder": "Наприклад: Full Body, День ніг...",
+      "muscle_group": "Група м'язів (необов'язково)",
+      "muscle_group_placeholder": "Наприклад: Спина + Біцепс",
+      "no_plans": "Немає планів",
+      "create_first_plan": "Створи свій перший план тренувань, щоб додати в нього вправи.",
+      "updated_at": "Оновлено:"
+    },
+    "progress_tab": {
+      "max_weight": "Макс. вага (кг)",
+      "total_volume": "Об'єм (кг)",
+      "total_reps": "Повторення",
+      "choose_plan": "Обери план тренувань",
+      "choose_plan_placeholder": "Обери план…",
+      "choose_exercise": "Обери вправу",
+      "choose_exercise_placeholder": "Обери вправу…",
+      "no_data": "Немає даних",
+      "no_data_desc": "Виконай цю вправу хоча б один раз на тренуванні, щоб побачити графік.",
+      "workouts": "Тренувань",
+      "max_volume": "Макс. об'єм",
+      "max_weight_short": "Макс. вага",
+      "all_reps": "Всі повтори",
+      "total_volume_short": "Загальний об'єм",
+      "history": "Історія результатів",
+      "max_tag": "макс",
+      "reps_tag": "повт",
+      "volume_tag": "об'єм",
+      "kg_tag": "кг",
+      "choose_exercise_desc": "Вибери план і вправу вище, щоб побачити графік та історію прогресу."
+    }
+  },
+  "nav": {
+    "main": "Головна",
+    "fridge": "Меню",
+    "workout": "Спорт",
+    "profile": "Профіль"
   }
 }

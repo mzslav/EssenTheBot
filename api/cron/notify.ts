@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const supabaseResp = await fetch(`${SUPABASE_URL}/rest/v1/users?notify_water=eq.true&select=telegram_user_id,first_name,notify_meals,waterPerDay`, {
+    const supabaseResp = await fetch(`${SUPABASE_URL}/rest/v1/users?or=(notify_water.eq.true,notify_meals.eq.true)&select=telegram_user_id,first_name,notify_meals,notify_water,waterPerDay,language`, {
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -29,25 +29,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const users = await supabaseResp.json();
     let sent = 0;
 
+    const translations: any = {
+      uk: {
+        water: (name: string, water: string) => `💧 Не забудь випити воду, ${name}!\n\nТвоя ціль: ${water}л на день.`,
+        meal_13: (name: string) => `🍽️ Час записати обід, ${name}!\n\nВідкрий додаток та додай страву.`,
+        meal_19: (name: string) => `🍽️ Час записати вечерю, ${name}!\n\nВідкрий додаток та додай страву.`
+      },
+      en: {
+        water: (name: string, water: string) => `💧 Don't forget to drink water, ${name}!\n\nYour goal: ${water}L per day.`,
+        meal_13: (name: string) => `🍽️ Time to log your lunch, ${name}!\n\nOpen the app and add your meal.`,
+        meal_19: (name: string) => `🍽️ Time to log your dinner, ${name}!\n\nOpen the app and add your meal.`
+      },
+      pl: {
+        water: (name: string, water: string) => `💧 Nie zapomnij wypić wody, ${name}!\n\nTwój cel: ${water}L dziennie.`,
+        meal_13: (name: string) => `🍽️ Czas zapisać obiad, ${name}!\n\nOtwórz aplikację i dodaj posiłek.`,
+        meal_19: (name: string) => `🍽️ Czas zapisać kolację, ${name}!\n\nOtwórz aplikację i dodaj posiłek.`
+      },
+      ru: {
+        water: (name: string, water: string) => `💧 Не забудь выпить воду, ${name}!\n\nТвоя цель: ${water}л в день.`,
+        meal_13: (name: string) => `🍽️ Время записать обед, ${name}!\n\nОткрой приложение и добавь блюдо.`,
+        meal_19: (name: string) => `🍽️ Время записать ужин, ${name}!\n\nОткрой приложение и добавь блюдо.`
+      }
+    };
+
     for (const user of users) {
       const hour = new Date().getHours();
+      const lang = user.language || 'uk';
+      const t = translations[lang] || translations['uk'];
 
       if (user.notify_water && hour >= 9 && hour <= 21 && hour % 3 === 0) {
-        await sendTelegramMessage(
-          BOT_TOKEN,
-          user.telegram_user_id,
-          `💧 Не забудь випити воду, ${user.first_name}!\n\nТвоя ціль: ${((user.waterPerDay || 2500) / 1000).toFixed(1)}л на день.`
-        );
+        const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
+        await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
         sent++;
       }
 
       if (user.notify_meals && (hour === 13 || hour === 19)) {
-        const mealType = hour === 13 ? 'обід' : 'вечерю';
-        await sendTelegramMessage(
-          BOT_TOKEN,
-          user.telegram_user_id,
-          `🍽️ Час записати ${mealType}, ${user.first_name}!\n\nВідкрий додаток та додай страву.`
-        );
+        const mealMsg = hour === 13 ? t.meal_13(user.first_name) : t.meal_19(user.first_name);
+        await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, mealMsg);
         sent++;
       }
     }

@@ -88,16 +88,16 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = async (closeModal = false): Promise<boolean> => {
+  const handleSave = async (closeModal = false, overrides?: Partial<FormData>): Promise<boolean> => {
     if (!user?.id) return false;
     setIsSaving(true);
     try {
-      const weight = Number(formData.weight);
-      const height = Number(formData.height);
-      const age = Number(formData.age);
-      const gender = formData.gender || 'Чоловік 👨';
-      const activityStr = formData.activity as string;
-      const goalStr = formData.goal as string;
+      const weight = Number(overrides?.weight ?? formData.weight);
+      const height = Number(overrides?.height ?? formData.height);
+      const age = Number(overrides?.age ?? formData.age);
+      const gender = overrides?.gender ?? formData.gender ?? 'Чоловік 👨';
+      const activityStr = (overrides?.activity ?? formData.activity) as string;
+      const goalStr = (overrides?.goal ?? formData.goal) as string;
 
       let activityMultiplier = 1.2;
       if (activityStr.includes('Сидячий')) activityMultiplier = 1.2;
@@ -163,6 +163,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
         waterPerDay, BMI, BMICategory,
         notify_water: notifyWater,
         notify_meals: notifyMeals,
+        language: i18n.language,
       }, { onConflict: 'telegram_user_id' });
 
       if (error) throw error;
@@ -392,7 +393,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                     {GOAL_OPTIONS.map(opt => {
                       const isSelected = (formData.goal as string)?.includes(opt.fullValue.replace(/ .*/, ''));
                       return (
-                        <button key={opt.id} onClick={() => { handleChange('goal', opt.fullValue); handleSave(true); }}
+                        <button key={opt.id} onClick={() => { handleChange('goal', opt.fullValue); handleSave(true, { goal: opt.fullValue }); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
                           style={isSelected ? { borderColor: themeColor } : {}}
                         >
@@ -416,7 +417,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                     {ACTIVITY_OPTIONS.map(opt => {
                       const isSelected = (formData.activity as string)?.includes(opt.fullValue.replace(/ \(.*/, ''));
                       return (
-                        <button key={opt.id} onClick={() => { handleChange('activity', opt.fullValue); handleSave(true); }}
+                        <button key={opt.id} onClick={() => { handleChange('activity', opt.fullValue); handleSave(true, { activity: opt.fullValue }); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
                           style={isSelected ? { borderColor: themeColor } : {}}
                         >

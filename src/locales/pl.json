@@ -16,37 +16,37 @@
       "gender": {
         "label": "Płeć",
         "options": {
-          "male": "Mężczyzna 👨",
-          "female": "Kobieta 👩"
+          "male": "Mężczyzna",
+          "female": "Kobieta"
         }
       },
       "age": {
         "label": "Ile masz lat?",
-        "placeholder": "Na przykład: 28"
+        "placeholder": "28"
       },
       "weight": {
         "label": "Twoja obecna waga",
-        "placeholder": "W kilogramach (np. 78.5)"
+        "placeholder": "78.5"
       },
       "height": {
         "label": "Twój wzrost",
-        "placeholder": "W centymetrach (np. 175)"
+        "placeholder": "175"
       },
       "goal": {
         "label": "Jaki jest twój cel?",
         "options": {
-          "lose": "Schudnąć (-300–500 kcal) 🔥",
-          "gain": "Zbudować mięśnie (+300–500 kcal) 💪",
+          "lose": "Schudnąć (-300–500 kcal)",
+          "gain": "Zbudować mięśnie (+300–500 kcal)",
           "maintain": "Utrzymać wagę (±100 kcal)"
         }
       },
       "activity": {
         "label": "Poziom aktywności",
         "options": {
-          "sedentary": "Siedzący (biuro, mało ruchu) 🪑",
-          "light": "Lekka aktywność (1-3 treningi/tydzień) 🚶",
-          "moderate": "Umiarkowana (3-5 treningów/tydzień) 🏃",
-          "high": "Wysoka (6-7 treningów/tydzień) 🔥"
+          "sedentary": "Siedzący (biuro, mało ruchu)",
+          "light": "Lekka aktywność (1-3 treningi/tydzień)",
+          "moderate": "Umiarkowana (3-5 treningów/tydzień)",
+          "high": "Wysoka (6-7 treningów/tydzień)"
         }
       }
     }
@@ -158,12 +158,12 @@
     "protein": "Białko",
     "fat": "Tłuszcze",
     "carbs": "Węglowodany",
-    "avg_per_day": "Średnio/dzień",
+    "avg_per_day": "Śr. na dzień",
     "goal_l": "l · cel: {{target}} l",
     "goal_reached": "Cel osiągnięty",
     "out_of_active": "z {{active}} aktywnych",
     "water_by_days": "Woda na dni",
-    "workouts_count": "Treningi",
+    "workouts_count": "Treningów",
     "volume": "Objętość",
     "volume_total": "ogólnie",
     "activity_pct": "Aktywność",
@@ -242,7 +242,15 @@
     "enter_text": "Wpisz tekst ręcznie:",
     "placeholder_voice": "Na przykład: Kurczak z ryżem 200g",
     "placeholder_text": "Opisz co zjadłeś, na przykład:\nKurczak z ryżem 200g, sałatka warzywna...",
-    "ai_hint": "AI automatycznie rozpozna posiłek i obliczy kalorie"
+    "ai_hint": "AI automatycznie rozpozna posiłek i obliczy kalorie",
+    "processing_audio": "Przetwarzanie audio...",
+    "uploading": "Przesyłanie...",
+    "recognizing": "Rozpoznawanie...",
+    "error_audio_processing": "Nie udało się przetworzyć audio",
+    "error_audio_too_short": "Nagranie jest zbyt krótkie (mów przez 3+ sek)",
+    "error_voice_not_recognized": "Nie udało się rozpoznać głosu. Mów wyraźniej lub dłużej.",
+    "error_api": "Błąd API",
+    "error_timeout": "Przekroczono czas przetwarzania"
   },
   "history": {
     "today": "Dzisiaj",
@@ -306,6 +314,115 @@
     "refining": "Doprecyzowywanie...",
     "add_with_clarifications": "Dodaj z doprecyzowaniem",
     "adding": "Dodawanie...",
-    "add_to_fridge": "Dodaj do lodówki"
+    "add_to_fridge": "Dodaj do lodówki",
+    "kcal": "kcal",
+    "protein": "białko",
+    "fat": "tłuszcze",
+    "carbs": "węglow."
+  },
+  "workout": {
+    "title": "Treningi",
+    "subtitle": "Śledź swoje postępy",
+    "journal": "Dziennik",
+    "plans": "Plany",
+    "progress": "Progres",
+    "journal_tab": {
+      "no_exercises_in_session": "Brak ćwiczeń w tym treningu",
+      "back": "Wróć",
+      "sets_count": "serie",
+      "exercise_index": "Ćwiczenie {{current}} z {{total}}",
+      "watch_technique": "Obejrzyj technikę",
+      "last_time": "Ostatnim razem",
+      "max_kg": "max kg",
+      "reps_count": "powt",
+      "volume_kg": "obj kg",
+      "first_time": "Pierwsze wykonanie tego ćwiczenia",
+      "sets": "Serie",
+      "track_results": "Śledź swoje wyniki",
+      "kg": "KG",
+      "reps": "POWT",
+      "rir": "RIR",
+      "prev": "← Wstecz",
+      "next": "Dalej →",
+      "finish": "Zakończ",
+      "rest": "Odpoczynek",
+      "no_exercises": "Brak ćwiczeń",
+      "choose_plan_title": "Wybierz plan",
+      "no_plans_for_picker": "Brak planów. Utwórz je w zakładce «Plany»",
+      "training_not_planned": "Nie zaplanowano treningu",
+      "no_trainings": "Brak treningów",
+      "choose_plan_desc": "Wybierz gotowy plan i zacznij ćwiczyć",
+      "choose_plan_btn": "Wybierz plan",
+      "workout": "Trening",
+      "completed": "Zakończono",
+      "in_progress": "W trakcie",
+      "planned": "Plan",
+      "exercise_list": "Lista ćwiczeń",
+      "view_results": "Zobacz wyniki",
+      "continue": "Kontynuuj",
+      "start": "Rozpocznij",
+      "add_more_workouts": "Dodaj kolejny trening",
+      "today": "Dzisiaj"
+    },
+    "plans_tab": {
+      "delete_plan_confirm": "Usunąć ten plan?",
+      "edit_exercise": "Edytuj ćwiczenie",
+      "new_exercise": "Nowe ćwiczenie",
+      "exercise_name": "Nazwa *",
+      "exercise_name_placeholder": "Np.: Wyciskanie sztangi",
+      "video_instruction": "Instrukcja wideo (YouTube)",
+      "video_placeholder": "https://youtube.com/...",
+      "sets": "Serie",
+      "reps": "Powtórzenia",
+      "weight": "Waga (kg)",
+      "rir": "RIR (Powt. w rezerwie)",
+      "notes": "Notatka",
+      "notes_placeholder": "Ważne szczegóły techniki...",
+      "cancel": "Anuluj",
+      "saving": "Zapisywanie...",
+      "save": "Zapisz",
+      "no_exercises": "Brak ćwiczeń",
+      "add_first_exercise": "Dodaj pierwsze ćwiczenie, aby rozpocząć tworzenie treningu",
+      "add_exercise": "+ Dodaj ćwiczenie",
+      "watch_technique": "Obejrzyj technikę",
+      "create_new_plan": "Utwórz nowy plan",
+      "edit_plan": "Edytuj plan",
+      "new_plan": "Nowy plan treningowy",
+      "plan_name": "Nazwa planu *",
+      "plan_name_placeholder": "Np.: Full Body, Leg Day...",
+      "muscle_group": "Grupa mięśniowa (opcjonalnie)",
+      "muscle_group_placeholder": "Np.: Plecy + Biceps",
+      "no_plans": "Brak planów",
+      "create_first_plan": "Utwórz swój pierwszy plan treningowy, aby dodać ćwiczenia.",
+      "updated_at": "Zaktualizowano:"
+    },
+    "progress_tab": {
+      "max_weight": "Max waga (kg)",
+      "total_volume": "Objętość (kg)",
+      "total_reps": "Powtórzenia",
+      "choose_plan": "Wybierz plan treningowy",
+      "choose_plan_placeholder": "Wybierz plan…",
+      "choose_exercise": "Wybierz ćwiczenie",
+      "choose_exercise_placeholder": "Wybierz ćwiczenie…",
+      "no_data": "Brak danych",
+      "no_data_desc": "Wykonaj to ćwiczenie przynajmniej raz na treningu, aby zobaczyć wykres.",
+      "workouts": "Treningów",
+      "max_volume": "Max objętość",
+      "max_weight_short": "Max waga",
+      "all_reps": "Wszystkie powt.",
+      "total_volume_short": "Całkowita objętość",
+      "history": "Historia wyników",
+      "max_tag": "max",
+      "reps_tag": "powt",
+      "volume_tag": "obj",
+      "kg_tag": "kg",
+      "choose_exercise_desc": "Wybierz plan i ćwiczenie powyżej, aby zobaczyć wykres i historię postępów."
+    }
+  },
+  "nav": {
+    "main": "Główna",
+    "fridge": "Menu",
+    "workout": "Sport",
+    "profile": "Profil"
   }
 }

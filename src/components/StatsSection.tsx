@@ -87,11 +87,11 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
     try {
       const days = range === '7' ? last7Days() : last30Days();
 
-      if (activeTab === 'nutrition' || activeTab === 'water') {
-        const { data: uData } = await supabase
-          .from('users').select('id').eq('telegram_user_id', user.id).single();
-        if (!uData) return;
+      const { data: uData } = await supabase
+        .from('users').select('id').eq('telegram_user_id', user.id).single();
+      if (!uData) return;
 
+      if (activeTab === 'nutrition' || activeTab === 'water') {
         const { data: logs } = await supabase
           .from('daily_logs')
           .select('date, water_ml')
@@ -132,7 +132,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
         const { data: sessions } = await supabase
           .from('workout_sessions')
           .select('date, id, status')
-          .eq('user_id', user.id)
+          .eq('user_id', uData.id)
           .gte('date', days[0])
           .lte('date', days[days.length - 1])
           .eq('status', 'completed');

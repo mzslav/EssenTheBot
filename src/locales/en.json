@@ -16,37 +16,37 @@
       "gender": {
         "label": "Gender",
         "options": {
-          "male": "Male 👨",
-          "female": "Female 👩"
+          "male": "Male",
+          "female": "Female"
         }
       },
       "age": {
         "label": "How old are you?",
-        "placeholder": "Example: 28"
+        "placeholder": "28"
       },
       "weight": {
         "label": "Your current weight",
-        "placeholder": "In kilograms (e.g., 78.5)"
+        "placeholder": "78.5"
       },
       "height": {
         "label": "Your height",
-        "placeholder": "In centimeters (e.g., 175)"
+        "placeholder": "175"
       },
       "goal": {
         "label": "What is your goal?",
         "options": {
-          "lose": "Lose weight (-300–500 kcal) 🔥",
-          "gain": "Build muscle (+300–500 kcal) 💪",
+          "lose": "Lose weight (-300–500 kcal)",
+          "gain": "Build muscle (+300–500 kcal)",
           "maintain": "Maintain weight (±100 kcal)"
         }
       },
       "activity": {
         "label": "Activity level",
         "options": {
-          "sedentary": "Sedentary (office, little movement) 🪑",
-          "light": "Light activity (1–3 workouts/week) 🚶",
-          "moderate": "Moderate (3–5 workouts/week) 🏃",
-          "high": "High (6–7 workouts/week) 🔥"
+          "sedentary": "Sedentary (office, little movement)",
+          "light": "Light activity (1–3 workouts/week)",
+          "moderate": "Moderate (3–5 workouts/week)",
+          "high": "High (6–7 workouts/week)"
         }
       }
     }
@@ -158,7 +158,7 @@
     "protein": "Protein",
     "fat": "Fat",
     "carbs": "Carbs",
-    "avg_per_day": "Avg/day",
+    "avg_per_day": "Avg per day",
     "goal_l": "l · goal: {{target}} l",
     "goal_reached": "Goal reached",
     "out_of_active": "of {{active}} active",
@@ -242,7 +242,15 @@
     "enter_text": "Enter text manually:",
     "placeholder_voice": "Example: Chicken with rice 200g",
     "placeholder_text": "Describe what you ate, for example:\nChicken with rice 200g, vegetable salad...",
-    "ai_hint": "AI will recognize the meal and calculate calories automatically"
+    "ai_hint": "AI will recognize the meal and calculate calories automatically",
+    "processing_audio": "Processing audio...",
+    "uploading": "Uploading...",
+    "recognizing": "Recognizing...",
+    "error_audio_processing": "Failed to process audio",
+    "error_audio_too_short": "Recording is too short or empty (speak for 3+ sec)",
+    "error_voice_not_recognized": "Failed to recognize voice. Speak clearer or longer.",
+    "error_api": "API Error",
+    "error_timeout": "Processing timeout"
   },
   "history": {
     "today": "Today",
@@ -306,6 +314,115 @@
     "refining": "Refining...",
     "add_with_clarifications": "Add with clarifications",
     "adding": "Adding...",
-    "add_to_fridge": "Add to fridge"
+    "add_to_fridge": "Add to fridge",
+    "kcal": "kcal",
+    "protein": "protein",
+    "fat": "fat",
+    "carbs": "carbs"
+  },
+  "workout": {
+    "title": "Workout",
+    "subtitle": "Track your progress",
+    "journal": "Journal",
+    "plans": "Plans",
+    "progress": "Progress",
+    "journal_tab": {
+      "no_exercises_in_session": "No exercises in this session",
+      "back": "Back",
+      "sets_count": "sets",
+      "exercise_index": "Exercise {{current}} of {{total}}",
+      "watch_technique": "Watch Technique",
+      "last_time": "Last time",
+      "max_kg": "max kg",
+      "reps_count": "reps",
+      "volume_kg": "vol kg",
+      "first_time": "First time doing this exercise",
+      "sets": "Sets",
+      "track_results": "Track your results",
+      "kg": "KG",
+      "reps": "REPS",
+      "rir": "RIR",
+      "prev": "← Prev",
+      "next": "Next →",
+      "finish": "Finish",
+      "rest": "Rest",
+      "no_exercises": "No exercises",
+      "choose_plan_title": "Choose a Plan",
+      "no_plans_for_picker": "No plans. Create them in the «Plans» tab",
+      "training_not_planned": "No workout planned",
+      "no_trainings": "No workouts found",
+      "choose_plan_desc": "Choose an existing plan and get started",
+      "choose_plan_btn": "Choose Plan",
+      "workout": "Workout",
+      "completed": "Completed",
+      "in_progress": "In Progress",
+      "planned": "Planned",
+      "exercise_list": "Exercise List",
+      "view_results": "View Results",
+      "continue": "Continue",
+      "start": "Start",
+      "add_more_workouts": "Add another workout",
+      "today": "Today"
+    },
+    "plans_tab": {
+      "delete_plan_confirm": "Delete this plan?",
+      "edit_exercise": "Edit Exercise",
+      "new_exercise": "New Exercise",
+      "exercise_name": "Name *",
+      "exercise_name_placeholder": "e.g., Bench Press",
+      "video_instruction": "Video Instruction (YouTube)",
+      "video_placeholder": "https://youtube.com/...",
+      "sets": "Sets",
+      "reps": "Reps",
+      "weight": "Weight (kg)",
+      "rir": "RIR (Reps in Reserve)",
+      "notes": "Notes",
+      "notes_placeholder": "Important technique details...",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save",
+      "no_exercises": "No exercises",
+      "add_first_exercise": "Add the first exercise to start building your workout",
+      "add_exercise": "+ Add Exercise",
+      "watch_technique": "Watch Technique",
+      "create_new_plan": "Create New Plan",
+      "edit_plan": "Edit Plan",
+      "new_plan": "New Workout Plan",
+      "plan_name": "Plan Name *",
+      "plan_name_placeholder": "e.g., Full Body, Leg Day...",
+      "muscle_group": "Muscle Group (optional)",
+      "muscle_group_placeholder": "e.g., Back + Biceps",
+      "no_plans": "No plans",
+      "create_first_plan": "Create your first workout plan to add exercises.",
+      "updated_at": "Updated:"
+    },
+    "progress_tab": {
+      "max_weight": "Max Weight (kg)",
+      "total_volume": "Volume (kg)",
+      "total_reps": "Reps",
+      "choose_plan": "Choose Workout Plan",
+      "choose_plan_placeholder": "Choose a plan...",
+      "choose_exercise": "Choose Exercise",
+      "choose_exercise_placeholder": "Choose an exercise...",
+      "no_data": "No data",
+      "no_data_desc": "Perform this exercise at least once to see the chart.",
+      "workouts": "Workouts",
+      "max_volume": "Max Volume",
+      "max_weight_short": "Max Weight",
+      "all_reps": "All Reps",
+      "total_volume_short": "Total Volume",
+      "history": "Result History",
+      "max_tag": "max",
+      "reps_tag": "reps",
+      "volume_tag": "vol",
+      "kg_tag": "kg",
+      "choose_exercise_desc": "Select a plan and exercise above to see the chart and progress history."
+    }
+  },
+  "nav": {
+    "main": "Home",
+    "fridge": "Menu",
+    "workout": "Sport",
+    "profile": "Profile"
   }
 }

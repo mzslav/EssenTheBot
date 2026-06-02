@@ -320,7 +320,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
 };
 
 const VoiceInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponentProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -389,13 +389,14 @@ const handleTranscribe = async (blob: Blob) => {
   
   try {
     const { transcribeAudio } = await import('../utils/assemblyAIService');
-    const text = await transcribeAudio(blob, (progress) => {
-      setTranscriptionProgress(progress);
+    const text = await transcribeAudio(blob, i18n.language, (progressKey) => {
+      setTranscriptionProgress(t(`input.${progressKey}`));
     });
     setTranscribedText(text);
   } catch (error: any) {
     console.error('Помилка транскрипції:', error);
-    const msg = error.message || t('fridge.unknown_error');
+    const isKnownError = typeof error.message === 'string' && error.message.startsWith('error_');
+    const msg = isKnownError ? t(`input.${error.message}`) : (error.message || t('fridge.unknown_error'));
     setTranscriptionProgress('');
     alert(t('input.transcription_error', { msg }));
     setTranscribedText('');

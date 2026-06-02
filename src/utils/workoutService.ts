@@ -1,4 +1,5 @@
 import supabase from '../supabase/supabase-client';
+import { getInternalUserId } from './supabaseService';
 import type {
   WorkoutPlan,
   WorkoutPlanWithExercises,
@@ -12,11 +13,12 @@ import type {
 } from '../types/types';
 
 
-export async function getPlans(userId: number): Promise<WorkoutPlan[]> {
+export async function getPlans(telegramUserId: number): Promise<WorkoutPlan[]> {
+  const internalId = await getInternalUserId(telegramUserId);
   const { data, error } = await supabase
     .from('workout_plans')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', internalId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -35,10 +37,11 @@ export async function getPlanWithExercises(planId: number): Promise<WorkoutPlanW
   return data;
 }
 
-export async function createPlan(userId: number, formData: PlanFormData): Promise<WorkoutPlan> {
+export async function createPlan(telegramUserId: number, formData: PlanFormData): Promise<WorkoutPlan> {
+  const internalId = await getInternalUserId(telegramUserId);
   const { data, error } = await supabase
     .from('workout_plans')
-    .insert({ user_id: userId, ...formData })
+    .insert({ user_id: internalId, ...formData })
     .select()
     .single();
 
@@ -64,14 +67,16 @@ export async function deletePlan(planId: number): Promise<void> {
   if (error) throw error;
 }
 
-export async function duplicatePlan(planId: number, userId: number): Promise<WorkoutPlan> {
+export async function duplicatePlan(planId: number, telegramUserId: number): Promise<WorkoutPlan> {
   const original = await getPlanWithExercises(planId);
   if (!original) throw new Error('Plan not found');
+
+  const internalId = await getInternalUserId(telegramUserId);
 
   const { data: newPlan, error: planError } = await supabase
     .from('workout_plans')
     .insert({
-      user_id: userId,
+      user_id: internalId,
       name: `${original.name} (копія)`,
       muscle_group: original.muscle_group,
     })
@@ -157,11 +162,12 @@ export async function reorderPlanExercises(orderedIds: number[]): Promise<void> 
 }
 
 
-export async function getSessionByDate(userId: number, date: string): Promise<WorkoutSession | null> {
+export async function getSessionByDate(telegramUserId: number, date: string): Promise<WorkoutSession | null> {
+  const internalId = await getInternalUserId(telegramUserId);
   const { data, error } = await supabase
     .from('workout_sessions')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', internalId)
     .eq('date', date)
     .maybeSingle();
 
@@ -200,17 +206,18 @@ export async function getSessionWithExercises(sessionId: number): Promise<Sessio
 }
 
 export async function getPreviousSession(
-  userId: number,
+  telegramUserId: number,
   planId: number,
   beforeDate: string
 ): Promise<SessionWithExercises | null> {
+  const internalId = await getInternalUserId(telegramUserId);
   const { data: sessionData, error: sessionError } = await supabase
     .from('workout_sessions')
     .select(`
       *,
       exercises:session_exercises(*)
     `)
-    .eq('user_id', userId)
+    .eq('user_id', internalId)
     .eq('plan_id', planId)
     .eq('status', 'completed')
     .lt('date', beforeDate)
@@ -239,17 +246,19 @@ export async function getPreviousSession(
 }
 
 export async function createSessionFromPlan(
-  userId: number,
+  telegramUserId: number,
   planId: number,
   date: string
 ): Promise<WorkoutSession> {
   const plan = await getPlanWithExercises(planId);
   if (!plan) throw new Error('Plan not found');
 
+  const internalId = await getInternalUserId(telegramUserId);
+
   const { data: session, error: sessionError } = await supabase
     .from('workout_sessions')
     .insert({
-      user_id: userId,
+      user_id: internalId,
       plan_id: planId,
       date,
       name: plan.name,
@@ -369,11 +378,12 @@ export function calculateVolume(sets: SessionSet[]): number {
     .reduce((sum, s) => sum + (s.weight ?? 0) * (s.reps ?? 0), 0);
 }
 
-export async function getSessionsByDate(userId: number, date: string): Promise<WorkoutSession[]> {
+export async function getSessionsByDate(telegramUserId: number, date: string): Promise<WorkoutSession[]> {
+  const internalId = await getInternalUserId(telegramUserId);
   const { data, error } = await supabase
     .from('workout_sessions')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', internalId)
     .eq('date', date)
     .order('created_at', { ascending: true });
 

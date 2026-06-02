@@ -26,7 +26,7 @@ export function getEmojiForName(name: string): string {
   return FOOD_EMOJIS[hash % FOOD_EMOJIS.length];
 }
 
-async function getInternalUserId(telegramUserId: number): Promise<number> {
+export async function getInternalUserId(telegramUserId: number): Promise<number> {
   const { data, error } = await supabase
     .from('users')
     .select('id')

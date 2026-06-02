@@ -153,9 +153,9 @@ export interface PlanFormData {
 export interface ExerciseFormData {
   name: string;
   video_url?: string;
-  sets: number;
+  sets: number | '';
   reps: string;
-  weight: number;
+  weight: number | '';
   rir: string;
   notes?: string;
 }

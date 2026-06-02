@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, Refrigerator, Dumbbell, User } from 'lucide-react';
 import type { AppScreen } from '../types/types';
+import { useTranslation } from 'react-i18next';
 
 interface BottomNavProps {
   currentScreen: AppScreen;
@@ -15,16 +16,17 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   isDark,
   themeColor 
 }) => {
+  const { t } = useTranslation();
   
   const handleNavClick = (screen: string) => {
     onNavigate(screen as AppScreen);
   };
 
   const navItems = [
-    { id: 'main', label: 'Головна', icon: <Home size={22} strokeWidth={2} /> },
-    { id: 'fridge', label: 'Меню', icon: <Refrigerator size={22} strokeWidth={2} /> },
-    { id: 'workout', label: 'Спорт', icon: <Dumbbell size={22} strokeWidth={2} /> },
-    { id: 'results', label: 'Профіль', icon: <User size={22} strokeWidth={2} /> },
+    { id: 'main', label: t('nav.main', 'Головна'), icon: <Home size={22} strokeWidth={2} /> },
+    { id: 'fridge', label: t('nav.fridge', 'Меню'), icon: <Refrigerator size={22} strokeWidth={2} /> },
+    { id: 'workout', label: t('nav.workout', 'Спорт'), icon: <Dumbbell size={22} strokeWidth={2} /> },
+    { id: 'results', label: t('nav.profile', 'Профіль'), icon: <User size={22} strokeWidth={2} /> },
   ];
 
   return (

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   notification boolean DEFAULT false,
   notify_water boolean DEFAULT false,
   notify_meals boolean DEFAULT false,
+  language text DEFAULT 'uk',
   streak_days int DEFAULT 0,
   "TDEE_Normal" numeric,
   "TDEE" numeric,

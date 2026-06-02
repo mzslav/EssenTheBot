@@ -5,9 +5,8 @@ import { getTotalsByDate, getWaterByDate, updateTodayWater } from '../utils/supa
 import { useTranslation } from 'react-i18next';
 import { StatsSection } from '../components/StatsSection';
 import { MainScreenSkeleton } from '../components/Skeleton';
-import { WeeklyReport } from '../components/WeeklyReport';
-import { Droplet, Flame, Target, ChevronLeft, ChevronRight, Activity, BarChart2 } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { Droplet, Flame, Target, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface MainScreenProps {
   user?: TelegramUser;
@@ -49,7 +48,6 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
   const { t, i18n } = useTranslation();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showReport, setShowReport] = useState(false);
 
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -192,19 +190,7 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
             <Target size={12} /> {getGoalLabel(userData.goal || '', t)}
           </p>
         </div>
-        <button
-          onClick={() => setShowReport(!showReport)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-[0.96] ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'}`}
-        >
-          <BarChart2 size={14} /> {t('main.report')}
-        </button>
       </motion.div>
-
-      <AnimatePresence>
-        {showReport && (
-          <WeeklyReport user={user} isDark={isDark} themeColor={themeColor} onClose={() => setShowReport(false)} />
-        )}
-      </AnimatePresence>
 
       <motion.div variants={itemVariants} className={`rounded-2xl p-2 flex items-center justify-between border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-100 shadow-sm'}`}>
         <button
