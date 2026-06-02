@@ -4,7 +4,7 @@ import { questions } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronRight, ChevronLeft, Check, Flame, Dumbbell, Target, 
-  Laptop, Footprints, Activity, Zap, User, Mars, Venus
+  Laptop, Footprints, Activity, Zap, Mars, Venus
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
