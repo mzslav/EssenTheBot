@@ -1,4 +1,5 @@
 import supabase from '../supabase/supabase-client';
+import i18n from '../i18n';
 
 interface ExportMeal {
   name: string;
@@ -20,15 +21,7 @@ interface ExportWeightEntry {
   weight: number;
 }
 
-async function getInternalUserId(telegramUserId: number): Promise<number> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('id')
-    .eq('telegram_user_id', telegramUserId)
-    .single();
-  if (error || !data) throw new Error('Користувача не знайдено');
-  return data.id as number;
-}
+import { getInternalUserId } from './supabaseService';
 
 export async function exportMealsForPeriod(
   telegramUserId: number,
@@ -100,7 +93,7 @@ export function generateTextReport(
   period: string
 ): string {
   const lines: string[] = [];
-  lines.push(`[Звіт] EssenTheBot — ${period}`);
+  lines.push(`[${i18n.t('main.report')}] EssenTheBot — ${period}`);
   lines.push('═══════════════════════');
 
   if (meals.length > 0) {
@@ -112,9 +105,9 @@ export function generateTextReport(
     const uniqueDays = new Set(meals.map(m => m.date)).size;
 
     lines.push('');
-    lines.push(`🥗 Харчування (${meals.length} записів, ${uniqueDays} днів)`);
-    lines.push(`  Середні калорії: ${avgCal} ккал/день`);
-    lines.push(`  Загальні Б/Ж/В: ${totalProt}г / ${totalFat}г / ${totalCarbs}г`);
+    lines.push(`🥗 ${i18n.t('stats.tabs.nutrition')} (${meals.length}, ${uniqueDays} ${i18n.t('stats.days_pct')})`);
+    lines.push(`  ${i18n.t('stats.avg_calories')}: ${avgCal} ${i18n.t('stats.kcal')}/${i18n.t('main.today').toLowerCase()}`);
+    lines.push(`  ${i18n.t('stats.macros_g')}: ${totalProt}г / ${totalFat}г / ${totalCarbs}г`);
 
     const mealCounts: Record<string, number> = {};
     meals.forEach(m => { mealCounts[m.name] = (mealCounts[m.name] || 0) + 1; });
@@ -122,7 +115,7 @@ export function generateTextReport(
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
     if (top3.length > 0) {
-      lines.push('  Топ страви:');
+      lines.push(`  Топ:`);
       top3.forEach(([name, count]) => {
         lines.push(`    • ${name} (×${count})`);
       });
@@ -132,11 +125,11 @@ export function generateTextReport(
   if (workouts.length > 0) {
     const completed = workouts.filter(w => w.status === 'completed');
     lines.push('');
-    lines.push(`💪 Тренування (${completed.length} завершених)`);
+    lines.push(`💪 ${i18n.t('workout.title')} (${completed.length} ${i18n.t('workout.journal_tab.completed').toLowerCase()})`);
     const workoutNames: Record<string, number> = {};
     completed.forEach(w => { workoutNames[w.name] = (workoutNames[w.name] || 0) + 1; });
     Object.entries(workoutNames).forEach(([name, count]) => {
-      lines.push(`  • ${name}: ${count} раз(ів)`);
+      lines.push(`  • ${name}: ${count}`);
     });
   }
 
@@ -145,14 +138,14 @@ export function generateTextReport(
     const earliest = weights[weights.length - 1];
     const diff = +(latest.weight - earliest.weight).toFixed(1);
     lines.push('');
-    lines.push('[Вага]');
-    lines.push(`  Поточна: ${latest.weight} кг`);
-    lines.push(`  Зміна: ${diff > 0 ? '+' : ''}${diff} кг`);
+    lines.push(`[${i18n.t('weight_tracking.title')}]`);
+    lines.push(`  ${i18n.t('weight_tracking.current')}: ${latest.weight} ${i18n.t('results.kg')}`);
+    lines.push(`  ${i18n.t('weight_tracking.change')}: ${diff > 0 ? '+' : ''}${diff} ${i18n.t('results.kg')}`);
   }
 
   lines.push('');
   lines.push('───────────────────────');
-  lines.push('🤖 Згенеровано EssenTheBot');
+  lines.push('🤖 EssenTheBot');
 
   return lines.join('\n');
 }
@@ -167,7 +160,7 @@ export function shareToTelegram(text: string): void {
 }
 
 export function generateCSV(meals: ExportMeal[]): string {
-  const header = 'Дата,Страва,Калорії,Білки,Жири,Вуглеводи';
+  const header = `${i18n.t('history.today')},${i18n.t('barcode.default_product')},${i18n.t('barcode.kcal')},${i18n.t('barcode.protein')},${i18n.t('barcode.fat')},${i18n.t('barcode.carbs')}`;
   const rows = meals.map(m =>
     `${m.date},"${m.name.replace(/"/g, '""')}",${m.calories},${m.protein},${m.fat},${m.carbs}`
   );

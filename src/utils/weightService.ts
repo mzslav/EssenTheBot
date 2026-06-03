@@ -9,15 +9,7 @@ export interface WeightEntry {
   created_at: string;
 }
 
-async function getInternalUserId(telegramUserId: number): Promise<number> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('id')
-    .eq('telegram_user_id', telegramUserId)
-    .single();
-  if (error || !data) throw new Error('Користувача не знайдено');
-  return data.id as number;
-}
+import { getInternalUserId } from './supabaseService';
 
 export async function addWeightEntry(
   telegramUserId: number,
@@ -37,7 +29,7 @@ export async function addWeightEntry(
     .select()
     .single();
 
-  if (error) throw new Error(`Помилка збереження ваги: ${error.message}`);
+  if (error) throw new Error(`error_saving_weight: ${error.message}`);
 
   await supabase
     .from('users')
@@ -60,7 +52,7 @@ export async function getWeightHistory(
     .order('date', { ascending: false })
     .limit(limit);
 
-  if (error) throw new Error(`Помилка завантаження: ${error.message}`);
+  if (error) throw new Error(`error_loading_weight: ${error.message}`);
   return data || [];
 }
 
@@ -86,5 +78,5 @@ export async function deleteWeightEntry(entryId: number): Promise<void> {
     .from('weight_logs')
     .delete()
     .eq('id', entryId);
-  if (error) throw new Error(`Помилка видалення: ${error.message}`);
+  if (error) throw new Error(`error_deleting: ${error.message}`);
 }

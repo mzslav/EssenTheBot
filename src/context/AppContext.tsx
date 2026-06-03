@@ -6,12 +6,14 @@ interface AppContextType {
   isDark: boolean;
   themeColor: string;
   colorScheme: 'light' | 'dark';
+  setAppTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
 const AppContext = createContext<AppContextType>({
   isDark: true,
   themeColor: '#8b5cf6',
   colorScheme: 'dark',
+  setAppTheme: () => {},
 });
 
 export const useAppContext = () => useContext(AppContext);
@@ -31,7 +33,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
     setUser(telegramUser);
 
-    const scheme = window.Telegram?.WebApp?.colorScheme || 'dark';
+    const savedTheme = localStorage.getItem('app-theme') as 'light' | 'dark' | null;
+    const scheme = savedTheme || window.Telegram?.WebApp?.colorScheme || 'dark';
     setColorScheme(scheme);
 
     const params = window.Telegram?.WebApp?.themeParams;
@@ -46,6 +49,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const isDark = colorScheme === 'dark';
 
+  const setAppTheme = (theme: 'light' | 'dark' | 'system') => {
+    if (theme === 'system') {
+      localStorage.removeItem('app-theme');
+      setColorScheme(window.Telegram?.WebApp?.colorScheme || 'dark');
+    } else {
+      localStorage.setItem('app-theme', theme);
+      setColorScheme(theme);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -53,6 +66,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         isDark,
         themeColor: themeParams.button_color,
         colorScheme,
+        setAppTheme,
       }}
     >
       {children}

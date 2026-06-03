@@ -18,7 +18,7 @@ type ProgressMetric = 'max_weight' | 'total_volume' | 'total_reps';
 
 export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTabProps) => {
   const { t } = useTranslation();
-  
+
   const METRIC_LABELS: Record<ProgressMetric, string> = {
     max_weight: t('workout.progress_tab.max_weight', 'Макс. вага (кг)'),
     total_volume: t('workout.progress_tab.total_volume', 'Об\'єм (кг)'),
@@ -78,7 +78,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
       <div className={`px-4 py-3 rounded-2xl shadow-xl text-xs border ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-zinc-100 text-zinc-900'}`}>
         <p className={`font-bold mb-1.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>{label}</p>
         <p className="font-black text-sm flex items-center gap-1.5" style={{ color: themeColor }}>
-           <Activity size={14} /> {METRIC_LABELS[metric]}: {payload[0].value}
+          <Activity size={14} /> {METRIC_LABELS[metric]}: {payload[0].value}
         </p>
       </div>
     );
@@ -88,8 +88,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
 
   return (
     <div className="space-y-4 pb-20">
-      
-      {/* Selection Area */}
+
       <div style={fadeIn.style(0)} className={`rounded-3xl p-5 border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200 shadow-sm'}`}>
         <div className="space-y-4">
           <div>
@@ -127,14 +126,13 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
       ) : selectedExerciseId && history.length === 0 ? (
         <div style={fadeIn.style(2)} className={`rounded-3xl p-10 flex flex-col items-center justify-center text-center border border-dashed ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-300'}`}>
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
-             <TrendingUp size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
+            <TrendingUp size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
           </div>
           <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.progress_tab.no_data', 'Немає даних')}</p>
           <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.no_data_desc', 'Виконай цю вправу хоча б один раз на тренуванні, щоб побачити графік.')}</p>
         </div>
       ) : history.length > 0 ? (
         <>
-          {/* Key Stats */}
           <div style={dataFadeIn.style(0)} className="grid grid-cols-3 gap-2">
             {[
               { label: t('workout.progress_tab.workouts', 'Тренувань'), value: totalSessions, icon: <History size={14} /> },
@@ -151,7 +149,6 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
             ))}
           </div>
 
-          {/* Metric Selector */}
           <div style={dataFadeIn.style(1)} className={`rounded-2xl p-1.5 flex gap-1.5 border ${isDark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-zinc-100 border-zinc-200'}`}>
             {(Object.keys(METRIC_LABELS) as ProgressMetric[]).map(m => (
               <button key={m} onClick={() => setMetric(m)}
@@ -162,7 +159,6 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
             ))}
           </div>
 
-          {/* Chart Area */}
           <div style={dataFadeIn.style(2)} className={`rounded-3xl p-5 border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
             <div className="flex items-center gap-2 mb-6">
               <LineChartIcon size={18} className={isDark ? 'text-zinc-400' : 'text-zinc-500'} />
@@ -170,26 +166,25 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
                 {selectedExercise?.name}: {METRIC_LABELS[metric]}
               </p>
             </div>
-            
+
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
                 <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 10, fill: isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} dy={10} />
                 <YAxis tick={{ fontSize: 10, fill: isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} dx={-10} />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', strokeWidth: 2 }} />
-                <Line 
-                  type="monotone" 
-                  dataKey={metric} 
-                  stroke={themeColor} 
+                <Line
+                  type="monotone"
+                  dataKey={metric}
+                  stroke={themeColor}
                   strokeWidth={3.5}
-                  dot={{ fill: isDark ? '#18181b' : '#ffffff', stroke: themeColor, strokeWidth: 2, r: 4 }} 
-                  activeDot={{ r: 6, fill: themeColor, stroke: isDark ? '#18181b' : '#ffffff', strokeWidth: 2 }} 
+                  dot={{ fill: isDark ? '#18181b' : '#ffffff', stroke: themeColor, strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: themeColor, stroke: isDark ? '#18181b' : '#ffffff', strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* History List */}
           <div style={dataFadeIn.style(3)} className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
             <div className={`px-5 py-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
               <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.progress_tab.history', 'Історія результатів')}</p>
@@ -199,7 +194,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
                 <div key={i} className={`px-5 py-3.5 flex items-center justify-between transition-colors ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
-                       <History size={14} />
+                      <History size={14} />
                     </div>
                     <p className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{new Date(entry.date).toLocaleDateString('uk-UA')}</p>
                   </div>
@@ -216,7 +211,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
         !selectedExerciseId && (
           <div style={fadeIn.style(2)} className={`rounded-3xl p-10 flex flex-col items-center justify-center text-center border border-dashed ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-300'}`}>
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-zinc-800' : 'bg-white shadow-sm'}`}>
-               <LineChartIcon size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
+              <LineChartIcon size={28} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
             </div>
             <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.progress_tab.choose_exercise', 'Обери вправу')}</p>
             <p className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_exercise_desc', 'Вибери план і вправу вище, щоб побачити графік та історію прогресу.')}</p>

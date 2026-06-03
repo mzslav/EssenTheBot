@@ -3,6 +3,7 @@ import type { MealRecord } from '../utils/supabaseService';
 import { MealDetailModal } from './MealDetailModal';
 import { Utensils, Camera, Mic, Keyboard, Lightbulb, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatDisplayTime } from '../utils/formatters';
 
 interface RecentItemsListProps {
   meals: MealRecord[];
@@ -16,10 +17,6 @@ interface RecentItemsListProps {
   onUpdate?: (meal: MealRecord) => void;
 }
 
-function formatDisplayTime(createdAt: string): string {
-  const d = new Date(createdAt);
-  return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-}
 
 export const RecentItemsList = ({
   meals,
@@ -139,7 +136,7 @@ export const RecentItemsList = ({
                         isDark ? 'text-white/30' : 'text-slate-300'
                       }`}
                     >
-                      {formatDisplayTime(meal.created_at)}
+                      {formatDisplayTime(meal.created_at, 'uk-UA')}
                     </span>
                   </div>
                 </div>

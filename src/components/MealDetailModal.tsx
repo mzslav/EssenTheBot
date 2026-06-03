@@ -6,6 +6,7 @@ import { Utensils, X, Pencil, Star, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import i18n from '../i18n';
+import { formatDisplayTime } from '../utils/formatters';
 
 interface MealDetailModalProps {
   meal: MealRecord;
@@ -25,10 +26,6 @@ function formatDisplayDate(dateStr?: string, lang: string = 'uk'): string {
   return d.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function formatDisplayTime(createdAt: string, lang: string = 'uk'): string {
-  const d = new Date(createdAt);
-  return d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
-}
 
 const MacroBar = ({ label, value, total, color, isDark }: { label: string; value: number; total: number; color: string; isDark: boolean }) => {
   const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
