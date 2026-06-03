@@ -23,10 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (text === '/start') {
         const translations: Record<string, string> = {
-          en: `Hi, <b>${firstName}</b>!\n\nEssen is your smart companion for tracking nutrition and fitness.\nReady to build better habits? Just open the app below.`,
-          uk: `Привіт, <b>${firstName}</b>!\n\nEssen — твій розумний помічник для трекінгу харчування та фітнесу.\nГотовий будувати кращі звички? Просто відкрий додаток нижче.`,
-          pl: `Cześć, <b>${firstName}</b>!\n\nEssen to Twój inteligentny asystent do śledzenia odżywiania i kondycji.\nGotowy na lepsze nawyki? Po prostu otwórz aplikację poniżej.`,
-          ru: `Привет, <b>${firstName}</b>!\n\nEssen — твой умный помощник для трекинга питания и фитнеса.\nГотов строить лучшие привычки? Просто открой приложение ниже.`,
+          en: `✨ Hi, <b>${firstName}</b>!\n\n🍏 <i>Essen</i> is your smart companion for tracking nutrition and fitness.\n\n🚀 <b>Ready to build better habits?</b>\nJust open the app below to get started! 👇`,
+          uk: `✨ Привіт, <b>${firstName}</b>!\n\n🍏 <i>Essen</i> — твій розумний помічник для трекінгу харчування та фітнесу.\n\n🚀 <b>Готовий будувати кращі звички?</b>\nПросто відкрий додаток нижче, щоб розпочати! 👇`,
+          pl: `✨ Cześć, <b>${firstName}</b>!\n\n🍏 <i>Essen</i> to Twój inteligentny asystent do śledzenia odżywiania i kondycji.\n\n🚀 <b>Gotowy na lepsze nawyki?</b>\nPo prostu otwórz aplikację poniżej, aby zacząć! 👇`,
+          ru: `✨ Привет, <b>${firstName}</b>!\n\n🍏 <i>Essen</i> — твой умный помощник для трекинга питания и фитнеса.\n\n🚀 <b>Готов строить лучшие привычки?</b>\nПросто открой приложение ниже, чтобы начать! 👇`,
         };
 
         const welcomeText = translations[languageCode] || translations['en'];
@@ -42,10 +42,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       } else {
         const fallbackTranslations: Record<string, string> = {
-          en: `I only understand the /start command right now. Open the app to access all features!`,
-          uk: `Поки що я розумію лише команду /start. Відкрий додаток, щоб скористатися всіма функціями!`,
-          pl: `Na razie rozumiem tylko komendę /start. Otwórz aplikację, aby uzyskać dostęp do wszystkich funkcji!`,
-          ru: `Пока что я понимаю только команду /start. Открой приложение, чтобы воспользоваться всеми функциями!`,
+          en: `🤖 <i>Oops!</i> I only understand the <b>/start</b> command right now.\n\n📱 Open the app below to access all features!`,
+          uk: `🤖 <i>Ой!</i> Поки що я розумію лише команду <b>/start</b>.\n\n📱 Відкрий додаток нижче, щоб скористатися всіма функціями!`,
+          pl: `🤖 <i>Ups!</i> Na razie rozumiem tylko komendę <b>/start</b>.\n\n📱 Otwórz aplikację poniżej, aby uzyskać dostęp do wszystkich funkcji!`,
+          ru: `🤖 <i>Ой!</i> Пока что я понимаю только команду <b>/start</b>.\n\n📱 Открой приложение ниже, чтобы воспользоваться всеми функциями!`,
         };
 
         const fallbackText = fallbackTranslations[languageCode] || fallbackTranslations['en'];
