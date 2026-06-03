@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+
 
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { FormScreen } from './screens/FormScreen';
@@ -15,20 +15,42 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const AccessDeniedScreen = ({ isDark }: { isDark: boolean }) => {
-  const { t } = useTranslation();
   return (
-  <div className={`min-h-screen flex flex-col items-center justify-center p-6 text-center ${isDark ? 'text-white' : 'text-slate-800'
-    }`}>
-    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-6 text-center ${isDark ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-900'}`}>
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}>
+      </div>
+
+      <div className="relative max-w-sm w-full z-10 flex flex-col items-center">
+        <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-8 shadow-xl ${isDark ? 'bg-zinc-900 shadow-black/50 border border-white/5' : 'bg-white shadow-zinc-200/50 border border-zinc-100'}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? 'text-blue-400' : 'text-blue-500'}>
+            <path d="m22 2-7 20-4-9-9-4Z" />
+            <path d="M22 2 11 13" />
+          </svg>
+        </div>
+        
+        <h1 className="text-2xl font-bold tracking-tight mb-3">
+          Telegram Only App
+        </h1>
+        
+        <p className={`text-sm mb-10 px-4 leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+          This application is designed to run exclusively within Telegram as a Mini App. Please launch it directly from our official bot to sync your data.
+        </p>
+
+        <a 
+          href="https://t.me/EssenTheBot" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className={`w-full py-4 px-6 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg ${isDark ? 'bg-blue-600 text-white shadow-blue-900/20 hover:bg-blue-500' : 'bg-blue-500 text-white shadow-blue-500/30 hover:bg-blue-600'}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          Open @EssenTheBot
+        </a>
+      </div>
     </div>
-    <h1 className="text-2xl font-bold mb-2">{t('access_denied.title')}</h1>
-    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-      {t('access_denied.description')}
-    </p>
-  </div>
   );
 };
 
@@ -47,8 +69,6 @@ function App() {
       const tg = (window as any).Telegram?.WebApp;
       const isValidTelegram = tg && tg.initData && tg.initData.length > 0;
 
-      if (import.meta.env.DEV) { setIsTelegramEnv(true); setIsEnvChecking(false); return; }
-
       setIsTelegramEnv(!!isValidTelegram);
       setIsEnvChecking(false);
     };
@@ -62,6 +82,7 @@ function App() {
       if (isEnvChecking || !isTelegramEnv) return;
 
       if (!user?.id) {
+        setIsTelegramEnv(false);
         setIsAuthChecking(false);
         return;
       }
