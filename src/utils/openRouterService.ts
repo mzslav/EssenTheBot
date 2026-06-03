@@ -2,7 +2,7 @@ import type { AIResponse } from '../types/types';
 import i18n from '../i18n';
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-lite-001';
+const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite-preview-09-2025';
 
 interface OpenRouterMessage {
   role: 'user' | 'assistant' | 'system';
@@ -21,9 +21,7 @@ function getSystemPrompt() {
 
   return `Ти - фітнес бот-нутриціоніст, який допомагає користувачам відстежувати їжу та калорії. Твоє завдання: 1) Проаналізувати що з'їв користувач, 2) Визначити назву страви ${targetLang}, 3) Підрахувати калорії та макронутрієнти (білки, жири, вуглеводи), 4) Згенерувати 2-3 уточнюючі питання для точнішого підрахунку ${targetLang}. КРИТИЧНО ВАЖЛИВО: Відповідай ТІЛЬКИ валідним JSON без markdown форматування, без пояснень, без додаткового тексту. Формат відповіді: {"name": "Назва страви ${targetLang}", "calories": 450, "protein": 35, "fat": 12, "carbs": 48, "clarifyingQuestions": ["Питання 1?", "Питання 2?"]}. Якщо інформація недостатня - роби обґрунтовані припущення для стандартної порції.`;
 }
-
-const USE_PROXY = !import.meta.env.DEV && !OPENROUTER_API_KEY;
-
+const USE_PROXY = !import.meta.env.DEV;
 async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
   let data: any;
 

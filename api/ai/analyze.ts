@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'X-Title': 'EssenTheBot',
       },
       body: JSON.stringify({
-        model: model || process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-lite-001',
+        model: model || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite-preview-09-2025',
         messages,
         temperature: 0.3,
         max_tokens: 1500,
