@@ -53,20 +53,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     for (const user of users) {
-      const hour = new Date().getHours();
-      const lang = user.language || 'uk';
-      const t = translations[lang] || translations['uk'];
+      const hour = parseInt(
+        new Date().toLocaleString('en-US', { timeZone: 'Europe/Kyiv', hour: '2-digit', hour12: false })
+      );
 
-      if (user.notify_water && hour >= 9 && hour <= 21 && hour % 3 === 0) {
-        const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
-        await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
-        sent++;
-      }
+      for (const user of users) {
+        const lang = user.language || 'uk';
+        const t = translations[lang] || translations['uk'];
 
-      if (user.notify_meals && (hour === 13 || hour === 19)) {
-        const mealMsg = hour === 13 ? t.meal_13(user.first_name) : t.meal_19(user.first_name);
-        await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, mealMsg);
-        sent++;
+        if (hour === 10) {
+          if (user.notify_water) {
+            const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
+            await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
+            sent++;
+          }
+        }
+
+        if (hour === 19) {
+          if (user.notify_water) {
+            const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
+            await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
+            sent++;
+          }
+          if (user.notify_meals) {
+            await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.meal_19(user.first_name));
+            sent++;
+          }
+        }
       }
     }
 

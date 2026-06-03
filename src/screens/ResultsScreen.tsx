@@ -264,14 +264,12 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
             <ToggleRow
               icon={<Droplets size={18} />}
               label={t('results.water_reminder')}
-              desc={t('results.water_reminder_desc')}
               state={notifyWater}
               toggle={() => setNotifyWater(!notifyWater)}
             />
             <ToggleRow
               icon={<Utensils size={18} />}
               label={t('results.meal_reminder')}
-              desc={t('results.meal_reminder_desc')}
               state={notifyMeals}
               toggle={() => setNotifyMeals(!notifyMeals)}
             />
@@ -280,20 +278,20 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
 
         <div style={fadeIn.style(2.5)}>
           <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')} & {t('results.theme', 'Тема')}</h2>
-          
+
           <div className="flex gap-3 mb-3">
             <button onClick={() => setActiveModal('language')} className={`flex-1 rounded-2xl p-4 flex flex-row items-center gap-3 border transition-all active:scale-95 ${isDark ? 'bg-zinc-900/50 border-white/5 hover:bg-zinc-800' : 'bg-white border-zinc-200/50 hover:bg-zinc-50 shadow-sm'}`}>
               <Globe size={20} style={{ color: themeColor }} />
               <div className="text-left overflow-hidden">
-                 <p className={`text-[10px] font-bold uppercase tracking-wider truncate ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')}</p>
-                 <p className={`font-bold text-sm truncate ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{i18n.language.toUpperCase()}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-wider truncate ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')}</p>
+                <p className={`font-bold text-sm truncate ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{i18n.language.toUpperCase()}</p>
               </div>
             </button>
             <button onClick={() => setActiveModal('theme')} className={`flex-1 rounded-2xl p-4 flex flex-row items-center gap-3 border transition-all active:scale-95 ${isDark ? 'bg-zinc-900/50 border-white/5 hover:bg-zinc-800' : 'bg-white border-zinc-200/50 hover:bg-zinc-50 shadow-sm'}`}>
               {colorScheme === 'dark' ? <Moon size={20} style={{ color: themeColor }} /> : <Sun size={20} style={{ color: themeColor }} />}
               <div className="text-left overflow-hidden">
-                 <p className={`text-[10px] font-bold uppercase tracking-wider truncate ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.theme', 'Тема')}</p>
-                 <p className={`font-bold text-sm truncate ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{colorScheme === 'dark' ? t('results.theme_dark', 'Темна') : colorScheme === 'light' ? t('results.theme_light', 'Світла') : t('results.theme_system', 'Системна')}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-wider truncate ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.theme', 'Тема')}</p>
+                <p className={`font-bold text-sm truncate ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{colorScheme === 'dark' ? t('results.theme_dark', 'Темна') : colorScheme === 'light' ? t('results.theme_light', 'Світла') : t('results.theme_system', 'Системна')}</p>
               </div>
             </button>
           </div>
@@ -453,7 +451,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                     ].map(opt => {
                       const savedTheme = localStorage.getItem('app-theme');
                       const isSelected = savedTheme ? savedTheme === opt.id : opt.id === 'system';
-                      
+
                       return (
                         <button key={opt.id} onClick={() => { setAppTheme(opt.id as 'dark' | 'light' | 'system'); setActiveModal(null); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
