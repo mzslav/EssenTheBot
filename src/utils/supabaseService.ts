@@ -158,6 +158,28 @@ export async function getTodayTotals(telegramUserId: number) {
   return getTotalsByDate(telegramUserId, new Date().toISOString().split('T')[0]);
 }
 
+export async function getCaloriesByDateRange(
+  telegramUserId: number, startDate: string, endDate: string
+): Promise<Record<string, number>> {
+  const internalId = await getInternalUserId(telegramUserId);
+  const { data, error } = await supabase
+    .from('meals')
+    .select(`calories, daily_logs!inner(user_id, date)`)
+    .eq('daily_logs.user_id', internalId)
+    .gte('daily_logs.date', startDate)
+    .lte('daily_logs.date', endDate);
+    
+  if (error) throw new Error(error.message);
+  
+  const result: Record<string, number> = {};
+  (data || []).forEach((item: any) => {
+    const date = item.daily_logs.date;
+    if (!result[date]) result[date] = 0;
+    result[date] += (item.calories || 0);
+  });
+  return result;
+}
+
 export async function getWaterByDate(telegramUserId: number, date: string): Promise<number> {
   const internalId = await getInternalUserId(telegramUserId);
   const { data, error } = await supabase

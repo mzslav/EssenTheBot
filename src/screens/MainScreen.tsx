@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import type { TelegramUser, UserData } from '../types/types';
 import supabase from '../supabase/supabase-client';
-import { getTotalsByDate, getWaterByDate, updateTodayWater } from '../utils/supabaseService';
+import { getTotalsByDate, getWaterByDate, updateTodayWater, getCaloriesByDateRange } from '../utils/supabaseService';
 import { useTranslation } from 'react-i18next';
 import { StatsSection } from '../components/StatsSection';
 import { MainScreenSkeleton } from '../components/Skeleton';
-import { Droplet, Flame, Target, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { Droplet, Flame, Target, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getDateLocale } from '../utils/formatters';
 
@@ -35,15 +35,7 @@ function toDateStr(d: Date): string {
   return local.toISOString().split('T')[0];
 }
 
-function addDays(d: Date, n: number): Date {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() + n);
-  return copy;
-}
 
-function formatDisplayDate(date: Date, locale: string): string {
-  return date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
-}
 
 export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenProps) => {
   const { t, i18n } = useTranslation();
@@ -61,6 +53,28 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
   const [waterConsumed, setWaterConsumed] = useState(0);
 
   const isToday = toDateStr(viewDate) === toDateStr(todayDate);
+
+  const [weeklyData, setWeeklyData] = useState<Record<string, number>>({});
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const weekDates = useMemo(() => {
+    const week = [];
+    const baseDate = new Date(todayDate);
+    baseDate.setDate(baseDate.getDate() - (weekOffset * 7));
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() - i);
+      week.push(d);
+    }
+    return week;
+  }, [todayDate.getTime(), weekOffset]);
+
+  const formatDateRange = (start: Date, end: Date) => {
+    const locale = getDateLocale(i18n.language);
+    const startStr = start.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const endStr = end.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    return `${startStr} - ${endStr}`;
+  };
 
   useEffect(() => {
     if (!user?.id) return;
@@ -98,8 +112,16 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
     if (!loading) loadDayData();
   }, [loadDayData, loading]);
 
-  const goBack = () => setViewDate(prev => addDays(prev, -1));
-  const goForward = () => { if (!isToday) setViewDate(prev => addDays(prev, 1)); };
+  useEffect(() => {
+    if (!user?.id || !userData) return;
+    const startStr = toDateStr(weekDates[0]);
+    const endStr = toDateStr(weekDates[6]);
+    getCaloriesByDateRange(user.id, startStr, endStr)
+      .then(setWeeklyData)
+      .catch(console.error);
+  }, [user?.id, userData, weekDates[0].getTime()]);
+
+
 
   const handleAddWater = async (amount: number) => {
     if (!user?.id || !userData || !isToday) return;
@@ -187,39 +209,80 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
               </span>
             ) : null}
           </h1>
-          <p className={`text-xs mt-0.5 font-medium flex items-center gap-1 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-            <Target size={12} /> {getGoalLabel(userData.goal || '', t)}
-          </p>
+        </div>
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-100 shadow-sm'}`}>
+          <Target size={12} style={{ color: themeColor }} />
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
+            {getGoalLabel(userData.goal || '', t)}
+          </span>
         </div>
       </motion.div>
 
-      <motion.div variants={itemVariants} className={`rounded-2xl p-2 flex items-center justify-between border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-100 shadow-sm'}`}>
-        <button
-          onClick={goBack}
-          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isDark ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-50 text-zinc-600'}`}
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className="text-center flex-1">
-          <p className={`text-sm font-semibold tracking-tight ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
-            {formatDisplayDate(viewDate, getDateLocale(i18n.language))}
-          </p>
-          {isToday && (
-            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block" style={{ color: themeColor, backgroundColor: `${themeColor}15` }}>
-              {t('main.today')}
-            </span>
-          )}
+      <motion.div variants={itemVariants} className="flex flex-col gap-2">
+        <div className="flex justify-between items-center px-2">
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            {formatDateRange(weekDates[0], weekDates[6])}
+          </span>
+          <div className="flex gap-2">
+            <button onClick={() => setWeekOffset(o => o + 1)} className={`p-1 rounded-full transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-500' : 'hover:bg-zinc-100 text-zinc-400'}`}><ChevronLeft size={14} /></button>
+            <button onClick={() => setWeekOffset(o => Math.max(0, o - 1))} disabled={weekOffset === 0} className={`p-1 rounded-full transition-colors ${weekOffset === 0 ? 'opacity-30' : ''} ${isDark ? 'hover:bg-zinc-800 text-zinc-500' : 'hover:bg-zinc-100 text-zinc-400'}`}><ChevronRight size={14} /></button>
+          </div>
         </div>
-        <button
-          onClick={goForward}
-          disabled={isToday}
-          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isToday
-              ? 'opacity-30 cursor-not-allowed'
-              : isDark ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-50 text-zinc-600'
-            }`}
-        >
-          <ChevronRight size={20} />
-        </button>
+        <div className={`flex justify-between items-center p-3 rounded-2xl border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-100 shadow-sm'}`}>
+          {weekDates.map((date) => {
+            const dateStr = toDateStr(date);
+            const eaten = weeklyData[dateStr] || (dateStr === toDateStr(viewDate) ? calories : 0);
+            const isSelected = dateStr === toDateStr(viewDate);
+            
+            let pct = Math.min((eaten / Math.max(tdee, 1)) * 100, 100);
+            let strokeColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            if (eaten > 0) {
+              if (pct >= 100) strokeColor = '#22c55e'; // green
+              else if (pct >= 50) strokeColor = '#eab308'; // yellow
+              else {
+                if (dateStr === toDateStr(todayDate)) strokeColor = '#eab308'; // yellow for today
+                else strokeColor = '#ef4444'; // red for past days
+              }
+            }
+
+            const size = 36;
+            const radius = (size - 4) / 2;
+            const circ = 2 * Math.PI * radius;
+            const strokePct = ((100 - pct) * circ) / 100;
+            
+            return (
+              <button 
+                key={dateStr}
+                onClick={() => setViewDate(date)}
+                className={`flex flex-col items-center gap-1.5 transition-all active:scale-90`}
+              >
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? (isDark ? 'text-zinc-100' : 'text-zinc-900') : (isDark ? 'text-zinc-500' : 'text-zinc-400')}`}>
+                  {date.toLocaleDateString(getDateLocale(i18n.language), { weekday: 'short' })}
+                </span>
+                
+                <div className={`relative flex items-center justify-center transition-all ${isSelected ? 'scale-110' : ''}`} style={{ width: size, height: size }}>
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                    <circle cx={size/2} cy={size/2} r={radius} stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} strokeWidth="2" fill={isSelected ? (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)") : "none"} />
+                    {eaten > 0 && (
+                      <motion.circle
+                        cx={size/2} cy={size/2} r={radius}
+                        stroke={strokeColor} strokeWidth="2" fill="none" strokeLinecap="round"
+                        initial={{ strokeDashoffset: circ }}
+                        animate={{ strokeDashoffset: strokePct }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        strokeDasharray={circ}
+                      />
+                    )}
+                  </svg>
+                  <span className={`text-xs font-bold ${isSelected ? (isDark ? 'text-zinc-100' : 'text-zinc-900') : (isDark ? 'text-zinc-400' : 'text-zinc-500')}`}>
+                    {date.getDate()}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </motion.div>
 
       <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3">
