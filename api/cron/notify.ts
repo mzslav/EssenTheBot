@@ -32,54 +32,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const translations: any = {
       uk: {
         water: (name: string, water: string) => `💧 Не забудь випити воду, ${name}!\n\nТвоя ціль: ${water}л на день.`,
-        meal_13: (name: string) => `🍽️ Час записати обід, ${name}!\n\nВідкрий додаток та додай страву.`,
         meal_19: (name: string) => `🍽️ Час записати вечерю, ${name}!\n\nВідкрий додаток та додай страву.`
       },
       en: {
         water: (name: string, water: string) => `💧 Don't forget to drink water, ${name}!\n\nYour goal: ${water}L per day.`,
-        meal_13: (name: string) => `🍽️ Time to log your lunch, ${name}!\n\nOpen the app and add your meal.`,
         meal_19: (name: string) => `🍽️ Time to log your dinner, ${name}!\n\nOpen the app and add your meal.`
       },
       pl: {
         water: (name: string, water: string) => `💧 Nie zapomnij wypić wody, ${name}!\n\nTwój cel: ${water}L dziennie.`,
-        meal_13: (name: string) => `🍽️ Czas zapisać obiad, ${name}!\n\nOtwórz aplikację i dodaj posiłek.`,
         meal_19: (name: string) => `🍽️ Czas zapisać kolację, ${name}!\n\nOtwórz aplikację i dodaj posiłek.`
       },
       ru: {
         water: (name: string, water: string) => `💧 Не забудь выпить воду, ${name}!\n\nТвоя цель: ${water}л в день.`,
-        meal_13: (name: string) => `🍽️ Время записать обед, ${name}!\n\nОткрой приложение и добавь блюдо.`,
         meal_19: (name: string) => `🍽️ Время записать ужин, ${name}!\n\nОткрой приложение и добавь блюдо.`
       }
     };
 
     for (const user of users) {
-      const hour = parseInt(
-        new Date().toLocaleString('en-US', { timeZone: 'Europe/Kyiv', hour: '2-digit', hour12: false })
-      );
+      const lang = user.language || 'uk';
+      const t = translations[lang] || translations['uk'];
 
-      for (const user of users) {
-        const lang = user.language || 'uk';
-        const t = translations[lang] || translations['uk'];
+      if (user.notify_water) {
+        const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
+        await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
+        sent++;
+      }
 
-        if (hour === 10) {
-          if (user.notify_water) {
-            const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
-            await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
-            sent++;
-          }
-        }
-
-        if (hour === 19) {
-          if (user.notify_water) {
-            const waterVal = ((user.waterPerDay || 2500) / 1000).toFixed(1);
-            await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.water(user.first_name, waterVal));
-            sent++;
-          }
-          if (user.notify_meals) {
-            await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.meal_19(user.first_name));
-            sent++;
-          }
-        }
+      if (user.notify_meals) {
+        await sendTelegramMessage(BOT_TOKEN, user.telegram_user_id, t.meal_19(user.first_name));
+        sent++;
       }
     }
 
