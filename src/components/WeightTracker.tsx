@@ -4,6 +4,7 @@ import { addWeightEntry, getWeightHistory, deleteWeightEntry, type WeightEntry }
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Scale } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getDateLocale } from '../utils/formatters';
 
 interface WeightTrackerProps {
   user?: TelegramUser;
@@ -61,19 +62,11 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
     }
   };
 
-  const getLocaleForDate = () => {
-    switch (i18n.language) {
-      case 'en': return 'en-US';
-      case 'pl': return 'pl-PL';
-      case 'ru': return 'ru-RU';
-      default: return 'uk-UA';
-    }
-  };
 
   const chartData = [...entries]
     .reverse()
     .map(e => ({
-      date: new Date(e.date).toLocaleDateString(getLocaleForDate(), { day: 'numeric', month: 'short' }),
+      date: new Date(e.date).toLocaleDateString(getDateLocale(i18n.language), { day: 'numeric', month: 'short' }),
       weight: e.weight,
     }));
 
@@ -228,7 +221,7 @@ export const WeightTracker = ({ user, isDark, themeColor }: WeightTrackerProps) 
                 <div className="flex-1">
                   <p className={`text-sm font-bold ${textMain}`}>{entry.weight} {t('results.kg')}</p>
                   <p className={`text-[10px] ${textMuted}`}>
-                    {new Date(entry.date).toLocaleDateString(getLocaleForDate(), { day: 'numeric', month: 'long' })}
+                    {new Date(entry.date).toLocaleDateString(getDateLocale(i18n.language), { day: 'numeric', month: 'long' })}
                     {entry.note && ` · ${entry.note}`}
                   </p>
                 </div>

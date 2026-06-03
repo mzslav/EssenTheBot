@@ -8,8 +8,8 @@ export const questions: Question[] = [
     requiredField: true,
     fieldOptions: {
       values: [
-        { option: "Чоловік", optionKey: "form.fields.gender.options.male" },
-        { option: "Жінка", optionKey: "form.fields.gender.options.female" }
+        { option: "male", optionKey: "form.fields.gender.options.male" },
+        { option: "female", optionKey: "form.fields.gender.options.female" }
       ]
     },
     key: 'gender'
@@ -48,9 +48,9 @@ export const questions: Question[] = [
     requiredField: true,
     fieldOptions: {
       values: [
-        { option: "Схуднути (-300–500 ккал)", optionKey: "form.fields.goal.options.lose" },
-        { option: "Набрати м'язи (+300–500 ккал)", optionKey: "form.fields.goal.options.gain" },
-        { option: "Підтримувати форму (±100 ккал)", optionKey: "form.fields.goal.options.maintain" }
+        { option: "lose", optionKey: "form.fields.goal.options.lose" },
+        { option: "gain", optionKey: "form.fields.goal.options.gain" },
+        { option: "maintain", optionKey: "form.fields.goal.options.maintain" }
       ]
     },
     key: 'goal'
@@ -62,10 +62,10 @@ export const questions: Question[] = [
     requiredField: true,
     fieldOptions: {
       values: [
-        { option: "Сидячий (офіс, мало руху)", optionKey: "form.fields.activity.options.sedentary" },
-        { option: "Легка активність (1–3 трен/тиждень)", optionKey: "form.fields.activity.options.light" },
-        { option: "Середня (3–5 тренувань)", optionKey: "form.fields.activity.options.moderate" },
-        { option: "Висока (6–7 тренувань)", optionKey: "form.fields.activity.options.high" }
+        { option: "sedentary", optionKey: "form.fields.activity.options.sedentary" },
+        { option: "light", optionKey: "form.fields.activity.options.light" },
+        { option: "moderate", optionKey: "form.fields.activity.options.moderate" },
+        { option: "high", optionKey: "form.fields.activity.options.high" }
       ]
     },
     key: 'activity'

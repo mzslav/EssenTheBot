@@ -67,7 +67,7 @@ export async function convertBlobToWav(inputBlob: Blob): Promise<Blob> {
 
 async function uploadAudio(audioBlob: Blob): Promise<string> {
   if (!ASSEMBLYAI_API_KEY) {
-    throw new Error('ASSEMBLYAI_API_KEY не встановлено в .env');
+    throw new Error('api_key_missing');
   }
 
   const response = await fetch('https://api.assemblyai.com/v2/upload', {
@@ -81,7 +81,7 @@ async function uploadAudio(audioBlob: Blob): Promise<string> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Помилка завантаження: ${response.status} - ${errorText}`);
+    throw new Error(`error_upload: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
@@ -108,7 +108,7 @@ async function createTranscription(audioUrl: string, languageCode: string): Prom
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(`Помилка API (${response.status}): ${errorData.error}`);
+    throw new Error(`error_api: ${response.status} - ${errorData.error}`);
   }
 
   const data = await response.json();
@@ -120,7 +120,7 @@ async function checkTranscriptionStatus(transcriptId: string): Promise<{ status:
     headers: { authorization: ASSEMBLYAI_API_KEY },
   });
 
-  if (!response.ok) throw new Error('Помилка статусу');
+  if (!response.ok) throw new Error('error_status');
   return await response.json();
 }
 

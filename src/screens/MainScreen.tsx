@@ -7,6 +7,7 @@ import { StatsSection } from '../components/StatsSection';
 import { MainScreenSkeleton } from '../components/Skeleton';
 import { Droplet, Flame, Target, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { motion } from 'motion/react';
+import { getDateLocale } from '../utils/formatters';
 
 interface MainScreenProps {
   user?: TelegramUser;
@@ -201,7 +202,7 @@ export const MainScreen = ({ user, isDark, themeColor = '#8b5cf6' }: MainScreenP
         </button>
         <div className="text-center flex-1">
           <p className={`text-sm font-semibold tracking-tight ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>
-            {formatDisplayDate(viewDate, i18n.language === 'en' ? 'en-US' : i18n.language === 'pl' ? 'pl-PL' : i18n.language === 'ru' ? 'ru-RU' : 'uk-UA')}
+            {formatDisplayDate(viewDate, getDateLocale(i18n.language))}
           </p>
           {isToday && (
             <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block" style={{ color: themeColor, backgroundColor: `${themeColor}15` }}>

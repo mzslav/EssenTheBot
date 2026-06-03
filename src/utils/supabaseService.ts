@@ -32,7 +32,7 @@ export async function getInternalUserId(telegramUserId: number): Promise<number>
     .select('id')
     .eq('telegram_user_id', telegramUserId)
     .single();
-  if (error || !data) throw new Error(`Користувача не знайдено (telegram_id: ${telegramUserId})`);
+  if (error || !data) throw new Error(`user_not_found: ${telegramUserId}`);
   return data.id as number;
 }
 
@@ -45,7 +45,7 @@ export async function getOrCreateDayId(telegramUserId: number, date?: string): P
     p_date: targetDate,
   });
 
-  if (error) throw new Error(`Помилка отримання дня: ${error.message}`);
+  if (error) throw new Error(`error_getting_day: ${error.message}`);
   return data as number;
 }
 
@@ -60,7 +60,7 @@ export async function saveMeal(
     .insert({ daily_log_id: dayId, ...meal })
     .select()
     .single();
-  if (error) throw new Error(`Помилка збереження їжі: ${error.message}`);
+  if (error) throw new Error(`error_saving_meal: ${error.message}`);
   return { ...data, emoji: getEmojiForName(data.name), type: inputMode };
 }
 
@@ -82,7 +82,7 @@ export async function addMealToToday(
     })
     .select()
     .single();
-  if (error) throw new Error(`Помилка додавання страви: ${error.message}`);
+  if (error) throw new Error(`error_adding_meal: ${error.message}`);
   return { ...data, emoji: emoji || getEmojiForName(data.name), type: 'text' as const };
 }
 
@@ -94,7 +94,7 @@ export async function getRecentMeals(telegramUserId: number, limit = 5): Promise
     .eq('daily_logs.user_id', internalId)
     .order('created_at', { ascending: false })
     .limit(limit);
-  if (error) throw new Error(`Помилка завантаження записів: ${error.message}`);
+  if (error) throw new Error(`error_loading_records: ${error.message}`);
   return (data || []).map((item: Record<string, any>) => ({
     id: item.id, daily_log_id: item.daily_log_id, name: item.name,
     calories: item.calories, protein: item.protein, fat: item.fat, carbs: item.carbs,
@@ -110,7 +110,7 @@ export async function getMealsByDate(telegramUserId: number, date: string): Prom
     .eq('daily_logs.user_id', internalId)
     .eq('daily_logs.date', date)
     .order('created_at', { ascending: false });
-  if (error) throw new Error(`Помилка завантаження записів за день: ${error.message}`);
+  if (error) throw new Error(`error_loading_daily_records: ${error.message}`);
   return (data || []).map((item: Record<string, any>) => ({
     id: item.id, daily_log_id: item.daily_log_id, name: item.name,
     calories: item.calories, protein: item.protein, fat: item.fat, carbs: item.carbs,
@@ -125,7 +125,7 @@ export async function getAllMeals(telegramUserId: number): Promise<MealRecord[]>
     .select(`*, daily_logs!inner(user_id, date)`)
     .eq('daily_logs.user_id', internalId)
     .order('created_at', { ascending: false });
-  if (error) throw new Error(`Помилка завантаження всіх записів: ${error.message}`);
+  if (error) throw new Error(`error_loading_all_records: ${error.message}`);
   return (data || []).map((item: Record<string, any>) => ({
     id: item.id, daily_log_id: item.daily_log_id, name: item.name,
     calories: item.calories, protein: item.protein, fat: item.fat, carbs: item.carbs,
@@ -193,5 +193,5 @@ export async function updateTodayWater(telegramUserId: number, waterMl: number):
 
 export async function deleteMeal(mealId: number): Promise<void> {
   const { error } = await supabase.from('meals').delete().eq('id', mealId);
-  if (error) throw new Error(`Помилка видалення: ${error.message}`);
+  if (error) throw new Error(`error_deleting: ${error.message}`);
 }

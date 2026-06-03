@@ -13,15 +13,7 @@ export interface FavoriteMeal {
   created_at: string;
 }
 
-async function getInternalUserId(telegramUserId: number): Promise<number> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('id')
-    .eq('telegram_user_id', telegramUserId)
-    .single();
-  if (error || !data) throw new Error('Користувача не знайдено');
-  return data.id as number;
-}
+import { getInternalUserId, getEmojiForName } from './supabaseService';
 
 export async function addFavorite(
   telegramUserId: number,
@@ -37,7 +29,7 @@ export async function addFavorite(
     .maybeSingle();
 
   if (existing) {
-    throw new Error('Ця страва вже в обраних');
+    throw new Error('already_in_favorites');
   }
 
   const emoji = meal.emoji || getEmojiForName(meal.name);
@@ -57,7 +49,7 @@ export async function addFavorite(
     .select()
     .single();
 
-  if (error) throw new Error(`Помилка: ${error.message}`);
+  if (error) throw new Error(`error: ${error.message}`);
   return data;
 }
 
@@ -66,7 +58,7 @@ export async function removeFavorite(favoriteId: number): Promise<void> {
     .from('favorite_meals')
     .delete()
     .eq('id', favoriteId);
-  if (error) throw new Error(`Помилка видалення: ${error.message}`);
+  if (error) throw new Error(`error_deleting: ${error.message}`);
 }
 
 export async function getFavorites(
@@ -79,7 +71,7 @@ export async function getFavorites(
     .eq('user_id', internalId)
     .order('use_count', { ascending: false });
 
-  if (error) throw new Error(`Помилка: ${error.message}`);
+  if (error) throw new Error(`error: ${error.message}`);
   return data || [];
 }
 
@@ -112,11 +104,3 @@ export async function isFavorite(
   return !!data;
 }
 
-export function getEmojiForName(name: string): string {
-  const FOOD_EMOJIS = [
-    '🍗', '🥗', '🍳', '🍜', '🥩', '🍕', '🥪', '🍲', '🥘', '🍱',
-    '🥙', '🌮', '🍝', '🥣', '🍛', '🥞', '🍔', '🍿', '🥧', '🧁',
-  ];
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return FOOD_EMOJIS[hash % FOOD_EMOJIS.length];
-}

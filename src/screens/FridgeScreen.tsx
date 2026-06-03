@@ -167,9 +167,10 @@ export const FridgeScreen = ({
     }
   };
 
-  const handleSubmitWithout = async () => {
-    if (!aiResponse) return;
-    await persistMeal(aiResponse);
+  const handleSubmitWithout = async (meal?: AIResponse) => {
+    const dataToSave = meal || aiResponse;
+    if (!dataToSave) return;
+    await persistMeal(dataToSave);
   };
 
   const handleDeleteRecent = async (mealId: number) => {

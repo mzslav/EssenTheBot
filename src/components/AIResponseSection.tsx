@@ -8,7 +8,7 @@ interface AIResponseSectionProps {
   isDark: boolean;
   themeColor: string;
   onSubmitWithClarifications: (answers: string[]) => void;
-  onSubmitWithout: () => void;
+  onSubmitWithout: (meal?: AIResponse) => void;
   isProcessing?: boolean;
 }
 
@@ -49,8 +49,7 @@ export const AIResponseSection = ({
       ...editedMacros
     };
 
-    console.log('Відправка з відредагованими даними:', updatedResponse);
-    onSubmitWithout();
+    onSubmitWithout(updatedResponse);
   };
 
   return (
@@ -135,8 +134,8 @@ export const AIResponseSection = ({
                 placeholder={t('ai_response.answer_placeholder', 'Твоя відповідь...')}
                 disabled={isProcessing}
                 className={`w-full rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${isDark
-                    ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20'
-                    : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
+                  ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20'
+                  : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
                   }`}
               />
             </div>

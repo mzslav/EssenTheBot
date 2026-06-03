@@ -16,13 +16,13 @@ const resources = {
 
 const supportedLangs = ['uk', 'en', 'pl', 'ru'];
 
-// Try to get Telegram language
-// We're casting window as any since Telegram might not be in global types
-const tg = (window as any).Telegram?.WebApp;
-let tgLang = tg?.initDataUnsafe?.user?.language_code || 'uk';
-
-// Some telegram clients might send 'en-US' instead of 'en'
-tgLang = tgLang.split('-')[0];
+let tgLang = 'uk';
+try {
+  const tg = (window as any).Telegram?.WebApp;
+  if (tg?.initDataUnsafe?.user?.language_code) {
+    tgLang = tg.initDataUnsafe.user.language_code.split('-')[0];
+  }
+} catch (e) {}
 
 const initialLang = supportedLangs.includes(tgLang) ? tgLang : 'uk';
 

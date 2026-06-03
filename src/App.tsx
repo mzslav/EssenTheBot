@@ -1,6 +1,6 @@
-// App.tsx
 import { useState, useEffect } from 'react';
-import { useTelegram } from './hooks';
+import { useTranslation } from 'react-i18next';
+
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { FormScreen } from './screens/FormScreen';
 import { ResultsScreen } from './screens/ResultsScreen';
@@ -11,10 +11,12 @@ import supabase from './supabase/supabase-client';
 import type { AppScreen, FormData } from './types/types';
 import { FridgeScreen } from './screens/FridgeScreen';
 import { WorkoutScreen } from './screens/workout/WorkoutScreen';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useAppContext } from './context/AppContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-const AccessDeniedScreen = ({ isDark }: { isDark: boolean }) => (
+const AccessDeniedScreen = ({ isDark }: { isDark: boolean }) => {
+  const { t } = useTranslation();
+  return (
   <div className={`min-h-screen flex flex-col items-center justify-center p-6 text-center ${isDark ? 'text-white' : 'text-slate-800'
     }`}>
     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
@@ -22,14 +24,13 @@ const AccessDeniedScreen = ({ isDark }: { isDark: boolean }) => (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
     </div>
-    <h1 className="text-2xl font-bold mb-2">Доступ заборонено</h1>
+    <h1 className="text-2xl font-bold mb-2">{t('access_denied.title')}</h1>
     <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-      Цей додаток працює лише всередині Telegram.
-      <br />
-      Будь ласка, відкрийте його через бот.
+      {t('access_denied.description')}
     </p>
   </div>
-);
+  );
+};
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('main');
@@ -39,7 +40,7 @@ function App() {
   const [isTelegramEnv, setIsTelegramEnv] = useState(true);
   const [isEnvChecking, setIsEnvChecking] = useState(true);
 
-  const { user, isDark, themeColor } = useTelegram();
+  const { user, isDark, themeColor } = useAppContext();
 
   useEffect(() => {
     const checkEnvironment = () => {

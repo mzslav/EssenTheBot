@@ -19,7 +19,7 @@ function getSystemPrompt() {
   };
   const targetLang = langNames[lang] || 'українською мовою';
 
-  return `Ти - фітнес бот-нутриціоніст, який допомагає користувачам відстежувати їжу та калорії. Твоє завдання: 1) Проаналізувати що з'їв користувач, 2) Визначити назву страви ${targetLang}, 3) Підрахувати калорії та макронутрієнти (білки, жири, вуглеводи), 4) Згенерувати 2-3 уточнюючі питання для точнішого підрахунку ${targetLang}. КРИТИЧНО ВАЖЛИВО: Відповідай ТІЛЬКИ валідним JSON без markdown форматування, без пояснень, без додаткового тексту. Формат відповіді: {"name": "Назва страви ${targetLang}", "calories": 450, "protein": 35, "fat": 12, "carbs": 48, "clarifyingQuestions": ["Питання 1?", "Питання 2?"]}. Якщо інформація недостатня - роби обґрунтовані припущення для стандартної порції.`;
+  return `You are a fitness bot nutritionist that helps users track food and calories. Your task is to: 1) Analyze what the user ate, 2) Determine the name of the dish in ${targetLang}, 3) Calculate calories and macronutrients (protein, fat, carbohydrates), 4) Generate 2-3 clarifying questions for a more accurate calculation in ${targetLang}. CRITICALLY IMPORTANT: Reply ONLY with valid JSON without markdown formatting, without explanations, without additional text. Response format: {"name": "Dish name in ${targetLang}", "calories": 450, "protein": 35, "fat": 12, "carbs": 48, "clarifyingQuestions": ["Question 1?", "Question 2?"]}. If the information is insufficient, make educated guesses for a standard portion.`;
 }
 const USE_PROXY = !import.meta.env.DEV;
 async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
@@ -36,12 +36,12 @@ async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API помилка: ${response.status} — ${errorText}`);
+      throw new Error(`api_error: ${response.status} — ${errorText}`);
     }
     data = await response.json();
   } else {
     if (!OPENROUTER_API_KEY) {
-      throw new Error('OpenRouter API key не знайдено. Додайте VITE_OPENROUTER_API_KEY в .env файл');
+      throw new Error('openrouter_key_missing');
     }
 
     const requestBody: Record<string, unknown> = {
@@ -69,7 +69,7 @@ async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      let errorMessage = `API помилка: ${response.status}`;
+      let errorMessage = `api_error: ${response.status}`;
       try {
         const errorData = JSON.parse(errorText);
         errorMessage = errorData.error?.message || errorMessage;
@@ -85,11 +85,11 @@ async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
   if (!content) {
     const finishReason = data.choices?.[0]?.finish_reason;
     if (finishReason === 'content_filter') {
-      throw new Error('Контент заблоковано фільтром. Спробуйте інший опис.');
+      throw new Error('content_filtered');
     } else if (finishReason === 'length') {
-      throw new Error('Відповідь занадто довга. Спробуйте коротший запит.');
+      throw new Error('response_too_long');
     }
-    throw new Error('API повернув порожню відповідь. Спробуйте іншу модель.');
+    throw new Error('empty_response');
   }
 
   return content;
@@ -97,7 +97,7 @@ async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
 
 function parseAIResponse(aiText: string): AIResponse {
   if (!aiText || aiText.trim() === '') {
-    throw new Error('Порожня відповідь від AI');
+    throw new Error('empty_response');
   }
 
   let cleanText = aiText.trim();
@@ -108,11 +108,11 @@ function parseAIResponse(aiText: string): AIResponse {
   const parsed = JSON.parse(cleanText);
 
   if (!parsed.name || typeof parsed.calories !== 'number') {
-    throw new Error('AI повернув невірний формат даних');
+    throw new Error('invalid_format');
   }
 
   return {
-    name: parsed.name || 'Невідома страва',
+    name: parsed.name || 'Unknown meal',
     calories: parseInt(parsed.calories) || 0,
     protein: parseInt(parsed.protein) || 0,
     fat: parseInt(parsed.fat) || 0,
@@ -123,7 +123,7 @@ function parseAIResponse(aiText: string): AIResponse {
 
 export async function analyzeTextInput(text: string): Promise<AIResponse> {
   const messages: OpenRouterMessage[] = [
-    { role: 'user', content: `Користувач описав що з'їв: ${text}. Проаналізуй цю їжу та поверни результат у JSON форматі.` },
+    { role: 'user', content: `The user described what they ate: ${text}. Analyze this food and return the result in JSON format.` },
   ];
   const aiResponse = await callOpenRouter(messages);
   return parseAIResponse(aiResponse);
@@ -131,8 +131,8 @@ export async function analyzeTextInput(text: string): Promise<AIResponse> {
 
 export async function analyzePhotoInput(photoBase64: string, description?: string): Promise<AIResponse> {
   const userPrompt = description
-    ? `Користувач надіслав фото своєї їжі з описом: ${description}. Проаналізуй фото та опис, поверни результат у JSON форматі.`
-    : `Користувач надіслав фото своєї їжі. Проаналізуй що на фото та поверни результат у JSON форматі.`;
+    ? `The user sent a photo of their food with the description: ${description}. Analyze the photo and description, return the result in JSON format.`
+    : `The user sent a photo of their food. Analyze what is in the photo and return the result in JSON format.`;
 
   const messages: OpenRouterMessage[] = [
     { role: 'user', content: [{ type: 'image_url', image_url: { url: photoBase64 } }, { type: 'text', text: userPrompt }] },
@@ -150,7 +150,7 @@ export async function refineWithClarifications(
 ): Promise<AIResponse> {
   let clarificationText = '';
   if (clarifications?.length && originalResponse.clarifyingQuestions) {
-    clarificationText = '\n\nВідповіді на уточнюючі питання:\n';
+    clarificationText = '\n\nAnswers to clarifying questions:\n';
     originalResponse.clarifyingQuestions.forEach((question, index) => {
       if (clarifications[index]) {
         clarificationText += `- ${question}: ${clarifications[index]}\n`;
@@ -167,30 +167,30 @@ export async function refineWithClarifications(
         { type: 'image_url', image_url: { url: photoBase64 } },
         {
           type: 'text',
-          text: `Раніше ти розпізнав це фото як "${originalResponse.name}" з показниками:
-- Калорії: ${originalResponse.calories}
-- Білки: ${originalResponse.protein}г
-- Жири: ${originalResponse.fat}г
-- Вуглеводи: ${originalResponse.carbs}г
+          text: `Previously you recognized this photo as "${originalResponse.name}" with the following metrics:
+- Calories: ${originalResponse.calories}
+- Protein: ${originalResponse.protein}g
+- Fat: ${originalResponse.fat}g
+- Carbs: ${originalResponse.carbs}g
 
-Опис: "${originalInput}"
+Description: "${originalInput}"
 ${clarificationText}
 
-ПЕРЕРАХУЙ більш точно з урахуванням відповідей. JSON формат.`,
+RECALCULATE more accurately taking into account the answers. JSON format.`,
         },
       ],
     });
   } else {
     messages.push({
       role: 'user',
-      content: `Раніше ти розпізнав "${originalInput}" як "${originalResponse.name}" з показниками:
-- Калорії: ${originalResponse.calories}
-- Білки: ${originalResponse.protein}г
-- Жири: ${originalResponse.fat}г
-- Вуглеводи: ${originalResponse.carbs}г
+      content: `Previously you recognized "${originalInput}" as "${originalResponse.name}" with the following metrics:
+- Calories: ${originalResponse.calories}
+- Protein: ${originalResponse.protein}g
+- Fat: ${originalResponse.fat}g
+- Carbs: ${originalResponse.carbs}g
 ${clarificationText}
 
-ПЕРЕРАХУЙ більш точно. JSON формат БЕЗ уточнюючих питань (clarifyingQuestions = []).`,
+RECALCULATE more accurately. JSON format WITHOUT clarifying questions (clarifyingQuestions = []).`,
     });
   }
 

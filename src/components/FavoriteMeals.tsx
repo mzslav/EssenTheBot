@@ -25,7 +25,7 @@ export const FavoriteMeals = ({ user, isDark, themeColor, onQuickAdd }: Favorite
     try {
       const data = await getFavorites(user.id);
       setFavorites(data);
-    } catch { /* ignore */ } finally { setIsLoading(false); }
+    } catch { } finally { setIsLoading(false); }
   };
 
   const handleQuickAdd = async (fav: FavoriteMeal) => {
@@ -43,7 +43,7 @@ export const FavoriteMeals = ({ user, isDark, themeColor, onQuickAdd }: Favorite
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-      <button 
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between px-1 active:scale-[0.98] transition-transform"
       >
@@ -59,7 +59,7 @@ export const FavoriteMeals = ({ user, isDark, themeColor, onQuickAdd }: Favorite
           <ChevronDown size={14} />
         </motion.div>
       </button>
-      
+
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -72,38 +72,38 @@ export const FavoriteMeals = ({ user, isDark, themeColor, onQuickAdd }: Favorite
             <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide pt-1">
               <AnimatePresence>
                 {favorites.map(fav => (
-            <motion.div 
-              key={fav.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15 }}
-              className={`flex-shrink-0 rounded-3xl p-3 border w-[130px] relative group transition-colors ${isDark ? 'bg-zinc-900 border-zinc-800 shadow-sm' : 'bg-white border-zinc-200 shadow-sm'}`}
-            >
-              <button 
-                onClick={() => handleRemove(fav.id)}
-                className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 z-10 ${isDark ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-zinc-400 hover:text-zinc-900'}`}
-              >
-                <X size={12} strokeWidth={3} />
-              </button>
-              
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-3 ${isDark ? 'bg-zinc-800' : 'bg-slate-100'}`} style={{ color: themeColor }}>
-                <Utensils size={18} strokeWidth={2.5} />
-              </div>
-              
-              <p className={`text-[11px] font-bold truncate leading-tight mb-0.5 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{fav.name}</p>
-              <p className={`text-[10px] font-semibold mb-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{fav.calories} {t('stats.kcal')}</p>
-              
-              <button 
-                onClick={() => handleQuickAdd(fav)}
-                className="w-full py-2.5 rounded-xl text-[10px] font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-1 shadow-md"
-                style={{ background: themeColor }}
-              >
-                <Plus size={14} strokeWidth={3} /> {t('barcode.add')}
-              </button>
-            </motion.div>
-          ))}
-                </AnimatePresence>
+                  <motion.div
+                    key={fav.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.15 }}
+                    className={`flex-shrink-0 rounded-3xl p-3 border w-[130px] relative group transition-colors ${isDark ? 'bg-zinc-900 border-zinc-800 shadow-sm' : 'bg-white border-zinc-200 shadow-sm'}`}
+                  >
+                    <button
+                      onClick={() => handleRemove(fav.id)}
+                      className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 z-10 ${isDark ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-zinc-400 hover:text-zinc-900'}`}
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-3 ${isDark ? 'bg-zinc-800' : 'bg-slate-100'}`} style={{ color: themeColor }}>
+                      <Utensils size={18} strokeWidth={2.5} />
+                    </div>
+
+                    <p className={`text-[11px] font-bold truncate leading-tight mb-0.5 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{fav.name}</p>
+                    <p className={`text-[10px] font-semibold mb-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{fav.calories} {t('stats.kcal')}</p>
+
+                    <button
+                      onClick={() => handleQuickAdd(fav)}
+                      className="w-full py-2.5 rounded-xl text-[10px] font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-1 shadow-md"
+                      style={{ background: themeColor }}
+                    >
+                      <Plus size={14} strokeWidth={3} /> {t('barcode.add')}
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}

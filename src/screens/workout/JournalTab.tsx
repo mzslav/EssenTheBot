@@ -14,8 +14,8 @@ import {
 import type { WorkoutPlan } from '../../types/types';
 import supabase from '../../supabase/supabase-client';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  ChevronLeft, ChevronRight, Play, Check, X, Timer, Dumbbell, CalendarPlus, 
+import {
+  ChevronLeft, ChevronRight, Play, Check, X, Timer, Dumbbell, CalendarPlus,
   Video, Calendar, Flame, Activity
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -108,7 +108,7 @@ const ActiveWorkoutView = ({
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
       }
-      setTimeLeft(90); 
+      setTimeLeft(90);
     }
   };
 
@@ -130,8 +130,7 @@ const ActiveWorkoutView = ({
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-4">
-      
-      {/* Header */}
+
       <div className="flex items-center gap-3 bg-transparent">
         <button onClick={onBack} className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all active:scale-90 ${isDark ? 'bg-zinc-900/80 text-zinc-100' : 'bg-white text-zinc-900 shadow-sm border border-zinc-100'}`}>
           <ChevronLeft size={20} />
@@ -147,7 +146,6 @@ const ActiveWorkoutView = ({
         </div>
       </div>
 
-      {/* Horizontal Nav */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
         {exercises.map((ex: any, idx: number) => {
           const sets = ex.sets ?? [];
@@ -156,12 +154,11 @@ const ActiveWorkoutView = ({
           const isCurrent = idx === activeIdx;
           return (
             <button key={ex.id} onClick={() => setActiveIdx(idx)}
-              className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[11px] font-bold transition-all whitespace-nowrap border ${
-                isCurrent ? 'text-white border-transparent shadow-md'
-                : done ? isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-600 border-green-200'
-                : partial ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'
-                : isDark ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-white text-zinc-500 border-zinc-200'
-              }`}
+              className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[11px] font-bold transition-all whitespace-nowrap border ${isCurrent ? 'text-white border-transparent shadow-md'
+                  : done ? isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-600 border-green-200'
+                    : partial ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'
+                      : isDark ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-white text-zinc-500 border-zinc-200'
+                }`}
               style={isCurrent ? { background: themeColor } : {}}
             >
               {done && <Check size={12} className="inline mr-1" />}
@@ -172,7 +169,6 @@ const ActiveWorkoutView = ({
         })}
       </div>
 
-      {/* Focus Exercise Card */}
       <div className="rounded-3xl p-6 text-white relative overflow-hidden shadow-2xl" style={{ background: `linear-gradient(135deg, ${themeColor}ee 0%, #18181b 100%)` }}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 space-y-4">
@@ -187,12 +183,12 @@ const ActiveWorkoutView = ({
               <Video size={14} /> {t('workout.journal_tab.watch_technique', 'Дивитись техніку')}
             </button>
           )}
-          
+
           <div className="pt-2">
             {prevEx ? (
               <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm border border-white/5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-white/50 uppercase font-bold tracking-widest flex items-center gap-1"><Calendar size={12}/> {t('workout.journal_tab.last_time', 'Минулий раз')}</p>
+                  <p className="text-[10px] text-white/50 uppercase font-bold tracking-widest flex items-center gap-1"><Calendar size={12} /> {t('workout.journal_tab.last_time', 'Минулий раз')}</p>
                   <p className="text-[10px] text-white/50 font-medium">{previousSession?.date}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -220,7 +216,6 @@ const ActiveWorkoutView = ({
         </div>
       </div>
 
-      {/* Sets Tracker */}
       <div className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
         <div className={`px-5 py-4 border-b flex justify-between items-center ${isDark ? 'border-white/5' : 'border-zinc-100'}`}>
           <div>
@@ -228,7 +223,7 @@ const ActiveWorkoutView = ({
             <p className={`text-[10px] mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.journal_tab.track_results', 'Трекай свої результати')}</p>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-12 gap-1 px-5 pt-4 pb-2">
           <p className={`col-span-2 text-[9px] font-bold uppercase tracking-wider text-center ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>#</p>
           <p className={`col-span-3 text-[9px] font-bold uppercase tracking-wider text-center ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.journal_tab.kg', 'КГ')}</p>
@@ -248,27 +243,27 @@ const ActiveWorkoutView = ({
                     {set.set_number}
                   </span>
                 </div>
-                
+
                 <input key={`w-${set.id}-${set.weight}`} type="number" inputMode="decimal"
                   defaultValue={set.weight !== null && set.weight !== undefined ? set.weight : ''}
                   placeholder={prevSet?.weight?.toString() ?? '—'}
                   onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) onUpdateSet(currentEx.id, set.set_number, 'weight', val); }}
                   className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300'}`}
                 />
-                
+
                 <input key={`r-${set.id}-${set.reps}`} type="number" inputMode="numeric"
                   defaultValue={set.reps !== null && set.reps !== undefined ? set.reps : ''}
                   placeholder={prevSet?.reps?.toString() ?? '—'}
                   onBlur={e => { const val = parseInt(e.target.value); if (!isNaN(val)) onUpdateSet(currentEx.id, set.set_number, 'reps', val); }}
                   className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300'}`}
                 />
-                
+
                 <select value={set.rir ?? ''} onChange={e => onUpdateSet(currentEx.id, set.set_number, 'rir', parseInt(e.target.value))}
                   className={`col-span-2 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border appearance-none ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:bg-zinc-800' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:bg-white'}`}>
                   <option value="">—</option>
                   {[0, 1, 2, 3].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-                
+
                 <div className="col-span-2 flex justify-end">
                   <button onClick={() => handleUpdateAndTimer(currentEx.id, set.set_number, 'is_completed', !set.is_completed)}
                     className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold transition-all active:scale-90 border ${set.is_completed ? 'text-white border-transparent shadow-md' : isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-300'}`}
@@ -282,7 +277,6 @@ const ActiveWorkoutView = ({
         </div>
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex gap-2 pb-6 pt-2">
         {activeIdx > 0 ? (
           <button onClick={() => setActiveIdx(i => i - 1)} className={`flex-1 py-4 rounded-2xl text-sm font-bold transition-all active:scale-[0.98] ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-700'}`}>{t('workout.journal_tab.prev', '← Назад')}</button>
@@ -291,23 +285,22 @@ const ActiveWorkoutView = ({
           <button onClick={() => setActiveIdx(i => i + 1)} className="flex-1 py-4 rounded-2xl text-sm font-bold text-white transition-all active:scale-[0.98] shadow-lg" style={{ background: themeColor }}>{t('workout.journal_tab.next', 'Наступна →')}</button>
         ) : (
           <button onClick={onFinish} className="flex-1 py-4 rounded-2xl text-sm font-bold text-white transition-all active:scale-[0.98] shadow-lg bg-emerald-500 flex justify-center items-center gap-2">
-             <Check size={18} strokeWidth={3} /> {t('workout.journal_tab.finish', 'Завершити')}
+            <Check size={18} strokeWidth={3} /> {t('workout.journal_tab.finish', 'Завершити')}
           </button>
         )}
       </div>
 
-      {/* Floating Rest Timer */}
       <AnimatePresence>
         {timeLeft !== null && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50, scale: 0.9 }} 
-            animate={{ opacity: 1, y: 0, scale: 1 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             className={`fixed bottom-24 left-4 right-4 z-50 flex items-center justify-between p-4 rounded-3xl shadow-2xl border backdrop-blur-xl ${isDark ? 'bg-zinc-900/90 border-white/10' : 'bg-white/90 border-zinc-200'}`}
           >
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${timeLeft === 0 ? 'bg-green-500 text-white' : isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
-                 <Timer size={24} className={timeLeft === 0 ? 'animate-pulse' : ''} />
+                <Timer size={24} className={timeLeft === 0 ? 'animate-pulse' : ''} />
               </div>
               <div>
                 <p className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.journal_tab.rest', 'Відпочинок')}</p>
@@ -316,7 +309,7 @@ const ActiveWorkoutView = ({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <div className="flex flex-col gap-1">
                 <button onClick={() => setTimeLeft(l => l ? l + 30 : 30)} className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>+30</button>
@@ -360,35 +353,35 @@ const ExerciseQuickList = ({ sessionId, isDark }: { sessionId: number; isDark: b
 const PlanPickerSheet = ({ plans, isDark, onSelect, onClose }: { plans: WorkoutPlan[]; isDark: boolean; themeColor: string; onSelect: (id: number) => void; onClose: () => void }) => {
   const { t } = useTranslation();
   return (
-  <AnimatePresence>
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm" onClick={onClose} />
-    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-      className={`fixed bottom-0 left-0 right-0 z-[101] p-6 rounded-t-3xl border-t ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200 shadow-2xl'}`}>
-      <div className="w-12 h-1.5 rounded-full bg-zinc-500/30 mx-auto mb-6" />
-      <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.journal_tab.choose_plan_title', 'Обери план')}</h3>
-      
-      {plans.length === 0 ? (
-        <div className="py-8 flex flex-col items-center justify-center opacity-50">
-           <CalendarPlus size={32} className="mb-2" />
-           <p className="text-sm font-medium">{t('workout.journal_tab.no_plans_for_picker', 'Немає планів. Створи їх у вкладці «Плани»')}</p>
-        </div>
-      ) : (
-        <div className="space-y-3 mb-8 max-h-[60vh] overflow-y-auto">
-          {plans.map(plan => (
-            <button key={plan.id} onClick={() => onSelect(plan.id)} className={`w-full flex items-center p-4 rounded-2xl border transition-all active:scale-[0.98] ${isDark ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'}`}>
-               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-white text-zinc-500 shadow-sm'}`}>
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className={`fixed bottom-0 left-0 right-0 z-[101] p-6 rounded-t-3xl border-t ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200 shadow-2xl'}`}>
+        <div className="w-12 h-1.5 rounded-full bg-zinc-500/30 mx-auto mb-6" />
+        <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.journal_tab.choose_plan_title', 'Обери план')}</h3>
+
+        {plans.length === 0 ? (
+          <div className="py-8 flex flex-col items-center justify-center opacity-50">
+            <CalendarPlus size={32} className="mb-2" />
+            <p className="text-sm font-medium">{t('workout.journal_tab.no_plans_for_picker', 'Немає планів. Створи їх у вкладці «Плани»')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3 mb-8 max-h-[60vh] overflow-y-auto">
+            {plans.map(plan => (
+              <button key={plan.id} onClick={() => onSelect(plan.id)} className={`w-full flex items-center p-4 rounded-2xl border transition-all active:scale-[0.98] ${isDark ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-white text-zinc-500 shadow-sm'}`}>
                   <Dumbbell size={18} />
-               </div>
-               <div className="text-left flex-1">
-                 <p className={`font-bold text-sm ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{plan.name}</p>
-                 {plan.muscle_group && <p className={`text-[10px] uppercase font-bold tracking-widest mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{plan.muscle_group}</p>}
-               </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </motion.div>
-  </AnimatePresence>
+                </div>
+                <div className="text-left flex-1">
+                  <p className={`font-bold text-sm ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{plan.name}</p>
+                  {plan.muscle_group && <p className={`text-[10px] uppercase font-bold tracking-widest mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{plan.muscle_group}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
@@ -456,8 +449,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
 
   const handleUpdateSet = async (exerciseId: number, setNumber: number, field: string, value: number | boolean) => {
     if (!activeWorkout) return;
-    
-    // Оптимістичне оновлення інтерфейсу (моментально)
+
     setActiveWorkout(prev => {
       if (!prev) return prev;
       const newExercises = prev.sessionFull.exercises.map(ex => {
@@ -473,9 +465,8 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
 
     try {
       await upsertSet(exerciseId, setNumber, { [field]: value });
-    } catch (e) { 
-      console.error(e); 
-      // Відкат у випадку помилки можна додати, якщо потрібно
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -526,8 +517,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
 
   return (
     <div className="space-y-4 pb-20">
-      
-      {/* Calendar Strip */}
+
       <div style={fadeIn.style(0)} className={`rounded-3xl p-4 shadow-sm border ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200'}`}>
         <div className="flex items-center justify-between mb-4 px-1">
           <button onClick={() => setViewDate(prev => addDays(prev, -7))} className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all active:scale-95 ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>
@@ -538,12 +528,12 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
             <ChevronRight size={16} />
           </button>
         </div>
-        
+
         <div className="grid grid-cols-7 gap-1">
           {weekDays.map((d, i) => (
             <p key={`label-${i}`} className={`text-[9px] font-bold uppercase tracking-wider text-center mb-1 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{new Intl.DateTimeFormat(currentLocale, { weekday: 'short' }).format(d)}</p>
           ))}
-          
+
           {weekDays.map((d, i) => {
             const dStr = toDateStr(d);
             const isFuture = d > todayDate.current;
@@ -552,12 +542,11 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
             const hasSession = sessionDates.has(dStr);
             return (
               <button key={`day-${i}`} onClick={() => !isFuture && setViewDate(new Date(d))} disabled={isFuture}
-                className={`flex flex-col items-center justify-center py-3 rounded-2xl transition-all active:scale-95 ${
-                  isFuture ? isDark ? 'text-zinc-800 cursor-default' : 'text-zinc-200 cursor-default'
-                  : isSelected ? 'text-white shadow-lg'
-                  : isT ? isDark ? 'bg-zinc-800 text-zinc-100' : 'bg-zinc-100 text-zinc-900 shadow-sm'
-                  : isDark ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-50 text-zinc-600'
-                }`}
+                className={`flex flex-col items-center justify-center py-3 rounded-2xl transition-all active:scale-95 ${isFuture ? isDark ? 'text-zinc-800 cursor-default' : 'text-zinc-200 cursor-default'
+                    : isSelected ? 'text-white shadow-lg'
+                      : isT ? isDark ? 'bg-zinc-800 text-zinc-100' : 'bg-zinc-100 text-zinc-900 shadow-sm'
+                        : isDark ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-zinc-50 text-zinc-600'
+                  }`}
                 style={isSelected && !isFuture ? { background: themeColor } : {}}
               >
                 <span className="text-sm font-black leading-none">{d.getDate()}</span>
@@ -581,7 +570,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
         <div style={fadeIn.style(2)} className="pt-4">
           <div className={`rounded-3xl p-8 flex flex-col items-center gap-4 text-center border ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
             <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
-               <Dumbbell size={32} className={isDark ? 'text-zinc-600' : 'text-zinc-400'} />
+              <Dumbbell size={32} className={isDark ? 'text-zinc-600' : 'text-zinc-400'} />
             </div>
             <div>
               <p className={`font-bold text-lg mb-1 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>
@@ -599,10 +588,10 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
           {sessions.map((session, sIdx) => {
             const isCompleted = session.status === 'completed';
             const isInProgress = session.status === 'in_progress';
-            
+
             let statusColor = themeColor;
-            if (isCompleted) statusColor = '#10b981'; // Emerald
-            if (isInProgress) statusColor = '#f59e0b'; // Amber
+            if (isCompleted) statusColor = '#10b981';
+            if (isInProgress) statusColor = '#f59e0b';
 
             return (
               <div key={session.id} className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
@@ -616,7 +605,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
                       {isCompleted ? t('workout.journal_tab.completed', 'Завершено') : isInProgress ? t('workout.journal_tab.in_progress', 'В процесі') : t('workout.journal_tab.planned', 'План')}
                     </span>
                   </div>
-                  
+
                   <div className={`px-4 py-3 rounded-2xl mb-4 ${isDark ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
                     <p className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.journal_tab.exercise_list', 'Список вправ')}</p>
                     <div className="flex flex-wrap gap-1.5">
@@ -634,13 +623,13 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
               </div>
             );
           })}
-          
+
           <button onClick={loadPlans} className={`w-full py-4 rounded-3xl border-2 border-dashed flex items-center justify-center gap-2 font-bold text-sm transition-transform active:scale-[0.98] ${isDark ? 'border-zinc-800 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900/50' : 'border-zinc-200 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'}`}>
-             <CalendarPlus size={16} /> {t('workout.journal_tab.add_more_workouts', 'Додати ще тренування')}
+            <CalendarPlus size={16} /> {t('workout.journal_tab.add_more_workouts', 'Додати ще тренування')}
           </button>
         </div>
       )}
-      
+
       {showPlanPicker && <PlanPickerSheet plans={plans} isDark={isDark} themeColor={themeColor} onSelect={handleStartFromPlan} onClose={() => setShowPlanPicker(false)} />}
     </div>
   );

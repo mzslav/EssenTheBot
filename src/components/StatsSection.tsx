@@ -228,7 +228,6 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
         <div className="flex-1 h-px" style={{ background: `linear-gradient(to left, ${tc}40, transparent)` }} />
       </div>
 
-      {/* Tabs */}
       <div className={`flex gap-1 p-1 rounded-2xl overflow-x-auto ${isDark ? 'bg-zinc-900/60 border border-white/5' : 'bg-zinc-100 border border-zinc-200/50'}`}
         style={{ scrollbarWidth: 'none' }}>
         {TABS.map(tab => {
@@ -237,9 +236,8 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors duration-300 ${
-                isActive ? 'text-white' : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
-              }`}
+              className={`relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors duration-300 ${isActive ? 'text-white' : isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
+                }`}
             >
               {isActive && (
                 <motion.div
@@ -267,9 +265,8 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
                 <button
                   key={r}
                   onClick={() => setRange(r)}
-                  className={`relative px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                    isActive ? 'text-white' : isDark ? 'text-zinc-500' : 'text-zinc-400'
-                  }`}
+                  className={`relative px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${isActive ? 'text-white' : isDark ? 'text-zinc-500' : 'text-zinc-400'
+                    }`}
                 >
                   {isActive && (
                     <motion.div layoutId="activeRange" className="absolute inset-0 rounded-lg shadow-sm" style={{ backgroundColor: tc }} />
@@ -284,7 +281,7 @@ export const StatsSection = ({ user, isDark, themeColor = '#8b5cf6' }: StatsSect
 
       <AnimatePresence mode="wait">
         {loading ? (
-          <motion.div 
+          <motion.div
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

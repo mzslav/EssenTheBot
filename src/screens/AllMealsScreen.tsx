@@ -7,6 +7,7 @@ import { useFadeIn } from '../utils/useFadeIn';
 import { Utensils, Plus, ChevronLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
+import { getDateLocale } from '../utils/formatters';
 
 interface AllMealsScreenProps {
   user?: TelegramUser;
@@ -22,7 +23,7 @@ function formatGroupDate(dateStr: string): string {
   yesterday.setDate(yesterday.getDate() - 1);
   if (d.toDateString() === today.toDateString()) return i18n.t('history.today');
   if (d.toDateString() === yesterday.toDateString()) return i18n.t('history.yesterday');
-  return d.toLocaleDateString(i18n.language === 'en' ? 'en-US' : i18n.language === 'pl' ? 'pl-PL' : i18n.language === 'ru' ? 'ru-RU' : 'uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString(getDateLocale(i18n.language), { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 function groupByDate(meals: MealRecord[]): { date: string; items: MealRecord[] }[] {

@@ -7,10 +7,11 @@ import { WeightTracker } from '../components/WeightTracker';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   User as UserIcon, Activity, Target, Droplets, Utensils,
-  ChevronRight, Pencil, Scale, Flame, Check, Globe, Trash2
+  ChevronRight, Pencil, Scale, Flame, Check, Globe, Trash2, Moon, Sun
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-
+import { useAppContext } from '../context/AppContext';
+import { calculateFitnessMetrics, getActivityMultiplier, getGoalKey } from '../utils/fitnessCalculator';
 interface ResultsScreenProps {
   isDark: boolean;
   themeColor?: string;
@@ -20,16 +21,16 @@ interface ResultsScreenProps {
 }
 
 const GOAL_OPTIONS = [
-  { id: 'lose', labelKey: 'results.goals.lose.label', descKey: 'results.goals.lose.desc', fullValue: 'Схуднути (-300–500 ккал) 🔥', icon: <Target size={18} /> },
-  { id: 'maintain', labelKey: 'results.goals.maintain.label', descKey: 'results.goals.maintain.desc', fullValue: 'Підтримувати форму (±100 ккал)', icon: <Scale size={18} /> },
-  { id: 'gain', labelKey: 'results.goals.gain.label', descKey: 'results.goals.gain.desc', fullValue: "Набрати м'язи (+300–500 ккал) 💪", icon: <Flame size={18} /> },
+  { id: 'lose', labelKey: 'results.goals.lose.label', descKey: 'results.goals.lose.desc', icon: <Target size={18} /> },
+  { id: 'maintain', labelKey: 'results.goals.maintain.label', descKey: 'results.goals.maintain.desc', icon: <Scale size={18} /> },
+  { id: 'gain', labelKey: 'results.goals.gain.label', descKey: 'results.goals.gain.desc', icon: <Flame size={18} /> },
 ];
 
 const ACTIVITY_OPTIONS = [
-  { id: 'sedentary', labelKey: 'results.activities.sedentary.label', descKey: 'results.activities.sedentary.desc', fullValue: 'Сидячий (офіс, мало руху) 🪑', icon: <UserIcon size={18} /> },
-  { id: 'light', labelKey: 'results.activities.light.label', descKey: 'results.activities.light.desc', fullValue: 'Легка активність (1–3 трен/тиждень) 🚶', icon: <Activity size={18} /> },
-  { id: 'moderate', labelKey: 'results.activities.moderate.label', descKey: 'results.activities.moderate.desc', fullValue: 'Середня (3–5 тренувань) 🏃', icon: <Activity size={18} /> },
-  { id: 'high', labelKey: 'results.activities.high.label', descKey: 'results.activities.high.desc', fullValue: 'Висока (6–7 тренувань) 🔥', icon: <Flame size={18} /> },
+  { id: 'sedentary', labelKey: 'results.activities.sedentary.label', descKey: 'results.activities.sedentary.desc', icon: <UserIcon size={18} /> },
+  { id: 'light', labelKey: 'results.activities.light.label', descKey: 'results.activities.light.desc', icon: <Activity size={18} /> },
+  { id: 'moderate', labelKey: 'results.activities.moderate.label', descKey: 'results.activities.moderate.desc', icon: <Activity size={18} /> },
+  { id: 'high', labelKey: 'results.activities.high.label', descKey: 'results.activities.high.desc', icon: <Flame size={18} /> },
 ];
 
 export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initialData, user, onComplete }: ResultsScreenProps) => {
@@ -39,7 +40,8 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [notifyWater, setNotifyWater] = useState(false);
   const [notifyMeals, setNotifyMeals] = useState(false);
-  const [activeModal, setActiveModal] = useState<'physical' | 'goal' | 'activity' | 'language' | 'delete_account' | null>(null);
+  const [activeModal, setActiveModal] = useState<'physical' | 'goal' | 'activity' | 'language' | 'theme' | 'delete_account' | null>(null);
+  const { colorScheme, setAppTheme } = useAppContext();
 
   const fadeIn = useFadeIn(!isLoadingData);
 
@@ -56,11 +58,11 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
         if (error && error.code !== 'PGRST116') console.error('Error:', error);
 
         if (data) {
-          let activityStr = ACTIVITY_OPTIONS[0].fullValue;
+          let activityId = ACTIVITY_OPTIONS[0].id;
           const m = data.multiplier;
-          if (m >= 1.725) activityStr = ACTIVITY_OPTIONS[3].fullValue;
-          else if (m >= 1.55) activityStr = ACTIVITY_OPTIONS[2].fullValue;
-          else if (m >= 1.375) activityStr = ACTIVITY_OPTIONS[1].fullValue;
+          if (m >= 1.725) activityId = ACTIVITY_OPTIONS[3].id;
+          else if (m >= 1.55) activityId = ACTIVITY_OPTIONS[2].id;
+          else if (m >= 1.375) activityId = ACTIVITY_OPTIONS[1].id;
 
           setFormData(prev => ({
             ...prev,
@@ -69,7 +71,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
             age: data.age || prev.age,
             gender: data.gender || prev.gender,
             goal: data.goal || prev.goal,
-            activity: activityStr,
+            activity: data.activity || activityId,
             notifications: data.notification ? 'Так' : 'Ні',
           }));
           setNotifyWater(data.notify_water || false);
@@ -95,65 +97,37 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
       const weight = Number(overrides?.weight ?? formData.weight);
       const height = Number(overrides?.height ?? formData.height);
       const age = Number(overrides?.age ?? formData.age);
-      const gender = overrides?.gender ?? formData.gender ?? 'Чоловік 👨';
+      const gender = overrides?.gender ?? formData.gender ?? 'male';
       const activityStr = (overrides?.activity ?? formData.activity) as string;
       const goalStr = (overrides?.goal ?? formData.goal) as string;
 
-      let activityMultiplier = 1.2;
-      if (activityStr.includes('Сидячий')) activityMultiplier = 1.2;
-      else if (activityStr.includes('Легка')) activityMultiplier = 1.375;
-      else if (activityStr.includes('Середня')) activityMultiplier = 1.55;
-      else if (activityStr.includes('Висока')) activityMultiplier = 1.725;
+      const activityMultiplier = getActivityMultiplier(activityStr);
+      const goalKey = getGoalKey(goalStr);
 
-      let goalKey = 'maintain';
-      if (goalStr.includes('Схуднути') || goalStr.includes('Схуднення')) goalKey = 'lose';
-      else if (goalStr.includes('Набрати') || goalStr.includes('Набір')) goalKey = 'gain';
+      const metrics = calculateFitnessMetrics({
+        weight,
+        height,
+        age,
+        gender,
+        activityMultiplier,
+        goalKey,
+      });
 
-      let BMR = gender.includes('Чоловік') || gender.includes('👨')
-        ? 10 * weight + 6.25 * height - 5 * age + 5
-        : 10 * weight + 6.25 * height - 5 * age - 161;
-      BMR = Math.round(BMR);
-
-      const TDEE_Normal = Math.round(BMR * activityMultiplier);
-      let TDEE = TDEE_Normal;
-
-      if (goalKey === 'gain') {
-        TDEE = TDEE_Normal + 400;
-      } else if (goalKey === 'lose') {
-        const minSafe = (gender.includes('Чоловік') || gender.includes('👨')) ? 1600 : 1300;
-        const deficit = Math.min(500, Math.max(0, TDEE_Normal - minSafe));
-        TDEE = TDEE_Normal - deficit;
-      }
-      TDEE = Math.round(TDEE);
-
-      const protein_Normal = Math.round(weight * 1.6);
-      const fat_Normal = Math.round(weight * 0.9);
-      const carbs_Normal = Math.max(50, Math.round((TDEE_Normal - (protein_Normal * 4 + fat_Normal * 9)) / 4));
-
-      let protein = protein_Normal;
-      let fat = fat_Normal;
-      let carbs = carbs_Normal;
-
-      if (goalKey === 'gain') { protein = Math.round(weight * 2.0); fat = Math.round(weight * 1.0); }
-      else if (goalKey === 'lose') { protein = Math.round(weight * 2.1); fat = Math.round(weight * 0.9); }
-
-      fat = Math.max(fat, Math.round((TDEE * 0.20) / 9));
-      carbs = Math.max(20, Math.round((TDEE - (protein * 4 + fat * 9)) / 4));
-
-      protein = Math.round(protein / 5) * 5;
-      fat = Math.round(fat / 5) * 5;
-      carbs = Math.round(carbs / 5) * 5;
-
-      const waterPerDay = Math.min(Math.max(weight * 33, 2000), 4500);
-      const BMI = parseFloat((weight / Math.pow(height / 100, 2)).toFixed(1));
-      const BMICategory = BMI < 18.5 ? 'Недостатня вага' : BMI < 25 ? 'Норма' : BMI < 30 ? 'Надмірна вага' : 'Ожиріння';
+      const {
+        TDEE_Normal, TDEE,
+        protein_Normal, protein,
+        fat_Normal, fat,
+        carbs_Normal, carbs,
+        waterPerDay, BMI, BMICategory,
+      } = metrics;
 
       const { error } = await supabase.from('users').upsert({
         telegram_user_id: user.id,
         first_name: user.first_name,
         username: user.username || '',
         gender, age, weight, height,
-        goal: goalStr,
+        goal: goalKey,
+        activity: activityStr,
         multiplier: activityMultiplier,
         notification: formData.notifications === 'Так',
         TDEE_Normal, TDEE,
@@ -272,13 +246,13 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
             <SettingRow
               icon={<Target size={18} />}
               label={t('results.current_goal')}
-              value={t(GOAL_OPTIONS.find(g => formData.goal?.includes(g.fullValue.replace(/ .*/, '')))?.labelKey || 'results.goals.maintain.label')}
+              value={t(GOAL_OPTIONS.find(g => g.id === formData.goal || getGoalKey(formData.goal as string) === g.id)?.labelKey || 'results.goals.maintain.label')}
               onClick={() => setActiveModal('goal')}
             />
             <SettingRow
               icon={<Activity size={18} />}
               label={t('results.activity')}
-              value={t(ACTIVITY_OPTIONS.find(a => formData.activity?.includes(a.fullValue.replace(/ \(.*/, '')))?.labelKey || 'results.activities.sedentary.label')}
+              value={t(ACTIVITY_OPTIONS.find(a => a.id === formData.activity || getActivityMultiplier(formData.activity as string) === getActivityMultiplier(a.id))?.labelKey || 'results.activities.sedentary.label')}
               onClick={() => setActiveModal('activity')}
             />
           </div>
@@ -305,14 +279,27 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
         </div>
 
         <div style={fadeIn.style(2.5)}>
-          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')} & {t('results.account')}</h2>
+          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')} & {t('results.theme', 'Тема')}</h2>
+          
+          <div className="flex gap-3 mb-3">
+            <button onClick={() => setActiveModal('language')} className={`flex-1 rounded-2xl p-4 flex flex-row items-center gap-3 border transition-all active:scale-95 ${isDark ? 'bg-zinc-900/50 border-white/5 hover:bg-zinc-800' : 'bg-white border-zinc-200/50 hover:bg-zinc-50 shadow-sm'}`}>
+              <Globe size={20} style={{ color: themeColor }} />
+              <div className="text-left overflow-hidden">
+                 <p className={`text-[10px] font-bold uppercase tracking-wider truncate ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.language')}</p>
+                 <p className={`font-bold text-sm truncate ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{i18n.language.toUpperCase()}</p>
+              </div>
+            </button>
+            <button onClick={() => setActiveModal('theme')} className={`flex-1 rounded-2xl p-4 flex flex-row items-center gap-3 border transition-all active:scale-95 ${isDark ? 'bg-zinc-900/50 border-white/5 hover:bg-zinc-800' : 'bg-white border-zinc-200/50 hover:bg-zinc-50 shadow-sm'}`}>
+              {colorScheme === 'dark' ? <Moon size={20} style={{ color: themeColor }} /> : <Sun size={20} style={{ color: themeColor }} />}
+              <div className="text-left overflow-hidden">
+                 <p className={`text-[10px] font-bold uppercase tracking-wider truncate ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.theme', 'Тема')}</p>
+                 <p className={`font-bold text-sm truncate ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{colorScheme === 'dark' ? t('results.theme_dark', 'Темна') : colorScheme === 'light' ? t('results.theme_light', 'Світла') : t('results.theme_system', 'Системна')}</p>
+              </div>
+            </button>
+          </div>
+
+          <h2 className={`px-4 text-xs font-semibold uppercase tracking-wider mb-2 mt-6 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.account', 'Акаунт')}</h2>
           <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-zinc-200/50 shadow-sm'}`}>
-            <SettingRow
-              icon={<Globe size={18} />}
-              label={t('results.language')}
-              value={i18n.language.toUpperCase()}
-              onClick={() => setActiveModal('language')}
-            />
             <SettingRow
               icon={<Trash2 size={18} className="text-red-500" />}
               label={t('results.delete_account')}
@@ -391,9 +378,9 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                   <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.current_goal')}</h3>
                   <div className="space-y-3 mb-8">
                     {GOAL_OPTIONS.map(opt => {
-                      const isSelected = (formData.goal as string)?.includes(opt.fullValue.replace(/ .*/, ''));
+                      const isSelected = formData.goal === opt.id || formData.goal === getGoalKey(formData.goal as string);
                       return (
-                        <button key={opt.id} onClick={() => { handleChange('goal', opt.fullValue); handleSave(true, { goal: opt.fullValue }); }}
+                        <button key={opt.id} onClick={() => { handleChange('goal', opt.id); handleSave(true, { goal: opt.id }); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
                           style={isSelected ? { borderColor: themeColor } : {}}
                         >
@@ -415,9 +402,9 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                   <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.activity')}</h3>
                   <div className="space-y-3 mb-8">
                     {ACTIVITY_OPTIONS.map(opt => {
-                      const isSelected = (formData.activity as string)?.includes(opt.fullValue.replace(/ \(.*/, ''));
+                      const isSelected = formData.activity === opt.id || getActivityMultiplier(formData.activity as string) === getActivityMultiplier(opt.id);
                       return (
-                        <button key={opt.id} onClick={() => { handleChange('activity', opt.fullValue); handleSave(true, { activity: opt.fullValue }); }}
+                        <button key={opt.id} onClick={() => { handleChange('activity', opt.id); handleSave(true, { activity: opt.id }); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
                           style={isSelected ? { borderColor: themeColor } : {}}
                         >
@@ -447,6 +434,33 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                           style={isSelected ? { borderColor: themeColor } : {}}
                         >
                           <div className="text-left flex-1 font-bold text-sm" style={isSelected ? { color: themeColor } : { color: isDark ? '#f4f4f5' : '#18181b' }}>{labels[lang]}</div>
+                          {isSelected && <Check size={20} style={{ color: themeColor }} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeModal === 'theme' && (
+                <div>
+                  <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.change_theme', 'Змінити тему')}</h3>
+                  <div className="space-y-3 mb-8">
+                    {[
+                      { id: 'dark', label: t('results.theme_dark', 'Темна'), icon: <Moon size={18} /> },
+                      { id: 'light', label: t('results.theme_light', 'Світла'), icon: <Sun size={18} /> },
+                      { id: 'system', label: t('results.theme_system', 'Як у Telegram'), icon: <Globe size={18} /> }
+                    ].map(opt => {
+                      const savedTheme = localStorage.getItem('app-theme');
+                      const isSelected = savedTheme ? savedTheme === opt.id : opt.id === 'system';
+                      
+                      return (
+                        <button key={opt.id} onClick={() => { setAppTheme(opt.id as 'dark' | 'light' | 'system'); setActiveModal(null); }}
+                          className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}
+                          style={isSelected ? { borderColor: themeColor } : {}}
+                        >
+                          <div className={`mr-3 ${isSelected ? '' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`} style={isSelected ? { color: themeColor } : {}}>{opt.icon}</div>
+                          <div className="text-left flex-1 font-bold text-sm" style={isSelected ? { color: themeColor } : { color: isDark ? '#f4f4f5' : '#18181b' }}>{opt.label}</div>
                           {isSelected && <Check size={20} style={{ color: themeColor }} />}
                         </button>
                       );
