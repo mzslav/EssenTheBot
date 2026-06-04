@@ -1,151 +1,198 @@
-# 🏋️‍♂️ EssenTheBot Telegram Mini App
+<div align="center">
+
+# Essen
+
+**Smart Telegram Mini App for nutrition tracking & fitness**
+
+Built with React · TypeScript · Supabase · Vercel
 
 ---
 
-## 📝 Про проект
-**Fitness & Diet TMA** — це сучасний додаток для Telegram, який допомагає повністю контролювати свій тренувальний процес та раціон в одному місці.
+</div>
+
+## About
+
+Essen is a Telegram Mini App that combines AI-powered meal recognition, workout planning, and detailed analytics into a single, premium mobile interface. Designed to run natively inside Telegram with full dark/light theme support and multilingual UI.
 
 ---
 
-## 🔥 Ключові можливості
-* ⚡ **Швидкий старт:** Починай тренування одним натисканням.
-* 📋 **Конструктор планів:** Створюй власні шаблони вправ.
-* 📉 **Професійна аналітика:** Відстежуй **загальний об'єм (тоннаж)** та **максимальні ваги** на інтерактивних графіках.
-* 🍎 **AI Нутриціолог:** Аналізуй фото їжі або текстові описи для підрахунку калорій та БЖВ.
-* 🕹 **UX/UI:** Підтримка темної теми та нативного інтерфейсу Telegram.
-
----
-
-
----
-
-## 📸 Скріншоти (Visuals)
+## Screenshots
 
 <div align="center">
-  <table style="border: none;">
+  <table>
     <tr>
-      <td align="center"><b>Головний екран</b></td>
-      <td align="center"><b>Екран тренувань</b></td>
-      <td align="center"><b>Аналітика</b></td>
+      <td align="center"><b>Dashboard</b></td>
+      <td align="center"><b>Menu & AI Input</b></td>
+      <td align="center"><b>Analytics</b></td>
     </tr>
     <tr>
-      <td><img src="./screenshots/main_screen.jpg" width="250" alt="Main Screen"></td>
-      <td><img src="./screenshots/workout.jpg" width="250" alt="Active Workout"></td>
-      <td><img src="./screenshots/analytics.jpg" width="250" alt="Analytics"></td>
+      <td><img src="./screenshots/MainScreen.png" width="240" alt="Dashboard"></td>
+      <td><img src="./screenshots/MenuScreen.png" width="240" alt="Menu"></td>
+      <td><img src="./screenshots/Main-AnalyticsScreen.png" width="240" alt="Analytics"></td>
     </tr>
     <tr>
-      <td align="center"><b>AI Аналіз їжі</b></td>
-      <td align="center"><b>Профіль користувача</b></td>
+      <td align="center"><b>Workout Plans</b></td>
+      <td align="center"><b>Progress Tracking</b></td>
+      <td align="center"><b>Profile & Settings</b></td>
     </tr>
     <tr>
-      <td><img src="./screenshots/food_ai.jpg" width="250" alt="Food AI"></td>
-      <td><img src="./screenshots/profile.jpg" width="250" alt="Profile"></td>
+      <td><img src="./screenshots/WorkoutScreen.png" width="240" alt="Workout"></td>
+      <td><img src="./screenshots/Workout-ProgressScreen.png" width="240" alt="Progress"></td>
+      <td><img src="./screenshots/ProfileScreen.png" width="240" alt="Profile"></td>
     </tr>
   </table>
 </div>
 
 ---
 
-## 🛠 Технологічний стек
-* **Frontend:** `React 18` + `TypeScript` + `Vite`
-* **Styling:** `Tailwind CSS` (Glassmorphism design)
-* **Backend/DB:** `Supabase` (PostgreSQL)
-* **Charts:** `Recharts`
-* **Integration:** `Telegram Web Apps API`
+## Key Features
+
+### 🍏 AI Nutrition Tracking
+- **Photo recognition** — take a photo of your meal or upload from gallery, AI identifies the dish and calculates calories & macros
+- **Voice input** — describe what you ate via voice message, automatic transcription + AI analysis
+- **Text input** — type a meal description and get instant nutritional breakdown
+- **Barcode scanner** — scan product barcodes for instant nutritional info
+- **Manual entry** — quick-add meals with custom values
+
+### 🏋️ Workout System
+- **Plan builder** — create reusable workout templates with exercises, sets, reps, weight, and RIR
+- **Active session tracker** — log sets in real-time during workouts with previous results visible
+- **Progress charts** — track max weight, total volume, and rep history per exercise over time
+- **Video links** — attach YouTube technique videos directly to exercises
+
+### 📊 Analytics & Insights
+- **7-day rolling calendar** with color-coded progress rings (green/yellow/red/grey)
+- **Weekly navigation** — browse past weeks to review calorie adherence
+- **Nutrition trends** — calorie and macronutrient charts over 7 or 30 days
+- **Water tracking** — daily water intake logging with visual progress
+- **BMI calculator** — body composition overview with ideal weight reference
+- **Weight tracker** — log weight over time with interactive chart
+
+### 🌍 Multilingual & Themeable
+- **4 languages** — English, Ukrainian, Polish, Russian (auto-detected from Telegram)
+- **Dark & Light themes** — follows Telegram's theme or can be set manually
+- **Telegram notifications** — automated daily reminders for water and meals
 
 ---
 
-## 🚀 Локальне розгортання
+## Tech Stack
 
-
-1.  **Встановлення залежностей:**
-    ```bash
-    npm install
-    ```
-
-2.  **Запуск:**
-    ```bash
-    npm run dev
-    ```
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite |
+| Styling | Tailwind CSS 4, Framer Motion |
+| Database | Supabase (PostgreSQL) |
+| AI | OpenRouter (Gemini), AssemblyAI |
+| Backend | Vercel Serverless Functions |
+| Charts | Recharts |
+| i18n | i18next |
+| Platform | Telegram Mini Apps API |
 
 ---
 
-## 🔐 Налаштування середовища (`.env`)
-
-Створіть файл **`.env`** у корені проекту та додайте ваші ключі:
-
-```env
-# Supabase Configuration
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_....
-VITE_SUPABASE_URL=https://123......supabase.co
-
-# Voice recognition
-VITE_ASSEMBLYAI_API_KEY=8ddc2f432vvf04a39.....
-
-# AI Configuration (OpenRouter)
-VITE_OPENROUTER_API_KEY=sk-or-v1-623ea3f771a....
-VITE_OPENROUTER_MODEL=google/gemini-2.0-flash-lite-001
+## Project Structure
 
 ```
+├── api/                    # Vercel Serverless Functions
+│   ├── ai/                 # AI meal recognition proxy
+│   ├── cron/               # Scheduled notifications
+│   ├── transcribe/         # Voice-to-text proxy (AssemblyAI)
+│   └── webhook/            # Telegram bot webhook (/start)
+├── src/
+│   ├── components/         # Reusable UI components
+│   ├── context/            # React context (auth, theme)
+│   ├── locales/            # Translation files (en, uk, pl, ru)
+│   ├── screens/            # App screens
+│   ├── utils/              # Services & helpers
+│   └── types/              # TypeScript definitions
+├── init_database.sql       # Full DB schema (run once to set up)
+└── vercel.json             # Deployment & cron config
+```
 
-### 🗄 Структура бази даних (Database Schema)
+---
 
-Для коректної роботи додатку необхідно створити наступні таблиці в Supabase. Ви можете використати цей перелік як інструкцію для SQL Editor:
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- [Supabase](https://supabase.com) project
+- [OpenRouter](https://openrouter.ai) API key
+- [AssemblyAI](https://www.assemblyai.com) API key
+
+### 1. Install
+
+```bash
+git clone https://github.com/your-username/EssenTheBot.git
+cd EssenTheBot
+npm install
+```
+
+### 2. Database Setup
+
+Open the **SQL Editor** in your Supabase dashboard and run the contents of `init_database.sql`. This single file creates all necessary tables, indexes, and RLS policies — no manual setup required.
+
+### 3. Environment Variables
+
+Copy the example and fill in your keys:
+
+```bash
+cp .env.example .env
+```
+
+The project uses two types of environment variables:
+
+#### Local `.env` (for `npm run dev`)
+
+These are needed to run the app locally. Variables prefixed with `VITE_` are embedded into the frontend bundle at build time.
+
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/public key |
+| `VITE_OPENROUTER_API_KEY` | OpenRouter key for AI meal recognition |
+| `VITE_OPENROUTER_MODEL` | AI model identifier (e.g. `google/gemini-2.5-flash-lite-preview-09-2025`) |
+| `ASSEMBLYAI_API_KEY` | AssemblyAI key (server-side only, not exposed to browser) |
+| `TELEGRAM_BOT_TOKEN` | Bot token for webhook & notifications |
+| `CRON_SECRET` | Secret for cron endpoint authentication |
+
+#### Vercel Dashboard (for production)
+
+When deploying, add **all variables from the table above** to your Vercel project under **Settings → Environment Variables**. Additionally, the backend functions also use:
+
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_SERVICE_KEY` | Supabase service role key (full DB access, backend only) |
+
+> **Important:** `ASSEMBLYAI_API_KEY` does **not** have the `VITE_` prefix on purpose — this keeps it hidden from the browser. All AssemblyAI requests go through the `/api/transcribe` serverless proxy.
+
+### 4. Run Locally
+
+```bash
+npm run dev
+```
+
+> **Note:** The app requires Telegram WebApp context to authenticate users. Outside of Telegram, a dedicated "Telegram Only" screen is shown.
 
 ---
 
-#### 1. `users` — Користувачі
-Зберігає основні дані про користувачів Telegram.
-* **id**: `bigint` (Primary Key, Identity)
-* **telegram_user_id**: `bigint` (Unique) — ID користувача з Telegram.
-* **first_name**: `text` — Ім'я користувача.
-* **username**: `text` — Юзернейм (@handle).
+## Deployment
 
-#### 2. `workout_plans` — Шаблони тренувань
-Шаблони (програми), які створює користувач (напр. "День Спини").
-* **id**: `bigint` (Primary Key, Identity)
-* **user_id**: `bigint` (Foreign Key -> `users.id`)
-* **name**: `text` — Назва плану.
-* **created_at**: `timestamp with time zone` (Default: now())
+This project is designed for **one-click deployment to Vercel**. The `api/` folder is automatically recognized as Serverless Functions, and the React app is built and served from CDN.
 
-#### 3. `plan_exercises` — Вправи в плані
-Список вправ, що входять до конкретного шаблону.
-* **plan_id**: `bigint` (Foreign Key -> `workout_plans.id`, On Delete: Cascade)
-* **exercise_name**: `text` — Назва вправи.
-* **target_sets**: `int` — Цільова кількість підходів.
-* **target_reps**: `text` — Цільові повторення (напр. "8-10").
-* **video_url**: `text` (Nullable) — Посилання на YouTube.
-* **order_index**: `int` — Порядок вправи у списку.
+```bash
+npm i -g vercel
+vercel --prod
+```
 
-#### 4. `workout_sessions` — Виконані тренування
-Запис кожного факту тренування.
-* **id**: `bigint` (Primary Key, Identity)
-* **user_id**: `bigint` (Foreign Key -> `users.id`)
-* **plan_id**: `bigint` (Foreign Key -> `workout_plans.id`, Nullable)
-* **workout_name**: `text` — Назва (копіюється з плану або вводиться вручну).
-* **total_volume**: `numeric` — Сумарний тоннаж (кг × підходи).
-* **date**: `date` (Default: today)
+Or simply connect your GitHub repository in the [Vercel Dashboard](https://vercel.com) — every push to `main` will trigger an automatic deployment.
 
-#### 5. `exercise_logs` — Деталі підходів
-Конкретні дані по кожному підходу в рамках сесії.
-* **id**: `bigint` (Primary Key, Identity)
-* **session_id**: `bigint` (Foreign Key -> `workout_sessions.id`, On Delete: Cascade)
-* **exercise_name**: `text` — Назва вправи.
-* **set_number**: `int` — Номер підходу.
-* **weight**: `numeric` — Вага (кг).
-* **reps**: `int` — Кількість повторень.
-* **rir**: `int` (Nullable) — Reps In Reserve (0-4).
-* **note**: `text` (Nullable) — Примітка до вправи.
-
-#### 6. `meals` — Щоденник харчування
-Історія прийомів їжі.
-* **id**: `bigint` (Primary Key, Identity)
-* **user_id**: `bigint` (Foreign Key -> `users.id`)
-* **name**: `text` — Назва страви/опис.
-* **calories**: `int` — Калорійність.
-* **protein**: `numeric` — Білки (г).
-* **fat**: `numeric` — Жири (г).
-* **carbs**: `numeric` — Вуглеводи (г).
-* **date**: `timestamp with time zone` (Default: now())
+Don't forget to:
+1. Add all environment variables in **Vercel → Settings → Environment Variables**
+2. Set up the Telegram webhook to point to `https://your-domain.vercel.app/api/webhook`
 
 ---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

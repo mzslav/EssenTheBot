@@ -231,7 +231,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
 
                         <div className="flex flex-wrap gap-2 mt-3 ml-10">
                           <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>{ex.sets} × {ex.reps}</span>
-                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>{ex.weight} кг</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>{ex.weight} {t('workout.plans_tab.kg', 'kg')}</span>
                           <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}>RIR {ex.rir}</span>
                         </div>
 
