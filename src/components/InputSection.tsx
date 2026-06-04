@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { InputMode } from '../types/types';
-import { Camera, Mic, Type, Image as ImageIcon, Play, Pause, Trash2 } from 'lucide-react';
+import { Camera, Mic, Type, Image as ImageIcon, Play, Pause, Trash2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface InputSectionProps {
@@ -196,6 +196,7 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
   const handleSubmit = () => {
     if (!capturedPhoto) return;
     onSubmit('photo', capturedPhoto, photoText);
+    retakePhoto();
   };
 
   if (photoSource === 'none') {
@@ -291,18 +292,30 @@ const PhotoInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputCompone
       </div>
 
       <div className="p-4 space-y-3">
-        <input
-          type="text"
-          value={photoText}
-          onChange={(e) => setPhotoText(e.target.value)}
-          placeholder={t('input.add_description')}
-          disabled={isProcessing}
-          className={`w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
-            isDark 
-              ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20' 
-              : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
-          }`}
-        />
+        <div className="relative">
+          <input
+            type="text"
+            value={photoText}
+            onChange={(e) => setPhotoText(e.target.value)}
+            placeholder={t('input.add_description')}
+            disabled={isProcessing}
+            className={`w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all disabled:opacity-50 pr-10 ${
+              isDark 
+                ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20' 
+                : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
+            }`}
+          />
+          {photoText && !isProcessing && (
+            <button
+              onClick={() => setPhotoText('')}
+              className={`absolute top-1/2 -translate-y-1/2 right-3 p-1 rounded-full transition-colors ${
+                isDark ? 'hover:bg-white/10 text-white/50 hover:text-white' : 'hover:bg-slate-200 text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
         {capturedPhoto && (
           <button
             onClick={handleSubmit}
@@ -440,6 +453,7 @@ const handleTranscribe = async (blob: Blob) => {
 
   const handleSubmit = () => {
     onSubmit('voice', transcribedText);
+    deleteAudio();
   };
 
   return (
@@ -594,22 +608,35 @@ const TextInput = ({ isDark, themeColor, onSubmit, isProcessing }: InputComponen
   const handleSubmit = () => {
     if (inputText.trim()) {
       onSubmit('text', inputText);
+      setInputText('');
     }
   };
 
   return (
     <div className="w-full p-4 space-y-3">
-      <textarea
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        placeholder={t('input.placeholder_text')}
-        disabled={isProcessing}
-        className={`w-full h-24 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${
-          isDark 
-            ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20' 
-            : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
-        }`}
-      />
+      <div className="relative">
+        <textarea
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder={t('input.placeholder_text')}
+          disabled={isProcessing}
+          className={`w-full h-24 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 transition-all disabled:opacity-50 pr-10 ${
+            isDark 
+              ? 'bg-white/5 border border-white/10 text-white placeholder-white/30 focus:ring-white/20' 
+              : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-slate-300'
+          }`}
+        />
+        {inputText && !isProcessing && (
+          <button
+            onClick={() => setInputText('')}
+            className={`absolute top-2 right-2 p-1.5 rounded-full transition-colors ${
+              isDark ? 'hover:bg-white/10 text-white/50 hover:text-white' : 'hover:bg-slate-200 text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
       <button
         onClick={handleSubmit}
         disabled={!inputText.trim() || isProcessing}
