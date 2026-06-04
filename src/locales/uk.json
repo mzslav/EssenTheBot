@@ -400,7 +400,8 @@
       "muscle_group_placeholder": "Наприклад: Спина + Біцепс",
       "no_plans": "Немає планів",
       "create_first_plan": "Створи свій перший план тренувань, щоб додати в нього вправи.",
-      "updated_at": "Оновлено:"
+      "updated_at": "Оновлено:",
+      "kg": "кг"
     },
     "progress_tab": {
       "max_weight": "Макс. вага (кг)",

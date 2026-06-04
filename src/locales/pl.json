@@ -400,7 +400,8 @@
       "muscle_group_placeholder": "Np.: Plecy + Biceps",
       "no_plans": "Brak planów",
       "create_first_plan": "Utwórz swój pierwszy plan treningowy, aby dodać ćwiczenia.",
-      "updated_at": "Zaktualizowano:"
+      "updated_at": "Zaktualizowano:",
+      "kg": "kg"
     },
     "progress_tab": {
       "max_weight": "Max waga (kg)",

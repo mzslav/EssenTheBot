@@ -400,7 +400,8 @@
       "muscle_group_placeholder": "e.g., Back + Biceps",
       "no_plans": "No plans",
       "create_first_plan": "Create your first workout plan to add exercises.",
-      "updated_at": "Updated:"
+      "updated_at": "Updated:",
+      "kg": "kg"
     },
     "progress_tab": {
       "max_weight": "Max Weight (kg)",
