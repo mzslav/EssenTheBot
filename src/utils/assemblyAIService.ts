@@ -1,5 +1,3 @@
-const ASSEMBLYAI_API_KEY = import.meta.env.VITE_ASSEMBLYAI_API_KEY;
-
 function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
@@ -52,8 +50,6 @@ export async function convertBlobToWav(inputBlob: Blob): Promise<Blob> {
     );
 
     const source = offlineContext.createBufferSource();
-    source.channelCount = 1;
-    source.channelInterpretation = 'speakers';
     source.buffer = audioBuffer;
     source.connect(offlineContext.destination);
     source.start();
@@ -65,23 +61,30 @@ export async function convertBlobToWav(inputBlob: Blob): Promise<Blob> {
   }
 }
 
-async function uploadAudio(audioBlob: Blob): Promise<string> {
-  if (!ASSEMBLYAI_API_KEY) {
-    throw new Error('api_key_missing');
-  }
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
-  const response = await fetch('https://api.assemblyai.com/v2/upload', {
+async function uploadAudio(audioBlob: Blob): Promise<string> {
+  const base64 = await blobToBase64(audioBlob);
+
+  const response = await fetch('/api/transcribe', {
     method: 'POST',
-    headers: {
-      'authorization': ASSEMBLYAI_API_KEY,
-      'content-type': 'application/octet-stream',
-    },
-    body: audioBlob,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'upload', audioBase64: base64 }),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`error_upload: ${response.status} - ${errorText}`);
+    const errorData = await response.json();
+    throw new Error(`error_upload: ${response.status} - ${errorData.error}`);
   }
 
   const data = await response.json();
@@ -89,21 +92,10 @@ async function uploadAudio(audioBlob: Blob): Promise<string> {
 }
 
 async function createTranscription(audioUrl: string, languageCode: string): Promise<string> {
-  const requestBody = {
-    audio_url: audioUrl,
-    speech_models: ['universal-3-pro', 'universal-2'],
-    language_code: languageCode,
-    punctuate: true,
-    format_text: true,
-  };
-
-  const response = await fetch('https://api.assemblyai.com/v2/transcript', {
+  const response = await fetch('/api/transcribe', {
     method: 'POST',
-    headers: {
-      authorization: ASSEMBLYAI_API_KEY,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'transcribe', audioUrl, languageCode }),
   });
 
   if (!response.ok) {
@@ -116,8 +108,10 @@ async function createTranscription(audioUrl: string, languageCode: string): Prom
 }
 
 async function checkTranscriptionStatus(transcriptId: string): Promise<{ status: string; text?: string; error?: string }> {
-  const response = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-    headers: { authorization: ASSEMBLYAI_API_KEY },
+  const response = await fetch('/api/transcribe', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'status', transcriptId }),
   });
 
   if (!response.ok) throw new Error('error_status');
