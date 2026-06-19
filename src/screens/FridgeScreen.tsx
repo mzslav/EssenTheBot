@@ -25,6 +25,28 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, Calculator, ScanLine, AlertCircle, X, History } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const ProcessingNotice = ({ isDark, themeColor, title, subtitle }: { isDark: boolean; themeColor: string; title: string; subtitle: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 8, height: 0 }}
+    animate={{ opacity: 1, y: 0, height: 'auto' }}
+    exit={{ opacity: 0, y: -8, height: 0 }}
+    className="overflow-hidden"
+  >
+    <div className={`rounded-2xl border p-4 flex items-center gap-3 ${isDark ? 'bg-zinc-900/70 border-white/10' : 'bg-white border-zinc-200 shadow-sm'}`}>
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${themeColor}18` }}>
+        <div
+          className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: `${themeColor}55`, borderTopColor: themeColor }}
+        />
+      </div>
+      <div className="min-w-0">
+        <p className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{title}</p>
+        <p className={`text-[11px] font-medium mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{subtitle}</p>
+      </div>
+    </div>
+  </motion.div>
+);
+
 export const FridgeScreen = ({
   user,
   isDark,
@@ -342,6 +364,17 @@ export const FridgeScreen = ({
         isProcessing={isProcessing}
       />
 
+      <AnimatePresence>
+        {isProcessing && !aiResponse && (
+          <ProcessingNotice
+            isDark={isDark}
+            themeColor={themeColor}
+            title={t('input.processing')}
+            subtitle={t('input.ai_analyzing')}
+          />
+        )}
+      </AnimatePresence>
+
       {aiResponse && (
         <AIResponseSection
           aiResponse={aiResponse}
@@ -353,7 +386,7 @@ export const FridgeScreen = ({
         />
       )}
 
-      {!aiResponse && !showManual && !showBarcode && (
+      {!aiResponse && !isProcessing && !showManual && !showBarcode && (
         <RecentItemsList
           meals={todayMeals}
           isLoading={isLoadingRecent}

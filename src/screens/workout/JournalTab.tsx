@@ -10,6 +10,7 @@ import {
   upsertSet,
   getPreviousSession,
   getPlans,
+  getSessionStatusesByDateRange,
 } from '../../utils/workoutService';
 import type { WorkoutPlan } from '../../types/types';
 import supabase from '../../supabase/supabase-client';
@@ -52,6 +53,12 @@ function getWeekDays(center: Date): Date[] {
 
 const calcVolume = (sets: any[]) =>
   sets.filter((s: any) => s.is_completed).reduce((sum: number, s: any) => sum + (s.weight ?? 0) * (s.reps ?? 0), 0);
+
+const getWorkoutDotColor = (statuses: WorkoutSession['status'][], themeColor: string) => {
+  if (statuses.includes('completed')) return '#10b981';
+  if (statuses.includes('in_progress')) return themeColor;
+  return null;
+};
 
 const openVideo = (url: string) => {
   if (!url) return;
@@ -397,7 +404,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
   const [saving, setSaving] = useState(false);
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [showPlanPicker, setShowPlanPicker] = useState(false);
-  const [sessionDates, setSessionDates] = useState<Set<string>>(new Set());
+  const [sessionStatuses, setSessionStatuses] = useState<Record<string, WorkoutSession['status'][]>>({});
   const [activeWorkout, setActiveWorkout] = useState<{ sessionMeta: WorkoutSession; sessionFull: SessionWithExercises; previousSession: SessionWithExercises | null } | null>(null);
 
   const isToday = toDateStr(viewDate) === toDateStr(todayDate.current);
@@ -409,8 +416,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
     const from = toDateStr(addDays(todayDate.current, -60));
     const to = toDateStr(addDays(todayDate.current, 30));
     try {
-      const { data } = await supabase.from('workout_sessions').select('date').eq('user_id', user.id).gte('date', from).lte('date', to);
-      if (data) setSessionDates(new Set(data.map((r: any) => r.date)));
+      setSessionStatuses(await getSessionStatusesByDateRange(user.id, from, to));
     } catch (e) { console.error(e); }
   }, [user?.id]);
 
@@ -435,6 +441,11 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
         await updateSessionStatus(session.id, 'in_progress');
         updatedSession = { ...session, status: 'in_progress' };
         setSessions(prev => prev.map(s => s.id === session.id ? updatedSession : s));
+        setSessionStatuses(prev => {
+          const date = updatedSession.date || toDateStr(viewDate);
+          const statuses = prev[date] ?? [];
+          return { ...prev, [date]: statuses.includes('in_progress') ? statuses : [...statuses, 'in_progress'] };
+        });
       }
       const full = await getSessionWithExercises(session.id);
       if (!full) { setSaving(false); return; }
@@ -539,7 +550,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
             const isFuture = d > todayDate.current;
             const isSelected = dStr === toDateStr(viewDate);
             const isT = dStr === toDateStr(todayDate.current);
-            const hasSession = sessionDates.has(dStr);
+            const dotColor = getWorkoutDotColor(sessionStatuses[dStr] ?? [], themeColor);
             return (
               <button key={`day-${i}`} onClick={() => !isFuture && setViewDate(new Date(d))} disabled={isFuture}
                 className={`flex flex-col items-center justify-center py-3 rounded-2xl transition-all active:scale-95 ${isFuture ? isDark ? 'text-zinc-800 cursor-default' : 'text-zinc-200 cursor-default'
@@ -550,7 +561,13 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
                 style={isSelected && !isFuture ? { background: themeColor } : {}}
               >
                 <span className="text-sm font-black leading-none">{d.getDate()}</span>
-                <span className={`w-1 h-1 rounded-full mt-1.5 ${hasSession ? isSelected ? 'bg-white' : 'bg-emerald-500' : 'bg-transparent'}`} />
+                <span
+                  className="w-1.5 h-1.5 rounded-full mt-1.5"
+                  style={{
+                    backgroundColor: dotColor ?? 'transparent',
+                    boxShadow: isSelected && dotColor ? '0 0 0 1px rgba(255,255,255,0.9)' : undefined,
+                  }}
+                />
               </button>
             );
           })}

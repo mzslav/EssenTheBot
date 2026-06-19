@@ -249,6 +249,7 @@
     "placeholder_voice": "Na przykład: Kurczak z ryżem 200g",
     "placeholder_text": "Opisz co zjadłeś, na przykład:\nKurczak z ryżem 200g, sałatka warzywna...",
     "ai_hint": "AI automatycznie rozpozna posiłek i obliczy kalorie",
+    "ai_analyzing": "AI analizuje posiłek i oblicza kalorie",
     "processing_audio": "Przetwarzanie audio...",
     "uploading": "Przesyłanie...",
     "recognizing": "Rozpoznawanie...",

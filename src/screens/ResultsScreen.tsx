@@ -175,6 +175,8 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
 
   if (isLoadingData) return <ProfileScreenSkeleton isDark={isDark} />;
 
+  const normalizedGoal = getGoalKey((formData.goal || 'maintain') as string);
+
   const SettingRow = ({ icon, label, value, onClick, textClass }: any) => (
     <button onClick={onClick} className={`w-full flex items-center justify-between p-4 bg-transparent border-b last:border-b-0 ${isDark ? 'border-zinc-800/50 hover:bg-zinc-800/30' : 'border-zinc-100 hover:bg-zinc-50'} transition-colors`}>
       <div className="flex items-center gap-3">
@@ -246,7 +248,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
             <SettingRow
               icon={<Target size={18} />}
               label={t('results.current_goal')}
-              value={t(GOAL_OPTIONS.find(g => g.id === formData.goal || getGoalKey(formData.goal as string) === g.id)?.labelKey || 'results.goals.maintain.label')}
+              value={t(GOAL_OPTIONS.find(g => g.id === normalizedGoal)?.labelKey || 'results.goals.maintain.label')}
               onClick={() => setActiveModal('goal')}
             />
             <SettingRow
@@ -376,7 +378,7 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                   <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.current_goal')}</h3>
                   <div className="space-y-3 mb-8">
                     {GOAL_OPTIONS.map(opt => {
-                      const isSelected = formData.goal === opt.id || formData.goal === getGoalKey(formData.goal as string);
+                      const isSelected = opt.id === normalizedGoal;
                       return (
                         <button key={opt.id} onClick={() => { handleChange('goal', opt.id); handleSave(true, { goal: opt.id }); }}
                           className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSelected ? isDark ? 'border-zinc-600 bg-zinc-800' : 'border-zinc-400 bg-zinc-100' : isDark ? 'border-zinc-800 bg-transparent' : 'border-zinc-200 bg-transparent'}`}

@@ -390,3 +390,26 @@ export async function getSessionsByDate(telegramUserId: number, date: string): P
   if (error) throw error;
   return data ?? [];
 }
+
+export async function getSessionStatusesByDateRange(
+  telegramUserId: number,
+  from: string,
+  to: string
+): Promise<Record<string, WorkoutSession['status'][]>> {
+  const internalId = await getInternalUserId(telegramUserId);
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('date,status')
+    .eq('user_id', internalId)
+    .gte('date', from)
+    .lte('date', to);
+
+  if (error) throw error;
+
+  return (data ?? []).reduce<Record<string, WorkoutSession['status'][]>>((acc, session) => {
+    const date = session.date as string;
+    const status = session.status as WorkoutSession['status'];
+    acc[date] = [...(acc[date] ?? []), status];
+    return acc;
+  }, {});
+}

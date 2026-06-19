@@ -249,6 +249,7 @@
     "placeholder_voice": "Example: Chicken with rice 200g",
     "placeholder_text": "Describe what you ate, for example:\nChicken with rice 200g, vegetable salad...",
     "ai_hint": "AI will recognize the meal and calculate calories automatically",
+    "ai_analyzing": "AI is analyzing the meal and calculating calories",
     "processing_audio": "Processing audio...",
     "uploading": "Uploading...",
     "recognizing": "Recognizing...",
