@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { createRagChatAnswer } from './lib/modules/create-rag-chat-answer';
-import { ragEnv } from './lib/env';
-import { validateImagePayload } from './lib/image';
+import { createRagChatAnswer } from './_lib/modules/create-rag-chat-answer.js';
+import { ragEnv } from './_lib/env.js';
+import { validateImagePayload } from './_lib/image.js';
 import {
   ApiError,
   applyCors,
@@ -11,7 +11,7 @@ import {
   handleCorsPreflight,
   isProductionEnvironment,
   sendApiError,
-} from './_shared';
+} from './_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCorsPreflight(req, res)) {
@@ -24,14 +24,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const message = typeof req.body?.message === 'string' ? req.body.message : '';
     assertMaxTextLength('Message', message, ragEnv.maxTextChars());
     const image = validateImagePayload(req.body?.image);
-    const rawHistory = Array.isArray(req.body?.history) ? req.body.history : [];
+    const rawHistory: unknown[] = Array.isArray(req.body?.history) ? req.body.history : [];
     const history = rawHistory
       .filter(
         (item): item is { role: 'user' | 'assistant'; content: string } =>
           !!item &&
           typeof item === 'object' &&
-          (item.role === 'user' || item.role === 'assistant') &&
-          typeof item.content === 'string'
+          ((item as any).role === 'user' || (item as any).role === 'assistant') &&
+          typeof (item as any).content === 'string'
       )
       .map((item) => ({
         role: item.role,

@@ -3,9 +3,9 @@ import {
   saveKnowledgeDocument,
   updateSingleChunkKnowledgeDocument,
   upsertKnowledgeSnapshot,
-} from '../adapters/knowledge-store';
-import { createContentHash } from '../hash';
-import { createTextEmbedding } from './create-text-embedding';
+} from '../adapters/knowledge-store.js';
+import { createContentHash } from '../hash.js';
+import { createTextEmbedding } from './create-text-embedding.js';
 
 type JsonObject = Record<string, unknown>;
 

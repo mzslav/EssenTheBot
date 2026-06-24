@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ingestTextDocument } from './lib/modules/ingest-text-document';
-import { ragEnv } from './lib/env';
+import { ingestTextDocument } from './_lib/modules/ingest-text-document.js';
+import { ragEnv } from './_lib/env.js';
 import {
   ApiError,
   applyCors,
@@ -9,7 +9,7 @@ import {
   authenticateTelegramRequest,
   handleCorsPreflight,
   sendApiError,
-} from './_shared';
+} from './_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCorsPreflight(req, res)) {

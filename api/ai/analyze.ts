@@ -1,14 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ragEnv } from '../rag/lib/env';
-import { validateImagePayload } from '../rag/lib/image';
+import { ragEnv } from '../rag/_lib/env.js';
+import { validateImagePayload } from '../rag/_lib/image.js';
 import {
   ApiError,
   applyCors,
   authenticateTelegramRequest,
   handleCorsPreflight,
   sendApiError,
-} from '../rag/_shared';
+} from '../rag/_shared.js';
 
 type OpenRouterMessage = {
   role: 'system' | 'user' | 'assistant';

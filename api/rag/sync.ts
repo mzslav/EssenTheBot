@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ragEnv } from './lib/env';
-import { syncUserKnowledge } from './lib/modules/sync-user-knowledge';
-import { applyCors, authenticateTelegramRequest, handleCorsPreflight, sendApiError } from './_shared';
+import { ragEnv } from './_lib/env.js';
+import { syncUserKnowledge } from './_lib/modules/sync-user-knowledge.js';
+import { applyCors, authenticateTelegramRequest, handleCorsPreflight, sendApiError } from './_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCorsPreflight(req, res)) {

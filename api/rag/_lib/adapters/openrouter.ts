@@ -1,4 +1,4 @@
-import { ragEnv } from '../env';
+import { ragEnv } from '../env.js';
 
 type OpenRouterEmbeddingResponse = {
   data?: Array<{

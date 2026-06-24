@@ -1,6 +1,6 @@
-import { createChatCompletion, type OpenRouterChatMessage } from '../adapters/openrouter';
-import { getKnowledgeDocumentBySource } from '../adapters/knowledge-store';
-import { retrieveRelevantChunks } from './retrieve-relevant-chunks';
+import { createChatCompletion, type OpenRouterChatMessage } from '../adapters/openrouter.js';
+import { getKnowledgeDocumentBySource } from '../adapters/knowledge-store.js';
+import { retrieveRelevantChunks } from './retrieve-relevant-chunks.js';
 
 type ChatImage = {
   dataUrl: string;

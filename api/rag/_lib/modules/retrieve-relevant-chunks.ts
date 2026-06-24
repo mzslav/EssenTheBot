@@ -1,6 +1,6 @@
-import { matchKnowledgeChunks } from '../adapters/knowledge-store';
-import { ragEnv } from '../env';
-import { createTextEmbedding } from './create-text-embedding';
+import { matchKnowledgeChunks } from '../adapters/knowledge-store.js';
+import { ragEnv } from '../env.js';
+import { createTextEmbedding } from './create-text-embedding.js';
 
 type RetrieveRelevantChunksInput = {
   userId: number;

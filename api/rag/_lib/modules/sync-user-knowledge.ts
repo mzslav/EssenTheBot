@@ -1,7 +1,7 @@
-import { deleteKnowledgeDocument } from '../adapters/knowledge-store';
-import { createSupabaseServiceClient } from '../adapters/supabase';
-import { ingestChunkedTextDocument } from './ingest-text-document';
-import { ingestUserProfile } from './ingest-user-profile';
+import { deleteKnowledgeDocument } from '../adapters/knowledge-store.js';
+import { createSupabaseServiceClient } from '../adapters/supabase.js';
+import { ingestChunkedTextDocument } from './ingest-text-document.js';
+import { ingestUserProfile } from './ingest-user-profile.js';
 
 type UserProfile = Parameters<typeof ingestUserProfile>[0]['profile'];
 
@@ -113,7 +113,7 @@ function buildWeightChunks(logs: WeightLog[]): SnapshotChunk[] {
         'Weight history:',
         ...group.map((log) => `- ${log.date}: ${log.weight} kg${log.note ? `; note: ${log.note}` : ''}.`),
       ].join('\n'),
-      metadata: { fromDate: group.at(-1)?.date, toDate: group[0]?.date },
+      metadata: { fromDate: group[group.length - 1]?.date, toDate: group[0]?.date },
     });
   }
 
