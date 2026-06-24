@@ -30,8 +30,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         (item): item is { role: 'user' | 'assistant'; content: string } =>
           !!item &&
           typeof item === 'object' &&
-          (item.role === 'user' || item.role === 'assistant') &&
-          typeof item.content === 'string'
+          ((item as any).role === 'user' || (item as any).role === 'assistant') &&
+          typeof (item as any).content === 'string'
       )
       .map((item) => ({
         role: item.role,

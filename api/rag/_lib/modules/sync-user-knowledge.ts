@@ -113,7 +113,7 @@ function buildWeightChunks(logs: WeightLog[]): SnapshotChunk[] {
         'Weight history:',
         ...group.map((log) => `- ${log.date}: ${log.weight} kg${log.note ? `; note: ${log.note}` : ''}.`),
       ].join('\n'),
-      metadata: { fromDate: group.at(-1)?.date, toDate: group[0]?.date },
+      metadata: { fromDate: group[group.length - 1]?.date, toDate: group[0]?.date },
     });
   }
 
