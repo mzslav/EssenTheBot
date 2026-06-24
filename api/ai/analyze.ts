@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ragEnv } from '../rag/lib/env';
-import { validateImagePayload } from '../rag/lib/image';
+import { ragEnv } from '../rag/_lib/env';
+import { validateImagePayload } from '../rag/_lib/image';
 import {
   ApiError,
   applyCors,

@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ragEnv } from './lib/env';
+import { ragEnv } from './_lib/env';
 import {
   deleteKnowledgeDocumentById,
   listManualKnowledgeDocuments,
-} from './lib/adapters/knowledge-store';
-import { updateTextDocument } from './lib/modules/ingest-text-document';
+} from './_lib/adapters/knowledge-store';
+import { updateTextDocument } from './_lib/modules/ingest-text-document';
 import {
   ApiError,
   assertMaxTextLength,

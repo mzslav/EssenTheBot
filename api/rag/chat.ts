@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { createRagChatAnswer } from './lib/modules/create-rag-chat-answer';
-import { ragEnv } from './lib/env';
-import { validateImagePayload } from './lib/image';
+import { createRagChatAnswer } from './_lib/modules/create-rag-chat-answer';
+import { ragEnv } from './_lib/env';
+import { validateImagePayload } from './_lib/image';
 import {
   ApiError,
   applyCors,

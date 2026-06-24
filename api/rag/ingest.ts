@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ingestTextDocument } from './lib/modules/ingest-text-document';
-import { ragEnv } from './lib/env';
+import { ingestTextDocument } from './_lib/modules/ingest-text-document';
+import { ragEnv } from './_lib/env';
 import {
   ApiError,
   applyCors,

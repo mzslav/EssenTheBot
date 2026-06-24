@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ragEnv } from '../rag/lib/env';
+import { ragEnv } from '../rag/_lib/env';
 import {
   ApiError,
   applyCors,
