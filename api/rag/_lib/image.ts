@@ -1,5 +1,5 @@
-import { ApiError } from '../_shared';
-import { ragEnv } from './env';
+import { ApiError } from '../_shared.js';
+import { ragEnv } from './env.js';
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 

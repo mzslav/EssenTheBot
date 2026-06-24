@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { ragEnv } from './_lib/env';
+import { ragEnv } from './_lib/env.js';
 import {
   deleteKnowledgeDocumentById,
   listManualKnowledgeDocuments,
-} from './_lib/adapters/knowledge-store';
-import { updateTextDocument } from './_lib/modules/ingest-text-document';
+} from './_lib/adapters/knowledge-store.js';
+import { updateTextDocument } from './_lib/modules/ingest-text-document.js';
 import {
   ApiError,
   assertMaxTextLength,
@@ -13,7 +13,7 @@ import {
   applyCors,
   handleCorsPreflight,
   sendApiError,
-} from './_shared';
+} from './_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCorsPreflight(req, res)) {

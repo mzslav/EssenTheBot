@@ -1,7 +1,7 @@
-import { deleteKnowledgeDocument } from '../adapters/knowledge-store';
-import { createSupabaseServiceClient } from '../adapters/supabase';
-import { ingestChunkedTextDocument } from './ingest-text-document';
-import { ingestUserProfile } from './ingest-user-profile';
+import { deleteKnowledgeDocument } from '../adapters/knowledge-store.js';
+import { createSupabaseServiceClient } from '../adapters/supabase.js';
+import { ingestChunkedTextDocument } from './ingest-text-document.js';
+import { ingestUserProfile } from './ingest-user-profile.js';
 
 type UserProfile = Parameters<typeof ingestUserProfile>[0]['profile'];
 

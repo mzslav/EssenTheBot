@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ragEnv } from '../rag/_lib/env';
+import { ragEnv } from '../rag/_lib/env.js';
 import {
   ApiError,
   applyCors,
   authenticateTelegramRequest,
   handleCorsPreflight,
   sendApiError,
-} from '../rag/_shared';
+} from '../rag/_shared.js';
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
 

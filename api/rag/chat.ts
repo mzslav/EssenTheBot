@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import { createRagChatAnswer } from './_lib/modules/create-rag-chat-answer';
-import { ragEnv } from './_lib/env';
-import { validateImagePayload } from './_lib/image';
+import { createRagChatAnswer } from './_lib/modules/create-rag-chat-answer.js';
+import { ragEnv } from './_lib/env.js';
+import { validateImagePayload } from './_lib/image.js';
 import {
   ApiError,
   applyCors,
@@ -11,7 +11,7 @@ import {
   handleCorsPreflight,
   isProductionEnvironment,
   sendApiError,
-} from './_shared';
+} from './_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCorsPreflight(req, res)) {

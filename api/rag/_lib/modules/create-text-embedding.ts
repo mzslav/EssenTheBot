@@ -1,4 +1,4 @@
-import { createEmbedding } from '../adapters/openrouter';
+import { createEmbedding } from '../adapters/openrouter.js';
 
 export async function createTextEmbedding(text: string, referer?: string): Promise<number[]> {
   const normalizedText = text.trim();

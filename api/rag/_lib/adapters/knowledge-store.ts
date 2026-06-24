@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from './supabase';
+import { createSupabaseServiceClient } from './supabase.js';
 
 type JsonObject = Record<string, unknown>;
 

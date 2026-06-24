@@ -1,4 +1,4 @@
-import { ingestTextDocument } from './ingest-text-document';
+import { ingestTextDocument } from './ingest-text-document.js';
 
 type UserProfileForKnowledge = {
   gender?: string;
