@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const message = typeof req.body?.message === 'string' ? req.body.message : '';
     assertMaxTextLength('Message', message, ragEnv.maxTextChars());
     const image = validateImagePayload(req.body?.image);
-    const rawHistory = Array.isArray(req.body?.history) ? req.body.history : [];
+    const rawHistory: unknown[] = Array.isArray(req.body?.history) ? req.body.history : [];
     const history = rawHistory
       .filter(
         (item): item is { role: 'user' | 'assistant'; content: string } =>
