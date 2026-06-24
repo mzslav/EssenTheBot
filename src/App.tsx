@@ -11,6 +11,7 @@ import supabase from './supabase/supabase-client';
 import type { AppScreen, FormData } from './types/types';
 import { FridgeScreen } from './screens/FridgeScreen';
 import { WorkoutScreen } from './screens/workout/WorkoutScreen';
+import { ChatScreen } from './screens/ChatScreen';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -119,7 +120,7 @@ function App() {
     }
   }, [user?.id, isEnvChecking, isTelegramEnv]);
 
-  const showNavigation = currentScreen && ['main', 'results', 'fridge', 'workout'].includes(currentScreen);
+  const showNavigation = currentScreen && ['main', 'results', 'fridge', 'workout', 'chat'].includes(currentScreen);
 
   if (isEnvChecking || (isTelegramEnv && isAuthChecking)) {
     return (
@@ -145,7 +146,11 @@ function App() {
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}>
       </div>
 
-      <main className={`flex-1 flex ${currentScreen === 'workout' ? 'items-start' : 'items-center'} justify-center p-2 transition-all duration-300 ${showNavigation ? 'pb-24' : ''}`}>
+      <main className={`flex-1 min-h-0 flex ${
+        currentScreen === 'workout' || currentScreen === 'chat' ? 'items-start' : 'items-center'
+      } justify-center p-2 transition-all duration-300 ${
+        showNavigation ? 'pb-24' : ''
+      }`}>
 
         {currentScreen === 'welcome' && (
           <WelcomeScreen
@@ -194,6 +199,14 @@ function App() {
 
         {currentScreen === 'workout' && (
           <WorkoutScreen
+            user={user}
+            isDark={isDark}
+            themeColor={themeColor}
+          />
+        )}
+
+        {currentScreen === 'chat' && (
+          <ChatScreen
             user={user}
             isDark={isDark}
             themeColor={themeColor}

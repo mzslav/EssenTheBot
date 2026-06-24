@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ToastProps {
@@ -16,7 +16,7 @@ export const Toast = ({ message, type, onClose }: ToastProps) => {
   return (
     <>
       <div
-        className="fixed top-5 left-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl text-white text-sm font-semibold"
+        className="fixed top-5 left-1/2 z-[150] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl text-white text-sm font-semibold"
         style={{
           transform: 'translateX(-50%)',
           maxWidth: '320px',
@@ -48,15 +48,3 @@ export const Toast = ({ message, type, onClose }: ToastProps) => {
     </>
   );
 };
-
-export function useToast() {
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-  };
-
-  const hideToast = () => setToast(null);
-
-  return { toast, showToast, hideToast };
-}

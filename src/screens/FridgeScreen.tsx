@@ -7,7 +7,8 @@ import { AllMealsScreen } from './AllMealsScreen';
 import { FavoriteMeals } from '../components/FavoriteMeals';
 import { ManualMealBuilder } from '../components/ManualMealBuilder';
 import { BarcodeScanner } from '../components/BarcodeScanner';
-import { Toast, useToast } from '../components/Toast';
+import { Toast } from '../components/Toast';
+import { useToast } from '../components/useToast';
 import {
   analyzeTextInput,
   analyzePhotoInput,
@@ -87,7 +88,7 @@ export const FridgeScreen = ({
       const meals = await getMealsByDate(user.id, todayStr);
       setTodayMeals(meals);
     } catch (err) {
-      console.error('Помилка завантаження:', err);
+      console.error('Error:', err);
     } finally {
       setIsLoadingRecent(false);
     }

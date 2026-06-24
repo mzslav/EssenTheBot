@@ -2,9 +2,9 @@
 
 # Essen
 
-**Smart Telegram Mini App for nutrition tracking & fitness**
+**Smart Telegram Mini App for nutrition tracking, fitness & AI coaching**
 
-Built with React · TypeScript · Supabase · Vercel
+Built with React · TypeScript · Supabase · Vercel · OpenRouter RAG
 
 ---
 
@@ -33,12 +33,12 @@ Essen is a Telegram Mini App that combines AI-powered meal recognition, workout 
     <tr>
       <td align="center"><b>Workout Plans</b></td>
       <td align="center"><b>Progress Tracking</b></td>
-      <td align="center"><b>Profile & Settings</b></td>
+      <td align="center"><b>AI Coach</b></td>
     </tr>
     <tr>
       <td><img src="./screenshots/WorkoutScreen.png" width="240" alt="Workout"></td>
       <td><img src="./screenshots/Workout-ProgressScreen.png" width="240" alt="Progress"></td>
-      <td><img src="./screenshots/ProfileScreen.png" width="240" alt="Profile"></td>
+      <td><img src="./screenshots/AIScreen.png" width="240" alt="AI Coach"></td>
     </tr>
   </table>
 </div>
@@ -53,6 +53,13 @@ Essen is a Telegram Mini App that combines AI-powered meal recognition, workout 
 - **Text input** — type a meal description and get instant nutritional breakdown
 - **Barcode scanner** — scan product barcodes for instant nutritional info
 - **Manual entry** — quick-add meals with custom values
+
+### 🤖 AI Coach (RAG)
+- **Contextual chat** — ask nutrition and fitness questions; the AI uses your profile, meal history, and personal knowledge base to give personalized answers
+- **Image analysis** — attach a photo to your message for AI-powered meal recognition directly inside the chat
+- **Personal knowledge base** — create, edit, and delete your own notes ("My Knowledge") that the AI references in every conversation
+- **Memory suggestions** — after a conversation the AI may propose saving useful facts; accept with one tap
+- **Automatic sync** — your profile and recent meals are synced into the RAG pipeline so the coach always has up-to-date context
 
 ### 🏋️ Workout System
 - **Plan builder** — create reusable workout templates with exercises, sets, reps, weight, and RIR
@@ -96,14 +103,16 @@ Essen is a Telegram Mini App that combines AI-powered meal recognition, workout 
 ├── api/                    # Vercel Serverless Functions
 │   ├── ai/                 # AI meal recognition proxy
 │   ├── cron/               # Scheduled notifications
+│   ├── rag/                # AI Coach — chat, sync, ingest, knowledge management
 │   ├── transcribe/         # Voice-to-text proxy (AssemblyAI)
 │   └── webhook/            # Telegram bot webhook (/start)
 ├── src/
 │   ├── components/         # Reusable UI components
+│   │   └── chat/           # AI Coach chat UI (composer, messages, knowledge sheet)
 │   ├── context/            # React context (auth, theme)
 │   ├── locales/            # Translation files (en, uk, pl, ru)
 │   ├── screens/            # App screens
-│   ├── utils/              # Services & helpers
+│   ├── utils/              # Services & helpers (incl. ragService)
 │   └── types/              # TypeScript definitions
 ├── init_database.sql       # Full DB schema (run once to set up)
 └── vercel.json             # Deployment & cron config
@@ -162,7 +171,11 @@ When deploying, add **all variables from the table above** to your Vercel projec
 
 | Variable | Purpose |
 |---|---|
+| `SUPABASE_URL` | Supabase project URL (server-side, used by RAG functions) |
 | `SUPABASE_SERVICE_KEY` | Supabase service role key (full DB access, backend only) |
+| `OPENROUTER_API_KEY` | OpenRouter API key (server-side, used by RAG chat & embeddings) |
+| `OPENROUTER_MODEL` | LLM model for AI Coach (default: `google/gemini-2.5-flash-lite-preview-09-2025`) |
+| `OPENROUTER_EMBEDDING_MODEL` | Embedding model for RAG retrieval (default: `nvidia/llama-nemotron-embed-vl-1b-v2:free`) |
 
 > **Important:** `ASSEMBLYAI_API_KEY` does **not** have the `VITE_` prefix on purpose — this keeps it hidden from the browser. All AssemblyAI requests go through the `/api/transcribe` serverless proxy.
 

@@ -28,12 +28,13 @@ function formatDisplayDate(dateStr?: string, lang: string = 'uk'): string {
 
 
 const MacroBar = ({ label, value, total, color, isDark }: { label: string; value: number; total: number; color: string; isDark: boolean }) => {
+  const { t } = useTranslation();
   const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-center">
         <span className={`text-xs font-semibold ${isDark ? 'text-white/70' : 'text-slate-500'}`}>{label}</span>
-        <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}г</span>
+        <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}{t('stats.g')}</span>
       </div>
       <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
@@ -165,7 +166,7 @@ export const MealDetailModal = ({
                 { label: t('stats.carbs'), value: meal.carbs, color: '#6366f1', bg: isDark ? 'bg-purple-500/10' : 'bg-purple-50' },
               ].map(({ label, value, color, bg }) => (
                 <div key={label} className={`${bg} rounded-xl p-2.5 text-center`}>
-                  <div className="text-lg font-black" style={{ color }}>{value}г</div>
+                  <div className="text-lg font-black" style={{ color }}>{value}{t('stats.g')}</div>
                   <div className={`text-[10px] font-semibold mt-0.5 ${isDark ? 'text-white/60' : 'text-slate-500'}`}>{label}</div>
                 </div>
               ))}

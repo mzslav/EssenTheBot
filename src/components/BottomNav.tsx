@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Refrigerator, Dumbbell, User } from 'lucide-react';
+import { Home, Refrigerator, Dumbbell, User, MessageCircle } from 'lucide-react';
 import type { AppScreen } from '../types/types';
 import { useTranslation } from 'react-i18next';
 
@@ -25,6 +25,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const navItems = [
     { id: 'main', label: t('nav.main', 'Головна'), icon: <Home size={22} strokeWidth={2} /> },
     { id: 'fridge', label: t('nav.fridge', 'Меню'), icon: <Refrigerator size={22} strokeWidth={2} /> },
+    { id: 'chat', label: t('nav.chat', 'Чат'), icon: <MessageCircle size={22} strokeWidth={2} /> },
     { id: 'workout', label: t('nav.workout', 'Спорт'), icon: <Dumbbell size={22} strokeWidth={2} /> },
     { id: 'results', label: t('nav.profile', 'Профіль'), icon: <User size={22} strokeWidth={2} /> },
   ];

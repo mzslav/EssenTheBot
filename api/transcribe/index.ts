@@ -1,8 +1,38 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { ragEnv } from '../rag/lib/env';
+import {
+  ApiError,
+  applyCors,
+  authenticateTelegramRequest,
+  handleCorsPreflight,
+  sendApiError,
+} from '../rag/_shared';
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY;
 
+function estimateBase64Size(base64: string) {
+  return Math.floor((base64.length * 3) / 4);
+}
+
+function validateAction(action: unknown) {
+  if (typeof action !== 'string' || !action.trim()) {
+    throw new ApiError(400, 'Missing action');
+  }
+
+  if (!['upload', 'transcribe', 'status'].includes(action)) {
+    throw new ApiError(400, 'Invalid action. Use: upload, transcribe, or status');
+  }
+
+  return action;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (handleCorsPreflight(req, res)) {
+    return;
+  }
+
+  applyCors(req, res);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -12,11 +42,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { action, audioBase64, audioUrl, transcriptId, languageCode } = req.body;
+    const action = validateAction(req.body?.action);
+    await authenticateTelegramRequest(req, action === 'status'
+      ? {
+          rateLimitKey: 'transcribe-status',
+          maxRequests: ragEnv.transcribeStatusRateLimitMaxRequests(),
+          windowSeconds: ragEnv.transcribeStatusRateLimitWindowSeconds(),
+        }
+      : {
+          rateLimitKey: 'transcribe',
+          maxRequests: ragEnv.transcribeRateLimitMaxRequests(),
+          windowSeconds: ragEnv.transcribeRateLimitWindowSeconds(),
+        });
+    const { audioBase64, audioUrl, transcriptId, languageCode } = req.body;
 
     if (action === 'upload') {
-      if (!audioBase64) {
-        return res.status(400).json({ error: 'Missing audioBase64' });
+      if (typeof audioBase64 !== 'string' || !audioBase64.trim()) {
+        throw new ApiError(400, 'Missing audioBase64');
+      }
+
+      if (estimateBase64Size(audioBase64) > ragEnv.maxAudioBytes()) {
+        throw new ApiError(413, 'Audio payload is too large.');
       }
 
       const audioBuffer = Buffer.from(audioBase64, 'base64');
@@ -40,8 +86,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (action === 'transcribe') {
-      if (!audioUrl) {
-        return res.status(400).json({ error: 'Missing audioUrl' });
+      if (typeof audioUrl !== 'string' || !audioUrl.trim()) {
+        throw new ApiError(400, 'Missing audioUrl');
       }
 
       const transcribeResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
@@ -69,8 +115,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (action === 'status') {
-      if (!transcriptId) {
-        return res.status(400).json({ error: 'Missing transcriptId' });
+      if (typeof transcriptId !== 'string' || !transcriptId.trim()) {
+        throw new ApiError(400, 'Missing transcriptId');
       }
 
       const statusResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
@@ -85,9 +131,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ status: data.status, text: data.text, error: data.error });
     }
 
-    return res.status(400).json({ error: 'Invalid action. Use: upload, transcribe, or status' });
-  } catch (error: any) {
-    console.error('Transcribe proxy error:', error);
-    return res.status(500).json({ error: error.message || 'Internal server error' });
+  } catch (error: unknown) {
+    return sendApiError(res, error);
   }
 }

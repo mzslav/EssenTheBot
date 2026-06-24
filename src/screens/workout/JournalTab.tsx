@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { TelegramUser, WorkoutSession, SessionWithExercises } from '../../types/types';
+import type { SessionSet, TelegramUser, WorkoutSession, SessionWithExercises } from '../../types/types';
 import { JournalTabSkeleton } from '../../components/Skeleton';
+import { Toast } from '../../components/Toast';
+import { useToast } from '../../components/useToast';
 import { useFadeIn } from '../../utils/useFadeIn';
 import {
   getSessionsByDate,
@@ -16,7 +18,7 @@ import type { WorkoutPlan } from '../../types/types';
 import supabase from '../../supabase/supabase-client';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ChevronLeft, ChevronRight, Play, Check, X, Timer, Dumbbell, CalendarPlus,
+  ChevronLeft, ChevronRight, Play, Check, Dumbbell, CalendarPlus,
   Video, Calendar, Flame, Activity
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -76,15 +78,45 @@ interface ActiveWorkoutProps {
   themeColor: string;
   onBack: () => void;
   onFinish: () => void;
-  onUpdateSet: (exerciseId: number, setNumber: number, field: string, value: number | boolean) => Promise<void>;
+  onSaveSet: (
+    exerciseId: number,
+    setNumber: number,
+    data: Partial<Pick<SessionSet, 'reps' | 'weight' | 'rir' | 'is_completed'>>
+  ) => Promise<void>;
+}
+
+type SetDraft = {
+  weight: string;
+  reps: string;
+  rir: string;
+};
+
+function toInputValue(value: number | null | undefined) {
+  return value === null || value === undefined ? '' : String(value);
+}
+
+function parseOptionalFloat(value: string) {
+  const normalized = value.trim();
+  if (!normalized) return null;
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseOptionalInteger(value: string) {
+  const normalized = value.trim();
+  if (!normalized) return null;
+  const parsed = Number.parseInt(normalized, 10);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 const ActiveWorkoutView = ({
   sessionFull, sessionMeta, previousSession,
-  isDark, themeColor, onBack, onFinish, onUpdateSet,
+  isDark, themeColor, onBack, onFinish, onSaveSet,
 }: ActiveWorkoutProps) => {
   const { t } = useTranslation();
   const [activeIdx, setActiveIdx] = useState(0);
+  const [drafts, setDrafts] = useState<Record<number, SetDraft>>({});
+  const [savingSetKeys, setSavingSetKeys] = useState<Record<string, boolean>>({});
   const exercises = sessionFull.exercises ?? [];
   const currentEx = exercises[activeIdx];
   const prevEx = previousSession?.exercises?.find((e: any) => e.plan_exercise_id === currentEx?.plan_exercise_id);
@@ -93,29 +125,78 @@ const ActiveWorkoutView = ({
   const completedSets = exercises.reduce((s: number, ex: any) => s + (ex.sets?.filter((st: any) => st.is_completed).length ?? 0), 0);
   const progress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
 
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-
   useEffect(() => {
-    if (timeLeft === null) return;
-    if (timeLeft === 0) {
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      } else {
-        navigator.vibrate?.([200, 100, 200]);
+    const nextDrafts: Record<number, SetDraft> = {};
+    for (const exercise of exercises) {
+      for (const set of exercise.sets ?? []) {
+        nextDrafts[set.id] = {
+          weight: toInputValue(set.weight),
+          reps: toInputValue(set.reps),
+          rir: toInputValue(set.rir),
+        };
       }
-      return;
     }
-    const t = setInterval(() => setTimeLeft(l => (l && l > 0 ? l - 1 : 0)), 1000);
-    return () => clearInterval(t);
-  }, [timeLeft]);
+    setDrafts(nextDrafts);
+  }, [sessionMeta.id]);
 
-  const handleUpdateAndTimer = async (exId: number, setNum: number, field: string, val: any) => {
-    await onUpdateSet(exId, setNum, field, val);
-    if (field === 'is_completed' && val === true) {
+  const getSetKey = (exerciseId: number, setNumber: number) => `${exerciseId}:${setNumber}`;
+
+  const updateDraft = (setId: number, field: keyof SetDraft, value: string) => {
+    setDrafts((prev) => ({
+      ...prev,
+      [setId]: {
+        ...(prev[setId] ?? { weight: '', reps: '', rir: '' }),
+        [field]: value,
+      },
+    }));
+  };
+
+  const persistSet = async (
+    exerciseId: number,
+    setNumber: number,
+    data: Partial<Pick<SessionSet, 'reps' | 'weight' | 'rir' | 'is_completed'>>
+  ) => {
+    const key = getSetKey(exerciseId, setNumber);
+    setSavingSetKeys((prev) => ({ ...prev, [key]: true }));
+    try {
+      await onSaveSet(exerciseId, setNumber, data);
+      return true;
+    } finally {
+      setSavingSetKeys((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
+  const handleCommitField = async (
+    exerciseId: number,
+    setNumber: number,
+    setId: number,
+    field: keyof Pick<SessionSet, 'weight' | 'reps' | 'rir'>
+  ) => {
+    const draft = drafts[setId] ?? { weight: '', reps: '', rir: '' };
+    const parsedValue = field === 'weight'
+      ? parseOptionalFloat(draft.weight)
+      : parseOptionalInteger(draft[field]);
+
+    await persistSet(exerciseId, setNumber, { [field]: parsedValue } as Partial<SessionSet>);
+  };
+
+  const handleToggleSet = async (exerciseId: number, set: SessionSet) => {
+    const draft = drafts[set.id] ?? { weight: '', reps: '', rir: '' };
+    await persistSet(exerciseId, set.set_number, {
+      weight: parseOptionalFloat(draft.weight),
+      reps: parseOptionalInteger(draft.reps),
+      rir: parseOptionalInteger(draft.rir),
+      is_completed: !set.is_completed,
+    });
+
+    if (!set.is_completed) {
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
       }
-      setTimeLeft(90);
     }
   };
 
@@ -242,6 +323,12 @@ const ActiveWorkoutView = ({
         <div className="px-3 pb-4 space-y-2">
           {(currentEx.sets ?? []).map((set: any) => {
             const prevSet = getPrevSet(set.set_number);
+            const draft = drafts[set.id] ?? {
+              weight: toInputValue(set.weight),
+              reps: toInputValue(set.reps),
+              rir: toInputValue(set.rir),
+            };
+            const isSavingSet = savingSetKeys[getSetKey(currentEx.id, set.set_number)] === true;
             return (
               <div key={set.id} className={`grid grid-cols-12 gap-1 items-center transition-all duration-300 p-1.5 rounded-2xl ${set.is_completed ? isDark ? 'bg-zinc-800/50 opacity-60' : 'bg-zinc-50 opacity-60' : isDark ? 'bg-zinc-800/20' : 'bg-white'}`}>
                 <div className="col-span-2 flex justify-center">
@@ -251,28 +338,43 @@ const ActiveWorkoutView = ({
                   </span>
                 </div>
 
-                <input key={`w-${set.id}-${set.weight}`} type="number" inputMode="decimal"
-                  defaultValue={set.weight !== null && set.weight !== undefined ? set.weight : ''}
+                <input type="number" inputMode="decimal"
+                  value={draft.weight}
                   placeholder={prevSet?.weight?.toString() ?? '—'}
-                  onBlur={e => { const val = parseFloat(e.target.value); if (!isNaN(val)) onUpdateSet(currentEx.id, set.set_number, 'weight', val); }}
+                  onChange={(e) => updateDraft(set.id, 'weight', e.target.value)}
+                  onBlur={() => void handleCommitField(currentEx.id, set.set_number, set.id, 'weight')}
+                  disabled={isSavingSet}
                   className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300'}`}
                 />
 
-                <input key={`r-${set.id}-${set.reps}`} type="number" inputMode="numeric"
-                  defaultValue={set.reps !== null && set.reps !== undefined ? set.reps : ''}
+                <input type="number" inputMode="numeric"
+                  value={draft.reps}
                   placeholder={prevSet?.reps?.toString() ?? '—'}
-                  onBlur={e => { const val = parseInt(e.target.value); if (!isNaN(val)) onUpdateSet(currentEx.id, set.set_number, 'reps', val); }}
+                  onChange={(e) => updateDraft(set.id, 'reps', e.target.value)}
+                  onBlur={() => void handleCommitField(currentEx.id, set.set_number, set.id, 'reps')}
+                  disabled={isSavingSet}
                   className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300'}`}
                 />
 
-                <select value={set.rir ?? ''} onChange={e => onUpdateSet(currentEx.id, set.set_number, 'rir', parseInt(e.target.value))}
+                <select
+                  value={draft.rir}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    updateDraft(set.id, 'rir', nextValue);
+                    void persistSet(currentEx.id, set.set_number, {
+                      rir: parseOptionalInteger(nextValue),
+                    });
+                  }}
+                  disabled={isSavingSet}
                   className={`col-span-2 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border appearance-none ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:bg-zinc-800' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:bg-white'}`}>
                   <option value="">—</option>
                   {[0, 1, 2, 3].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
 
                 <div className="col-span-2 flex justify-end">
-                  <button onClick={() => handleUpdateAndTimer(currentEx.id, set.set_number, 'is_completed', !set.is_completed)}
+                  <button
+                    onClick={() => void handleToggleSet(currentEx.id, set)}
+                    disabled={isSavingSet}
                     className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold transition-all active:scale-90 border ${set.is_completed ? 'text-white border-transparent shadow-md' : isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-300'}`}
                     style={set.is_completed ? { background: themeColor } : {}}>
                     {set.is_completed && <Check size={16} strokeWidth={3} />}
@@ -296,39 +398,6 @@ const ActiveWorkoutView = ({
           </button>
         )}
       </div>
-
-      <AnimatePresence>
-        {timeLeft !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className={`fixed bottom-24 left-4 right-4 z-50 flex items-center justify-between p-4 rounded-3xl shadow-2xl border backdrop-blur-xl ${isDark ? 'bg-zinc-900/90 border-white/10' : 'bg-white/90 border-zinc-200'}`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${timeLeft === 0 ? 'bg-green-500 text-white' : isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
-                <Timer size={24} className={timeLeft === 0 ? 'animate-pulse' : ''} />
-              </div>
-              <div>
-                <p className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.journal_tab.rest', 'Відпочинок')}</p>
-                <p className={`font-mono text-2xl font-black ${timeLeft === 0 ? 'text-green-500' : isDark ? 'text-white' : 'text-zinc-900'}`}>
-                  {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <div className="flex flex-col gap-1">
-                <button onClick={() => setTimeLeft(l => l ? l + 30 : 30)} className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>+30</button>
-                <button onClick={() => setTimeLeft(l => l && l > 30 ? l - 30 : 0)} className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}>-30</button>
-              </div>
-              <button onClick={() => setTimeLeft(null)} className={`w-12 rounded-xl flex items-center justify-center transition-all active:scale-95 ${isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'}`}>
-                <X size={20} />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
@@ -394,6 +463,7 @@ const PlanPickerSheet = ({ plans, isDark, onSelect, onClose }: { plans: WorkoutP
 
 export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabProps) => {
   const { t, i18n } = useTranslation();
+  const { toast, showToast, hideToast } = useToast();
   const currentLocale = i18n.language || 'uk';
   const todayDate = useRef(new Date());
   todayDate.current.setHours(0, 0, 0, 0);
@@ -458,8 +528,19 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
     finally { setSaving(false); }
   };
 
-  const handleUpdateSet = async (exerciseId: number, setNumber: number, field: string, value: number | boolean) => {
+  const handleSaveSet = useCallback(async (
+    exerciseId: number,
+    setNumber: number,
+    data: Partial<Pick<SessionSet, 'reps' | 'weight' | 'rir' | 'is_completed'>>
+  ) => {
     if (!activeWorkout) return;
+    const previousSet = activeWorkout.sessionFull.exercises
+      .find((exercise) => exercise.id === exerciseId)
+      ?.sets.find((set) => set.set_number === setNumber);
+
+    if (!previousSet) {
+      return;
+    }
 
     setActiveWorkout(prev => {
       if (!prev) return prev;
@@ -467,7 +548,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
         if (ex.id !== exerciseId) return ex;
         const newSets = ex.sets.map(s => {
           if (s.set_number !== setNumber) return s;
-          return { ...s, [field]: value };
+          return { ...s, ...data };
         });
         return { ...ex, sets: newSets };
       });
@@ -475,11 +556,22 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
     });
 
     try {
-      await upsertSet(exerciseId, setNumber, { [field]: value });
+      await upsertSet(exerciseId, setNumber, data);
     } catch (e) {
+      setActiveWorkout(prev => {
+        if (!prev) return prev;
+        const newExercises = prev.sessionFull.exercises.map(ex => {
+          if (ex.id !== exerciseId) return ex;
+          const newSets = ex.sets.map(s => s.set_number === setNumber ? previousSet : s);
+          return { ...ex, sets: newSets };
+        });
+        return { ...prev, sessionFull: { ...prev.sessionFull, exercises: newExercises } };
+      });
       console.error(e);
+      showToast(t('workout.journal_tab.save_error', 'Не вдалося зберегти підхід'), 'error');
+      throw e;
     }
-  };
+  }, [activeWorkout, showToast, t]);
 
   const handleFinishWorkout = async () => {
     if (!activeWorkout) return;
@@ -514,14 +606,14 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
 
   if (activeWorkout) {
     return (
-      <ActiveWorkoutView
-        sessionFull={activeWorkout.sessionFull}
-        sessionMeta={activeWorkout.sessionMeta}
-        previousSession={activeWorkout.previousSession}
-        isDark={isDark} themeColor={themeColor}
-        onBack={handleBackFromWorkout} onFinish={handleFinishWorkout} onUpdateSet={handleUpdateSet}
-      />
-    );
+        <ActiveWorkoutView
+          sessionFull={activeWorkout.sessionFull}
+          sessionMeta={activeWorkout.sessionMeta}
+          previousSession={activeWorkout.previousSession}
+          isDark={isDark} themeColor={themeColor}
+          onBack={handleBackFromWorkout} onFinish={handleFinishWorkout} onSaveSet={handleSaveSet}
+        />
+      );
   }
 
   if (loading) return <JournalTabSkeleton isDark={isDark} />;
@@ -648,6 +740,7 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
       )}
 
       {showPlanPicker && <PlanPickerSheet plans={plans} isDark={isDark} themeColor={themeColor} onSelect={handleStartFromPlan} onClose={() => setShowPlanPicker(false)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
     </div>
   );
 };

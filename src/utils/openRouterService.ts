@@ -1,12 +1,19 @@
 import type { AIResponse } from '../types/types';
 import i18n from '../i18n';
-
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite-preview-09-2025';
+import { buildApiUrl } from './apiUrl';
 
 interface OpenRouterMessage {
   role: 'user' | 'assistant' | 'system';
   content: string | Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }>;
+}
+
+function getTelegramInitData() {
+  return ((window.Telegram?.WebApp as { initData?: string } | undefined)?.initData) || '';
+}
+
+function getTelegramUserId() {
+  const user = (window.Telegram?.WebApp as { initDataUnsafe?: { user?: { id?: number } } } | undefined)?.initDataUnsafe?.user;
+  return user?.id;
 }
 
 function getSystemPrompt() {
@@ -21,65 +28,24 @@ function getSystemPrompt() {
 
   return `You are a fitness bot nutritionist that helps users track food and calories. Your task is to: 1) Analyze what the user ate, 2) Determine the name of the dish in ${targetLang}, 3) Calculate calories and macronutrients (protein, fat, carbohydrates), 4) Generate 2-3 clarifying questions for a more accurate calculation in ${targetLang}. CRITICALLY IMPORTANT: Reply ONLY with valid JSON without markdown formatting, without explanations, without additional text. Response format: {"name": "Dish name in ${targetLang}", "calories": 450, "protein": 35, "fat": 12, "carbs": 48, "clarifyingQuestions": ["Question 1?", "Question 2?"]}. If the information is insufficient, make educated guesses for a standard portion.`;
 }
-const USE_PROXY = !import.meta.env.DEV;
+
 async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
-  let data: any;
-
-  if (USE_PROXY) {
-    const response = await fetch('/api/ai/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'system', content: getSystemPrompt() }, ...messages],
-        model: OPENROUTER_MODEL,
-      }),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`api_error: ${response.status} — ${errorText}`);
-    }
-    data = await response.json();
-  } else {
-    if (!OPENROUTER_API_KEY) {
-      throw new Error('openrouter_key_missing');
-    }
-
-    const requestBody: Record<string, unknown> = {
-      model: OPENROUTER_MODEL,
+  const response = await fetch(buildApiUrl('/api/ai/analyze'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      telegramInitData: getTelegramInitData(),
+      telegramUserId: getTelegramUserId(),
       messages: [{ role: 'system', content: getSystemPrompt() }, ...messages],
-      temperature: 0.3,
-      max_tokens: 1500,
-    };
+    }),
+  });
 
-    const supportsJsonMode = OPENROUTER_MODEL.includes('gpt-4') || OPENROUTER_MODEL.includes('gpt-3.5');
-    if (supportsJsonMode) {
-      requestBody.response_format = { type: 'json_object' };
-    }
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'EssenTheBot',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = `api_error: ${response.status}`;
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error?.message || errorMessage;
-      } catch { }
-      throw new Error(errorMessage);
-    }
-
-    data = await response.json();
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`api_error: ${response.status} — ${errorText}`);
   }
 
+  const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
 
   if (!content) {

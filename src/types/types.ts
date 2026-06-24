@@ -33,7 +33,7 @@ export interface Question {
   key: keyof FormData;
 }
 
-export type AppScreen = 'welcome' | 'form' | 'results' | 'main' | 'fridge' | 'workout';
+export type AppScreen = 'welcome' | 'form' | 'results' | 'main' | 'fridge' | 'workout' | 'chat';
 
 
 export type InputMode = 'photo' | 'voice' | 'text';
@@ -111,9 +111,9 @@ export interface SessionSet {
   id: number;
   session_exercise_id: number;
   set_number: number;
-  reps?: number;
-  weight?: number;
-  rir?: number;
+  reps?: number | null;
+  weight?: number | null;
+  rir?: number | null;
   is_completed: boolean;
 }
 

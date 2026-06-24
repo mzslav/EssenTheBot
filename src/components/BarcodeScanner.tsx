@@ -52,7 +52,7 @@ export const BarcodeScanner = ({ isDark, themeColor, onProductFound, onClose }: 
     if (!product?.nutriments) return;
     const f = (parseFloat(portion) || 100) / 100;
     const name = product.product_name_uk || product.product_name || product.product_name_en || t('barcode.default_product');
-    onProductFound({ name: `${name} (${Math.round(f*100)}г)`, calories: Math.round((product.nutriments['energy-kcal_100g']||0)*f), protein: Math.round((product.nutriments.proteins_100g||0)*f), fat: Math.round((product.nutriments.fat_100g||0)*f), carbs: Math.round((product.nutriments.carbohydrates_100g||0)*f) });
+    onProductFound({ name: `${name} (${Math.round(f*100)}${t('stats.g')})`, calories: Math.round((product.nutriments['energy-kcal_100g']||0)*f), protein: Math.round((product.nutriments.proteins_100g||0)*f), fat: Math.round((product.nutriments.fat_100g||0)*f), carbs: Math.round((product.nutriments.carbohydrates_100g||0)*f) });
   };
 
   const reset = () => { setScannedCode(null); setProduct(null); setError(null); setPortion('100'); };

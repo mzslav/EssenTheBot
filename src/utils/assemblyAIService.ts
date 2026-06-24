@@ -1,3 +1,14 @@
+import { buildApiUrl } from './apiUrl';
+
+function getTelegramInitData() {
+  return ((window.Telegram?.WebApp as { initData?: string } | undefined)?.initData) || '';
+}
+
+function getTelegramUserId() {
+  const user = (window.Telegram?.WebApp as { initDataUnsafe?: { user?: { id?: number } } } | undefined)?.initDataUnsafe?.user;
+  return user?.id;
+}
+
 function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
@@ -75,11 +86,13 @@ function blobToBase64(blob: Blob): Promise<string> {
 
 async function uploadAudio(audioBlob: Blob): Promise<string> {
   const base64 = await blobToBase64(audioBlob);
+  const telegramInitData = getTelegramInitData();
+  const telegramUserId = getTelegramUserId();
 
-  const response = await fetch('/api/transcribe', {
+  const response = await fetch(buildApiUrl('/api/transcribe'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action: 'upload', audioBase64: base64 }),
+    body: JSON.stringify({ action: 'upload', audioBase64: base64, telegramInitData, telegramUserId }),
   });
 
   if (!response.ok) {
@@ -92,10 +105,12 @@ async function uploadAudio(audioBlob: Blob): Promise<string> {
 }
 
 async function createTranscription(audioUrl: string, languageCode: string): Promise<string> {
-  const response = await fetch('/api/transcribe', {
+  const telegramInitData = getTelegramInitData();
+  const telegramUserId = getTelegramUserId();
+  const response = await fetch(buildApiUrl('/api/transcribe'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action: 'transcribe', audioUrl, languageCode }),
+    body: JSON.stringify({ action: 'transcribe', audioUrl, languageCode, telegramInitData, telegramUserId }),
   });
 
   if (!response.ok) {
@@ -108,10 +123,12 @@ async function createTranscription(audioUrl: string, languageCode: string): Prom
 }
 
 async function checkTranscriptionStatus(transcriptId: string): Promise<{ status: string; text?: string; error?: string }> {
-  const response = await fetch('/api/transcribe', {
+  const telegramInitData = getTelegramInitData();
+  const telegramUserId = getTelegramUserId();
+  const response = await fetch(buildApiUrl('/api/transcribe'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action: 'status', transcriptId }),
+    body: JSON.stringify({ action: 'status', transcriptId, telegramInitData, telegramUserId }),
   });
 
   if (!response.ok) throw new Error('error_status');
@@ -123,42 +140,38 @@ export async function transcribeAudio(
   languageCode: string,
   onProgress?: (status: string) => void
 ): Promise<string> {
-  try {
-    onProgress?.('processing_audio');
-    const audioBlob = await convertBlobToWav(rawAudioBlob);
+  onProgress?.('processing_audio');
+  const audioBlob = await convertBlobToWav(rawAudioBlob);
 
-    if (audioBlob.size < 2000) {
-      throw new Error('error_audio_too_short');
-    }
-
-    onProgress?.('uploading');
-    const audioUrl = await uploadAudio(audioBlob);
-
-    onProgress?.('recognizing');
-    const transcriptId = await createTranscription(audioUrl, languageCode);
-
-    let attempts = 0;
-    while (attempts < 60) {
-      await new Promise(r => setTimeout(r, 2500));
-      const result = await checkTranscriptionStatus(transcriptId);
-
-      if (result.status === 'completed') {
-        if (!result.text?.trim()) {
-          throw new Error('error_voice_not_recognized');
-        }
-        return result.text.trim();
-      }
-
-      if (result.status === 'error') {
-        throw new Error(result.error || 'error_api');
-      }
-
-      attempts++;
-      onProgress?.('recognizing');
-    }
-
-    throw new Error('error_timeout');
-  } catch (error) {
-    throw error;
+  if (audioBlob.size < 2000) {
+    throw new Error('error_audio_too_short');
   }
+
+  onProgress?.('uploading');
+  const audioUrl = await uploadAudio(audioBlob);
+
+  onProgress?.('recognizing');
+  const transcriptId = await createTranscription(audioUrl, languageCode);
+
+  let attempts = 0;
+  while (attempts < 60) {
+    await new Promise(r => setTimeout(r, 2500));
+    const result = await checkTranscriptionStatus(transcriptId);
+
+    if (result.status === 'completed') {
+      if (!result.text?.trim()) {
+        throw new Error('error_voice_not_recognized');
+      }
+      return result.text.trim();
+    }
+
+    if (result.status === 'error') {
+      throw new Error(result.error || 'error_api');
+    }
+
+    attempts++;
+    onProgress?.('recognizing');
+  }
+
+  throw new Error('error_timeout');
 }

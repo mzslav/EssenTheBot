@@ -220,8 +220,9 @@ export async function getPreviousSession(
     .eq('user_id', internalId)
     .eq('plan_id', planId)
     .eq('status', 'completed')
-    .lt('date', beforeDate)
+    .lte('date', beforeDate)
     .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
     .order('order_index', { referencedTable: 'session_exercises', ascending: true })
     .limit(1)
     .maybeSingle();
@@ -254,6 +255,13 @@ export async function createSessionFromPlan(
   if (!plan) throw new Error('Plan not found');
 
   const internalId = await getInternalUserId(telegramUserId);
+  const previousSession = await getPreviousSession(telegramUserId, planId, date);
+  const previousSetsByExercise = new Map(
+    (previousSession?.exercises ?? []).map((exercise) => [
+      exercise.plan_exercise_id,
+      new Map((exercise.sets ?? []).map((set) => [set.set_number, set])),
+    ])
+  );
 
   const { data: session, error: sessionError } = await supabase
     .from('workout_sessions')
@@ -285,14 +293,20 @@ export async function createSessionFromPlan(
 
     if (exError) throw exError;
 
-    const setsToInsert = Array.from({ length: ex.sets }, (_, i) => ({
-      session_exercise_id: sessionEx.id,
-      set_number: i + 1,
-      reps: null,
-      weight: ex.weight,
-      rir: null,
-      is_completed: false,
-    }));
+    const previousExerciseSets = previousSetsByExercise.get(ex.id);
+    const setsToInsert = Array.from({ length: ex.sets }, (_, i) => {
+      const setNumber = i + 1;
+      const previousSet = previousExerciseSets?.get(setNumber);
+
+      return {
+        session_exercise_id: sessionEx.id,
+        set_number: setNumber,
+        reps: previousSet?.reps ?? null,
+        weight: previousSet?.weight ?? ex.weight ?? null,
+        rir: previousSet?.rir ?? null,
+        is_completed: false,
+      };
+    });
 
     const { error: setsError } = await supabase
       .from('session_sets')
@@ -319,16 +333,33 @@ export async function updateSessionStatus(
 export async function upsertSet(
   sessionExerciseId: number,
   setNumber: number,
-  data: { reps?: number; weight?: number; rir?: number; is_completed?: boolean }
+  data: { reps?: number | null; weight?: number | null; rir?: number | null; is_completed?: boolean }
 ): Promise<void> {
-  const { error } = await supabase
+  const { data: updatedRows, error } = await supabase
     .from('session_sets')
-    .upsert(
-      { session_exercise_id: sessionExerciseId, set_number: setNumber, ...data },
-      { onConflict: 'session_exercise_id,set_number' }
-    );
+    .update(data)
+    .eq('session_exercise_id', sessionExerciseId)
+    .eq('set_number', setNumber)
+    .select('id');
 
   if (error) throw error;
+
+  if (updatedRows && updatedRows.length > 0) {
+    return;
+  }
+
+  const { error: insertError } = await supabase
+    .from('session_sets')
+    .insert({
+      session_exercise_id: sessionExerciseId,
+      set_number: setNumber,
+      reps: data.reps ?? null,
+      weight: data.weight ?? null,
+      rir: data.rir ?? null,
+      is_completed: data.is_completed ?? false,
+    });
+
+  if (insertError) throw insertError;
 }
 
 export async function markSetCompleted(setId: number, is_completed: boolean): Promise<void> {

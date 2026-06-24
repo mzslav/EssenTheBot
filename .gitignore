@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+icons
+.codegraph
+.agents
+.vercel
+.env*
+!.env.example

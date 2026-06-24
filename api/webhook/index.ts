@@ -1,6 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const secretHeader = req.headers['x-telegram-bot-api-secret-token'];
+  const receivedSecret = Array.isArray(secretHeader) ? secretHeader[0] : secretHeader;
+
+  if (!webhookSecret) {
+    return res.status(500).json({ error: 'Missing TELEGRAM_WEBHOOK_SECRET' });
+  }
+
+  if (receivedSecret !== webhookSecret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
