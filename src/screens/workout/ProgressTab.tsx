@@ -5,7 +5,7 @@ import { useFadeIn } from '../../utils/useFadeIn';
 import { getExerciseHistory, searchExerciseLibrary } from '../../utils/workoutService';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { TrendingUp, Activity, BarChart2, Dumbbell, History, LineChart as LineChartIcon } from 'lucide-react';
+import { TrendingUp, Activity, BarChart2, Dumbbell, History, LineChart as LineChartIcon, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface ProgressTabProps {
@@ -27,29 +27,36 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
 
   const [exercises, setExercises] = useState<ExerciseLibraryItem[]>([]);
   const [query, setQuery] = useState('');
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseLibraryItem | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
   const [history, setHistory] = useState<ProgressEntry[]>([]);
   const [metric, setMetric] = useState<ProgressMetric>('max_weight');
   const [loading, setLoading] = useState(false);
   const [exercisesLoading, setExercisesLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
 
   const fadeIn = useFadeIn(!exercisesLoading);
   const dataFadeIn = useFadeIn(!loading && history.length > 0);
 
   useEffect(() => {
     if (!user?.id) return;
-    setExercisesLoading(true);
+    const isFirstLoad = exercisesLoading && exercises.length === 0;
+    if (!isFirstLoad) setSearching(true);
     searchExerciseLibrary(user.id, query)
       .then(setExercises)
       .catch(console.error)
-      .finally(() => setExercisesLoading(false));
+      .finally(() => {
+        setExercisesLoading(false);
+        setSearching(false);
+      });
   }, [query, user?.id]);
 
-  const handleSelectExercise = async (exerciseId: number) => {
-    setSelectedExerciseId(exerciseId);
+  const handleSelectExercise = async (exercise: ExerciseLibraryItem) => {
+    setSelectedExercise(exercise);
+    setSelectedExerciseId(exercise.id);
     setLoading(true);
     try {
-      const data = await getExerciseHistory(exerciseId);
+      const data = await getExerciseHistory(exercise.id);
       setHistory(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -60,7 +67,6 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
     return `${d.getDate()}.${d.getMonth() + 1}`;
   };
 
-  const selectedExercise = exercises.find(e => e.id === selectedExerciseId);
   const bestWeight = history.length ? Math.max(...history.map(h => h.max_weight)) : 0;
   const bestVolume = history.length ? Math.max(...history.map(h => h.total_volume)) : 0;
   const totalSessions = history.length;
@@ -89,8 +95,9 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
           <div>
             <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.search_exercise', 'Знайди вправу')}</label>
             <div className="relative">
+              <Search size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`} />
               <input
-                className={selectClass}
+                className={`${selectClass} pl-11`}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder={t('workout.progress_tab.search_placeholder', 'Наприклад: жим, присідання...')}
@@ -100,15 +107,36 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
 
           {exercises.length > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-              <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_exercise', 'Обери вправу')}</label>
-              <div className="relative">
-                <select className={selectClass} value={selectedExerciseId ?? ''} onChange={e => handleSelectExercise(Number(e.target.value))}>
-                  <option value="">{t('workout.progress_tab.choose_exercise_placeholder', 'Обери вправу…')}</option>
-                  {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-                  ▼
-                </div>
+              <div className="flex items-center justify-between mb-2">
+                <label className={`block text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_exercise', 'Обери вправу')}</label>
+                {searching && <span className={`text-[10px] font-bold ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{t('workout.exercise_picker.loading', 'Шукаю...')}</span>}
+              </div>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {exercises.map(ex => {
+                  const isSelected = selectedExerciseId === ex.id;
+                  return (
+                    <button
+                      key={ex.id}
+                      onClick={() => handleSelectExercise(ex)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+                        isSelected
+                          ? 'text-white border-transparent shadow-md'
+                          : isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900 shadow-sm'
+                      }`}
+                      style={isSelected ? { background: themeColor } : {}}
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-white/15 text-white' : isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-100 text-zinc-500'}`}>
+                        <Dumbbell size={16} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black truncate">{ex.name}</p>
+                        <p className={`text-[10px] font-semibold truncate ${isSelected ? 'text-white/65' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                          {ex.muscle_group || t('workout.exercise_picker.no_group', 'Без групи')}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           )}

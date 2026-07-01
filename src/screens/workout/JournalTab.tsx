@@ -287,6 +287,24 @@ const ActiveWorkoutView = ({
     );
   }
 
+  const isExerciseLocked = currentEx.status === 'skipped' || currentEx.status === 'replaced';
+  const statusAccent = currentEx.status === 'skipped'
+    ? '#ef4444'
+    : currentEx.status === 'replaced'
+      ? '#f59e0b'
+      : themeColor;
+  const heroBackground = isExerciseLocked
+    ? `linear-gradient(135deg, ${statusAccent}33 0%, #18181b 100%)`
+    : `linear-gradient(135deg, ${themeColor}ee 0%, #18181b 100%)`;
+  const statusPanelClass = currentEx.status === 'skipped'
+    ? isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200'
+    : currentEx.status === 'replaced'
+      ? isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200'
+      : isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm';
+  const disabledInputClass = isExerciseLocked
+    ? isDark ? 'bg-zinc-950/70 border-zinc-900 text-zinc-600 placeholder:text-zinc-700 cursor-not-allowed' : 'bg-zinc-100 border-zinc-200 text-zinc-400 placeholder:text-zinc-300 cursor-not-allowed'
+    : isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300';
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-4">
 
@@ -311,15 +329,22 @@ const ActiveWorkoutView = ({
           const done = sets.length > 0 && sets.every((s: any) => s.is_completed);
           const partial = !done && sets.some((s: any) => s.is_completed);
           const isCurrent = idx === activeIdx;
+          const skipped = ex.status === 'skipped';
+          const replaced = ex.status === 'replaced';
+          const statusStyle = skipped ? { background: '#ef4444' } : replaced ? { background: '#f59e0b' } : { background: themeColor };
           return (
             <button key={ex.id} onClick={() => setActiveIdx(idx)}
               className={`flex-shrink-0 px-4 py-2 rounded-2xl text-[11px] font-bold transition-all whitespace-nowrap border ${isCurrent ? 'text-white border-transparent shadow-md'
-                  : done ? isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-600 border-green-200'
-                    : partial ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'
-                      : isDark ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-white text-zinc-500 border-zinc-200'
+                  : skipped ? isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-600 border-red-200'
+                    : replaced ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'
+                      : done ? isDark ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-green-50 text-green-600 border-green-200'
+                        : partial ? isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'
+                          : isDark ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-white text-zinc-500 border-zinc-200'
                 }`}
-              style={isCurrent ? { background: themeColor } : {}}
+              style={isCurrent ? statusStyle : {}}
             >
+              {skipped && <SkipForward size={12} className="inline mr-1" />}
+              {replaced && <Shuffle size={12} className="inline mr-1" />}
               {done && <Check size={12} className="inline mr-1" />}
               {partial && <Activity size={12} className="inline mr-1" />}
               {ex.name?.split(' ').slice(0, 3).join(' ')}
@@ -328,7 +353,7 @@ const ActiveWorkoutView = ({
         })}
       </div>
 
-      <div className="rounded-3xl p-6 text-white relative overflow-hidden shadow-2xl" style={{ background: `linear-gradient(135deg, ${themeColor}ee 0%, #18181b 100%)` }}>
+      <div className="rounded-3xl p-6 text-white relative overflow-hidden shadow-2xl border" style={{ background: heroBackground, borderColor: isExerciseLocked ? `${statusAccent}55` : 'transparent' }}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 space-y-4">
           <div>
@@ -407,11 +432,17 @@ const ActiveWorkoutView = ({
         )}
       </div>
 
-      <div className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
+      <div className={`rounded-3xl border overflow-hidden ${statusPanelClass}`}>
         <div className={`px-5 py-4 border-b flex justify-between items-center ${isDark ? 'border-white/5' : 'border-zinc-100'}`}>
           <div>
-            <p className={`text-sm font-bold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.journal_tab.sets', 'Підходи')}</p>
-            <p className={`text-[10px] mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('workout.journal_tab.track_results', 'Трекай свої результати')}</p>
+            <p className={`text-sm font-bold ${isExerciseLocked ? currentEx.status === 'skipped' ? 'text-red-400' : 'text-amber-400' : isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('workout.journal_tab.sets', 'Підходи')}</p>
+            <p className={`text-[10px] mt-0.5 ${isExerciseLocked ? currentEx.status === 'skipped' ? 'text-red-400/70' : 'text-amber-500/80' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              {isExerciseLocked
+                ? currentEx.status === 'skipped'
+                  ? t('workout.journal_tab.skipped_status', 'Цю вправу пропущено у сьогоднішньому тренуванні')
+                  : t('workout.journal_tab.replaced_status', 'Цю вправу замінено у сьогоднішньому тренуванні')
+                : t('workout.journal_tab.track_results', 'Трекай свої результати')}
+            </p>
           </div>
         </div>
 
@@ -432,8 +463,9 @@ const ActiveWorkoutView = ({
               rir: toInputValue(set.rir),
             };
             const isSavingSet = savingSetKeys[getSetKey(currentEx.id, set.set_number)] === true;
+            const disabled = isSavingSet || isExerciseLocked;
             return (
-              <div key={set.id} className={`grid grid-cols-12 gap-1 items-center transition-all duration-300 p-1.5 rounded-2xl ${set.is_completed ? isDark ? 'bg-zinc-800/50 opacity-60' : 'bg-zinc-50 opacity-60' : isDark ? 'bg-zinc-800/20' : 'bg-white'}`}>
+              <div key={set.id} className={`grid grid-cols-12 gap-1 items-center transition-all duration-300 p-1.5 rounded-2xl ${isExerciseLocked ? isDark ? 'bg-zinc-950/40 opacity-70' : 'bg-white/60 opacity-70' : set.is_completed ? isDark ? 'bg-zinc-800/50 opacity-60' : 'bg-zinc-50 opacity-60' : isDark ? 'bg-zinc-800/20' : 'bg-white'}`}>
                 <div className="col-span-2 flex justify-center">
                   <span className={`text-[11px] font-black w-8 h-8 rounded-xl flex items-center justify-center transition-all ${set.is_completed ? 'text-white shadow-sm' : isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-400'}`}
                     style={set.is_completed ? { background: themeColor } : {}}>
@@ -446,8 +478,8 @@ const ActiveWorkoutView = ({
                   placeholder={prevSet?.weight?.toString() ?? '—'}
                   onChange={(e) => updateDraft(set.id, 'weight', e.target.value)}
                   onBlur={() => void handleCommitField(currentEx.id, set.set_number, set.id, 'weight')}
-                  disabled={isSavingSet}
-                  className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300'}`}
+                  disabled={disabled}
+                  className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${disabledInputClass}`}
                 />
 
                 <input type="number" inputMode="numeric"
@@ -455,8 +487,8 @@ const ActiveWorkoutView = ({
                   placeholder={prevSet?.reps?.toString() ?? '—'}
                   onChange={(e) => updateDraft(set.id, 'reps', e.target.value)}
                   onBlur={() => void handleCommitField(currentEx.id, set.set_number, set.id, 'reps')}
-                  disabled={isSavingSet}
-                  className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus:bg-zinc-800 focus:border-zinc-700' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-300'}`}
+                  disabled={disabled}
+                  className={`col-span-3 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border ${disabledInputClass}`}
                 />
 
                 <select
@@ -468,8 +500,8 @@ const ActiveWorkoutView = ({
                       rir: parseOptionalInteger(nextValue),
                     });
                   }}
-                  disabled={isSavingSet}
-                  className={`col-span-2 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border appearance-none ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:bg-zinc-800' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:bg-white'}`}>
+                  disabled={disabled}
+                  className={`col-span-2 w-full text-center text-sm font-bold rounded-xl py-3 outline-none transition-all border appearance-none ${disabledInputClass}`}>
                   <option value="">—</option>
                   {[0, 1, 2, 3].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -477,8 +509,8 @@ const ActiveWorkoutView = ({
                 <div className="col-span-2 flex justify-end">
                   <button
                     onClick={() => void handleToggleSet(currentEx.id, set)}
-                    disabled={isSavingSet}
-                    className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold transition-all active:scale-90 border ${set.is_completed ? 'text-white border-transparent shadow-md' : isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-300'}`}
+                    disabled={disabled}
+                    className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold transition-all active:scale-90 border disabled:cursor-not-allowed ${set.is_completed ? 'text-white border-transparent shadow-md' : isExerciseLocked ? isDark ? 'bg-zinc-950 border-zinc-900 text-zinc-700' : 'bg-zinc-100 border-zinc-200 text-zinc-300' : isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-300'}`}
                     style={set.is_completed ? { background: themeColor } : {}}>
                     {set.is_completed && <Check size={16} strokeWidth={3} />}
                   </button>
