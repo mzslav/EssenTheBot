@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { TelegramUser, WorkoutPlan, PlanExercise, ProgressEntry } from '../../types/types';
+import type { ExerciseLibraryItem, TelegramUser, ProgressEntry } from '../../types/types';
 import { ProgressTabSkeleton } from '../../components/Skeleton';
 import { useFadeIn } from '../../utils/useFadeIn';
-import { getPlans, getPlanExercises, getExerciseHistory } from '../../utils/workoutService';
+import { getExerciseHistory, searchExerciseLibrary } from '../../utils/workoutService';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
 import { TrendingUp, Activity, BarChart2, Dumbbell, History, LineChart as LineChartIcon } from 'lucide-react';
@@ -25,30 +25,25 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
     total_reps: t('workout.progress_tab.total_reps', 'Повторення'),
   };
 
-  const [plans, setPlans] = useState<WorkoutPlan[]>([]);
-  const [exercises, setExercises] = useState<PlanExercise[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+  const [exercises, setExercises] = useState<ExerciseLibraryItem[]>([]);
+  const [query, setQuery] = useState('');
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
   const [history, setHistory] = useState<ProgressEntry[]>([]);
   const [metric, setMetric] = useState<ProgressMetric>('max_weight');
   const [loading, setLoading] = useState(false);
-  const [plansLoading, setPlansLoading] = useState(true);
+  const [exercisesLoading, setExercisesLoading] = useState(true);
 
-  const fadeIn = useFadeIn(!plansLoading);
+  const fadeIn = useFadeIn(!exercisesLoading);
   const dataFadeIn = useFadeIn(!loading && history.length > 0);
 
   useEffect(() => {
     if (!user?.id) return;
-    getPlans(user.id).then(data => { setPlans(data); setPlansLoading(false); });
-  }, [user?.id]);
-
-  const handleSelectPlan = async (planId: number) => {
-    setSelectedPlanId(planId);
-    setSelectedExerciseId(null);
-    setHistory([]);
-    const exs = await getPlanExercises(planId);
-    setExercises(exs);
-  };
+    setExercisesLoading(true);
+    searchExerciseLibrary(user.id, query)
+      .then(setExercises)
+      .catch(console.error)
+      .finally(() => setExercisesLoading(false));
+  }, [query, user?.id]);
 
   const handleSelectExercise = async (exerciseId: number) => {
     setSelectedExerciseId(exerciseId);
@@ -84,7 +79,7 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
     );
   };
 
-  if (plansLoading) return <ProgressTabSkeleton isDark={isDark} />;
+  if (exercisesLoading) return <ProgressTabSkeleton isDark={isDark} />;
 
   return (
     <div className="space-y-4 pb-20">
@@ -92,19 +87,18 @@ export const ProgressTab = ({ user, isDark, themeColor = '#8b5cf6' }: ProgressTa
       <div style={fadeIn.style(0)} className={`rounded-3xl p-5 border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200 shadow-sm'}`}>
         <div className="space-y-4">
           <div>
-            <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_plan', 'Обери план тренувань')}</label>
+            <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.search_exercise', 'Знайди вправу')}</label>
             <div className="relative">
-              <select className={selectClass} value={selectedPlanId ?? ''} onChange={e => handleSelectPlan(Number(e.target.value))}>
-                <option value="">{t('workout.progress_tab.choose_plan_placeholder', 'Обери план…')}</option>
-                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-                ▼
-              </div>
+              <input
+                className={selectClass}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={t('workout.progress_tab.search_placeholder', 'Наприклад: жим, присідання...')}
+              />
             </div>
           </div>
 
-          {selectedPlanId && exercises.length > 0 && (
+          {exercises.length > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
               <label className={`block text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('workout.progress_tab.choose_exercise', 'Обери вправу')}</label>
               <div className="relative">

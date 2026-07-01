@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { SessionSet, TelegramUser, WorkoutSession, SessionWithExercises } from '../../types/types';
+import type { ExerciseFormData, SessionSet, TelegramUser, WorkoutSession, SessionWithExercises } from '../../types/types';
 import { JournalTabSkeleton } from '../../components/Skeleton';
 import { Toast } from '../../components/Toast';
 import { useToast } from '../../components/useToast';
@@ -13,13 +13,17 @@ import {
   getPreviousSession,
   getPlans,
   getSessionStatusesByDateRange,
+  addExerciseToSession,
+  replaceSessionExercise,
+  skipSessionExercise,
 } from '../../utils/workoutService';
 import type { WorkoutPlan } from '../../types/types';
+import { ExercisePickerSheet } from './ExercisePickerSheet';
 import supabase from '../../supabase/supabase-client';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ChevronLeft, ChevronRight, Play, Check, Dumbbell, CalendarPlus,
-  Video, Calendar, Flame, Activity
+  Video, Calendar, Flame, Activity, Plus, Shuffle, SkipForward, TimerReset, X
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -56,6 +60,8 @@ function getWeekDays(center: Date): Date[] {
 const calcVolume = (sets: any[]) =>
   sets.filter((s: any) => s.is_completed).reduce((sum: number, s: any) => sum + (s.weight ?? 0) * (s.reps ?? 0), 0);
 
+const DEFAULT_SESSION_SETS = 3;
+
 const getWorkoutDotColor = (statuses: WorkoutSession['status'][], themeColor: string) => {
   if (statuses.includes('completed')) return '#10b981';
   if (statuses.includes('in_progress')) return themeColor;
@@ -71,13 +77,18 @@ const openVideo = (url: string) => {
 };
 
 interface ActiveWorkoutProps {
+  user?: TelegramUser;
   sessionFull: SessionWithExercises;
   sessionMeta: WorkoutSession;
   previousSession: SessionWithExercises | null;
   isDark: boolean;
   themeColor: string;
+  restTimerSettings: RestTimerSettings;
   onBack: () => void;
   onFinish: () => void;
+  onAddExercise: (data: ExerciseFormData) => Promise<void>;
+  onReplaceExercise: (sessionExerciseId: number, data: ExerciseFormData) => Promise<void>;
+  onSkipExercise: (sessionExerciseId: number) => Promise<void>;
   onSaveSet: (
     exerciseId: number,
     setNumber: number,
@@ -85,11 +96,19 @@ interface ActiveWorkoutProps {
   ) => Promise<void>;
 }
 
+type RestTimerSettings = {
+  enabled: boolean;
+  defaultSeconds: number;
+  adjustSeconds: number;
+};
+
 type SetDraft = {
   weight: string;
   reps: string;
   rir: string;
 };
+
+type PickerMode = 'add' | 'replace';
 
 function toInputValue(value: number | null | undefined) {
   return value === null || value === undefined ? '' : String(value);
@@ -110,16 +129,25 @@ function parseOptionalInteger(value: string) {
 }
 
 const ActiveWorkoutView = ({
+  user,
   sessionFull, sessionMeta, previousSession,
-  isDark, themeColor, onBack, onFinish, onSaveSet,
+  isDark, themeColor, restTimerSettings,
+  onBack, onFinish, onAddExercise, onReplaceExercise, onSkipExercise, onSaveSet,
 }: ActiveWorkoutProps) => {
   const { t } = useTranslation();
   const [activeIdx, setActiveIdx] = useState(0);
   const [drafts, setDrafts] = useState<Record<number, SetDraft>>({});
   const [savingSetKeys, setSavingSetKeys] = useState<Record<string, boolean>>({});
+  const [pickerMode, setPickerMode] = useState<PickerMode | null>(null);
+  const [restSeconds, setRestSeconds] = useState(0);
+  const [restRunning, setRestRunning] = useState(false);
+  const [restDone, setRestDone] = useState(false);
   const exercises = sessionFull.exercises ?? [];
   const currentEx = exercises[activeIdx];
-  const prevEx = previousSession?.exercises?.find((e: any) => e.plan_exercise_id === currentEx?.plan_exercise_id);
+  const prevEx = previousSession?.exercises?.find((e: any) =>
+    (currentEx?.exercise_id && e.exercise_id === currentEx.exercise_id) ||
+    (!currentEx?.exercise_id && e.plan_exercise_id === currentEx?.plan_exercise_id)
+  );
 
   const totalSets = exercises.reduce((s: number, ex: any) => s + (ex.sets?.length ?? 0), 0);
   const completedSets = exercises.reduce((s: number, ex: any) => s + (ex.sets?.filter((st: any) => st.is_completed).length ?? 0), 0);
@@ -138,6 +166,31 @@ const ActiveWorkoutView = ({
     }
     setDrafts(nextDrafts);
   }, [sessionMeta.id]);
+
+  useEffect(() => {
+    if (!restRunning || restSeconds <= 0) return;
+    const id = window.setInterval(() => {
+      setRestSeconds(prev => {
+        if (prev <= 1) {
+          window.clearInterval(id);
+          setRestRunning(false);
+          setRestDone(true);
+          window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, [restRunning, restSeconds]);
+
+  const startRestTimer = () => {
+    if (!restTimerSettings.enabled) return;
+    setRestSeconds(Math.max(restTimerSettings.defaultSeconds, 1));
+    setRestRunning(true);
+    setRestDone(false);
+  };
 
   const getSetKey = (exerciseId: number, setNumber: number) => `${exerciseId}:${setNumber}`;
 
@@ -194,6 +247,7 @@ const ActiveWorkoutView = ({
     });
 
     if (!set.is_completed) {
+      startRestTimer();
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
       }
@@ -204,6 +258,23 @@ const ActiveWorkoutView = ({
     if (!prevEx) return null;
     return (prevEx.sets as any[]).find((s: any) => s.set_number === setNumber) ?? null;
   };
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const buildPickedExercise = (exercise: Partial<ExerciseFormData>): ExerciseFormData => ({
+    exercise_id: exercise.exercise_id,
+    name: exercise.name ?? '',
+    video_url: exercise.video_url ?? '',
+    sets: currentEx?.sets?.length || DEFAULT_SESSION_SETS,
+    reps: exercise.reps ?? '8-10',
+    weight: exercise.weight ?? 0,
+    rir: exercise.rir ?? '1-2',
+    notes: exercise.notes ?? '',
+  });
 
   if (!currentEx) {
     return (
@@ -304,6 +375,38 @@ const ActiveWorkoutView = ({
         </div>
       </div>
 
+      <div className={`rounded-3xl border p-3 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => setPickerMode('add')}
+            className={`py-3 rounded-2xl text-[11px] font-black flex items-center justify-center gap-1.5 transition-all active:scale-95 ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}
+          >
+            <Plus size={14} /> {t('workout.journal_tab.add_exercise', '+ Вправа')}
+          </button>
+          <button
+            onClick={() => setPickerMode('replace')}
+            disabled={currentEx.status === 'skipped' || currentEx.status === 'replaced'}
+            className={`py-3 rounded-2xl text-[11px] font-black flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}
+          >
+            <Shuffle size={14} /> {t('workout.journal_tab.replace_exercise', 'Замінити')}
+          </button>
+          <button
+            onClick={() => void onSkipExercise(currentEx.id)}
+            disabled={currentEx.status === 'skipped' || currentEx.status === 'replaced'}
+            className={`py-3 rounded-2xl text-[11px] font-black flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}
+          >
+            <SkipForward size={14} /> {t('workout.journal_tab.skip_exercise', 'Пропустити')}
+          </button>
+        </div>
+        {(currentEx.status === 'skipped' || currentEx.status === 'replaced') && (
+          <p className={`text-[11px] font-semibold text-center mt-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            {currentEx.status === 'skipped'
+              ? t('workout.journal_tab.skipped_status', 'Цю вправу пропущено у сьогоднішньому тренуванні')
+              : t('workout.journal_tab.replaced_status', 'Цю вправу замінено у сьогоднішньому тренуванні')}
+          </p>
+        )}
+      </div>
+
       <div className={`rounded-3xl border overflow-hidden ${isDark ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
         <div className={`px-5 py-4 border-b flex justify-between items-center ${isDark ? 'border-white/5' : 'border-zinc-100'}`}>
           <div>
@@ -398,6 +501,67 @@ const ActiveWorkoutView = ({
           </button>
         )}
       </div>
+
+      <AnimatePresence>
+        {(restRunning || restDone) && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            className={`sticky bottom-3 z-30 rounded-3xl border p-3 shadow-2xl ${isDark ? 'bg-zinc-950/95 border-zinc-800' : 'bg-white/95 border-zinc-200'}`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white" style={{ background: restDone ? '#10b981' : themeColor }}>
+                <TimerReset size={20} />
+              </div>
+              <div className="flex-1">
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                  {restDone ? t('workout.journal_tab.rest_done', 'Відпочинок завершено') : t('workout.journal_tab.rest', 'Відпочинок')}
+                </p>
+                <p className={`text-2xl font-black tabular-nums leading-tight ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{formatTimer(restSeconds)}</p>
+              </div>
+              {!restDone && (
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setRestSeconds(prev => Math.max(prev - restTimerSettings.adjustSeconds, 0))}
+                    className={`px-3 py-2 rounded-xl text-xs font-black ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}
+                  >
+                    -{restTimerSettings.adjustSeconds}
+                  </button>
+                  <button
+                    onClick={() => setRestSeconds(prev => prev + restTimerSettings.adjustSeconds)}
+                    className={`px-3 py-2 rounded-xl text-xs font-black ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'}`}
+                  >
+                    +{restTimerSettings.adjustSeconds}
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => { setRestRunning(false); setRestDone(false); setRestSeconds(0); }}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'}`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {pickerMode && (
+        <ExercisePickerSheet
+          user={user}
+          isDark={isDark}
+          themeColor={themeColor}
+          title={pickerMode === 'replace' ? t('workout.journal_tab.replace_exercise', 'Замінити вправу') : t('workout.journal_tab.add_exercise', 'Додати вправу')}
+          onClose={() => setPickerMode(null)}
+          onSelect={(exercise) => {
+            const payload = buildPickedExercise(exercise);
+            if (!payload.name.trim()) return;
+            if (pickerMode === 'replace') void onReplaceExercise(currentEx.id, payload);
+            else void onAddExercise(payload);
+          }}
+        />
+      )}
     </motion.div>
   );
 };
@@ -408,7 +572,7 @@ const ExerciseQuickList = ({ sessionId, isDark }: { sessionId: number; isDark: b
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    supabase.from('session_exercises').select('id, name').eq('session_id', sessionId).order('order_index')
+    supabase.from('session_exercises').select('id, name, status').eq('session_id', sessionId).order('order_index')
       .then(({ data }) => { if (data) setExercises(data); setLoaded(true); });
   }, [sessionId]);
 
@@ -418,8 +582,8 @@ const ExerciseQuickList = ({ sessionId, isDark }: { sessionId: number; isDark: b
   return (
     <>
       {exercises.map((ex, i) => (
-        <span key={ex.id} className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${isDark ? 'bg-zinc-800/50 border-zinc-700 text-zinc-400' : 'bg-zinc-100 border-zinc-200 text-zinc-600'}`}>
-          {i + 1}. {ex.name}
+        <span key={ex.id} className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${ex.status === 'skipped' || ex.status === 'replaced' ? isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-600 line-through' : 'bg-zinc-50 border-zinc-200 text-zinc-400 line-through' : isDark ? 'bg-zinc-800/50 border-zinc-700 text-zinc-400' : 'bg-zinc-100 border-zinc-200 text-zinc-600'}`}>
+          {i + 1}. {ex.name}{ex.status === 'replaced' ? ` · ${t('workout.journal_tab.replaced_short', 'замінено')}` : ex.status === 'skipped' ? ` · ${t('workout.journal_tab.skipped_short', 'пропущено')}` : ''}
         </span>
       ))}
     </>
@@ -476,6 +640,11 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
   const [showPlanPicker, setShowPlanPicker] = useState(false);
   const [sessionStatuses, setSessionStatuses] = useState<Record<string, WorkoutSession['status'][]>>({});
   const [activeWorkout, setActiveWorkout] = useState<{ sessionMeta: WorkoutSession; sessionFull: SessionWithExercises; previousSession: SessionWithExercises | null } | null>(null);
+  const [restTimerSettings, setRestTimerSettings] = useState<RestTimerSettings>({
+    enabled: true,
+    defaultSeconds: 90,
+    adjustSeconds: 30,
+  });
 
   const isToday = toDateStr(viewDate) === toDateStr(todayDate.current);
   const weekDays = getWeekDays(viewDate);
@@ -502,6 +671,23 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
 
   useEffect(() => { loadDay(); }, [loadDay]);
   useEffect(() => { loadSessionDates(); }, [loadSessionDates]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('users')
+      .select('rest_timer_enabled, rest_timer_default_seconds, rest_timer_adjust_seconds')
+      .eq('telegram_user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setRestTimerSettings({
+          enabled: data.rest_timer_enabled ?? true,
+          defaultSeconds: data.rest_timer_default_seconds ?? 90,
+          adjustSeconds: data.rest_timer_adjust_seconds ?? 30,
+        });
+      });
+  }, [user?.id]);
 
   const openActiveWorkout = async (session: WorkoutSession) => {
     setSaving(true);
@@ -573,6 +759,45 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
     }
   }, [activeWorkout, showToast, t]);
 
+  const reloadActiveWorkout = useCallback(async () => {
+    if (!activeWorkout) return;
+    const full = await getSessionWithExercises(activeWorkout.sessionMeta.id);
+    if (!full) return;
+    setActiveWorkout(prev => prev ? { ...prev, sessionFull: full } : prev);
+  }, [activeWorkout]);
+
+  const handleAddSessionExercise = useCallback(async (data: ExerciseFormData) => {
+    if (!user?.id || !activeWorkout) return;
+    try {
+      await addExerciseToSession(user.id, activeWorkout.sessionMeta.id, data);
+      await reloadActiveWorkout();
+    } catch (e) {
+      console.error(e);
+      showToast(t('workout.journal_tab.save_error', 'Не вдалося зберегти підхід'), 'error');
+    }
+  }, [activeWorkout, reloadActiveWorkout, showToast, t, user?.id]);
+
+  const handleReplaceSessionExercise = useCallback(async (sessionExerciseId: number, data: ExerciseFormData) => {
+    if (!user?.id) return;
+    try {
+      await replaceSessionExercise(user.id, sessionExerciseId, data);
+      await reloadActiveWorkout();
+    } catch (e) {
+      console.error(e);
+      showToast(t('workout.journal_tab.save_error', 'Не вдалося зберегти підхід'), 'error');
+    }
+  }, [reloadActiveWorkout, showToast, t, user?.id]);
+
+  const handleSkipSessionExercise = useCallback(async (sessionExerciseId: number) => {
+    try {
+      await skipSessionExercise(sessionExerciseId);
+      await reloadActiveWorkout();
+    } catch (e) {
+      console.error(e);
+      showToast(t('workout.journal_tab.save_error', 'Не вдалося зберегти підхід'), 'error');
+    }
+  }, [reloadActiveWorkout, showToast, t]);
+
   const handleFinishWorkout = async () => {
     if (!activeWorkout) return;
     try {
@@ -607,11 +832,17 @@ export const JournalTab = ({ user, isDark, themeColor = '#8b5cf6' }: JournalTabP
   if (activeWorkout) {
     return (
         <ActiveWorkoutView
+          user={user}
           sessionFull={activeWorkout.sessionFull}
           sessionMeta={activeWorkout.sessionMeta}
           previousSession={activeWorkout.previousSession}
           isDark={isDark} themeColor={themeColor}
-          onBack={handleBackFromWorkout} onFinish={handleFinishWorkout} onSaveSet={handleSaveSet}
+          restTimerSettings={restTimerSettings}
+          onBack={handleBackFromWorkout} onFinish={handleFinishWorkout}
+          onAddExercise={handleAddSessionExercise}
+          onReplaceExercise={handleReplaceSessionExercise}
+          onSkipExercise={handleSkipSessionExercise}
+          onSaveSet={handleSaveSet}
         />
       );
   }

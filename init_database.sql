@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
   notification boolean DEFAULT false,
   notify_water boolean DEFAULT false,
   notify_meals boolean DEFAULT false,
+  rest_timer_enabled boolean DEFAULT true,
+  rest_timer_default_seconds int DEFAULT 90,
+  rest_timer_adjust_seconds int DEFAULT 30,
   language text DEFAULT 'uk',
   streak_days int DEFAULT 0,
   "TDEE_Normal" numeric,
@@ -87,9 +90,23 @@ CREATE TABLE IF NOT EXISTS workout_plans (
   updated_at timestamptz DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS exercise_library (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id bigint REFERENCES users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  muscle_group text,
+  video_url text,
+  notes text,
+  is_favorite boolean DEFAULT false,
+  last_used_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS plan_exercises (
   id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   plan_id bigint REFERENCES workout_plans(id) ON DELETE CASCADE,
+  exercise_id bigint REFERENCES exercise_library(id) ON DELETE SET NULL,
   name text NOT NULL,
   video_url text,
   sets int DEFAULT 1,
@@ -115,10 +132,13 @@ CREATE TABLE IF NOT EXISTS session_exercises (
   id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   session_id bigint REFERENCES workout_sessions(id) ON DELETE CASCADE,
   plan_exercise_id bigint REFERENCES plan_exercises(id) ON DELETE SET NULL,
+  exercise_id bigint REFERENCES exercise_library(id) ON DELETE SET NULL,
   name text NOT NULL,
   video_url text,
   notes text,
-  order_index int DEFAULT 0
+  order_index int DEFAULT 0,
+  status text DEFAULT 'planned' CHECK (status IN ('planned', 'completed', 'skipped', 'replaced')),
+  replaced_by_session_exercise_id bigint REFERENCES session_exercises(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS session_sets (
@@ -415,6 +435,7 @@ ALTER TABLE meals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weight_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE favorite_meals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE exercise_library ENABLE ROW LEVEL SECURITY;
 ALTER TABLE plan_exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE session_exercises ENABLE ROW LEVEL SECURITY;
@@ -429,6 +450,7 @@ DROP POLICY IF EXISTS "Allow all meals" ON meals;
 DROP POLICY IF EXISTS "Allow all weight_logs" ON weight_logs;
 DROP POLICY IF EXISTS "Allow all favorite_meals" ON favorite_meals;
 DROP POLICY IF EXISTS "Allow all workout_plans" ON workout_plans;
+DROP POLICY IF EXISTS "Allow all exercise_library" ON exercise_library;
 DROP POLICY IF EXISTS "Allow all plan_exercises" ON plan_exercises;
 DROP POLICY IF EXISTS "Allow all workout_sessions" ON workout_sessions;
 DROP POLICY IF EXISTS "Allow all session_exercises" ON session_exercises;
@@ -464,6 +486,10 @@ DROP POLICY IF EXISTS workout_plans_select_legacy ON workout_plans;
 DROP POLICY IF EXISTS workout_plans_insert_legacy ON workout_plans;
 DROP POLICY IF EXISTS workout_plans_update_legacy ON workout_plans;
 DROP POLICY IF EXISTS workout_plans_delete_legacy ON workout_plans;
+DROP POLICY IF EXISTS exercise_library_select_legacy ON exercise_library;
+DROP POLICY IF EXISTS exercise_library_insert_legacy ON exercise_library;
+DROP POLICY IF EXISTS exercise_library_update_legacy ON exercise_library;
+DROP POLICY IF EXISTS exercise_library_delete_legacy ON exercise_library;
 DROP POLICY IF EXISTS plan_exercises_select_legacy ON plan_exercises;
 DROP POLICY IF EXISTS plan_exercises_insert_legacy ON plan_exercises;
 DROP POLICY IF EXISTS plan_exercises_update_legacy ON plan_exercises;
@@ -511,6 +537,11 @@ CREATE POLICY workout_plans_insert_legacy ON workout_plans FOR INSERT WITH CHECK
 CREATE POLICY workout_plans_update_legacy ON workout_plans FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY workout_plans_delete_legacy ON workout_plans FOR DELETE USING (true);
 
+CREATE POLICY exercise_library_select_legacy ON exercise_library FOR SELECT USING (true);
+CREATE POLICY exercise_library_insert_legacy ON exercise_library FOR INSERT WITH CHECK (true);
+CREATE POLICY exercise_library_update_legacy ON exercise_library FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY exercise_library_delete_legacy ON exercise_library FOR DELETE USING (true);
+
 CREATE POLICY plan_exercises_select_legacy ON plan_exercises FOR SELECT USING (true);
 CREATE POLICY plan_exercises_insert_legacy ON plan_exercises FOR INSERT WITH CHECK (true);
 CREATE POLICY plan_exercises_update_legacy ON plan_exercises FOR UPDATE USING (true) WITH CHECK (true);
@@ -545,7 +576,14 @@ CREATE INDEX IF NOT EXISTS idx_daily_logs_user_date ON daily_logs(user_id, date)
 CREATE INDEX IF NOT EXISTS idx_meals_daily_log ON meals(daily_log_id);
 CREATE INDEX IF NOT EXISTS idx_weight_logs_user_date ON weight_logs(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_favorite_meals_user ON favorite_meals(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_exercise_library_user_name_unique
+  ON exercise_library(user_id, lower(trim(name)));
+CREATE INDEX IF NOT EXISTS idx_exercise_library_user_recent
+  ON exercise_library(user_id, last_used_at DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS idx_plan_exercises_exercise_id ON plan_exercises(exercise_id);
 CREATE INDEX IF NOT EXISTS idx_workout_sessions_user_date ON workout_sessions(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_session_exercises_exercise_id ON session_exercises(exercise_id);
+CREATE INDEX IF NOT EXISTS idx_session_exercises_status ON session_exercises(status);
 CREATE INDEX IF NOT EXISTS idx_knowledge_documents_user ON knowledge_documents(user_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_documents_source_type ON knowledge_documents(source_type);
 CREATE INDEX IF NOT EXISTS idx_knowledge_documents_source_hash ON knowledge_documents(source_hash);

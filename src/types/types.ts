@@ -73,9 +73,23 @@ export interface WorkoutPlan {
   updated_at: string;
 }
 
+export interface ExerciseLibraryItem {
+  id: number;
+  user_id: number;
+  name: string;
+  muscle_group?: string;
+  video_url?: string;
+  notes?: string;
+  is_favorite: boolean;
+  last_used_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PlanExercise {
   id: number;
   plan_id: number;
+  exercise_id?: number;
   name: string;
   video_url?: string;
   sets: number;
@@ -101,10 +115,13 @@ export interface SessionExercise {
   id: number;
   session_id: number;
   plan_exercise_id?: number;
+  exercise_id?: number;
   name: string;
   video_url?: string;
   notes?: string;
   order_index: number;
+  status?: 'planned' | 'completed' | 'skipped' | 'replaced';
+  replaced_by_session_exercise_id?: number;
 }
 
 export interface SessionSet {
@@ -151,6 +168,7 @@ export interface PlanFormData {
 }
 
 export interface ExerciseFormData {
+  exercise_id?: number;
   name: string;
   video_url?: string;
   sets: number | '';
@@ -174,6 +192,9 @@ export interface UserData {
   notification?: boolean;
   notify_water?: boolean;
   notify_meals?: boolean;
+  rest_timer_enabled?: boolean;
+  rest_timer_default_seconds?: number;
+  rest_timer_adjust_seconds?: number;
   streak_days?: number;
   TDEE_Normal: number;
   TDEE: number;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { TelegramUser, WorkoutPlan, WorkoutPlanWithExercises, PlanExercise, ExerciseFormData, PlanFormData } from '../../types/types';
 import { PlansTabSkeleton } from '../../components/Skeleton';
 import { useFadeIn } from '../../utils/useFadeIn';
+import { ExercisePickerSheet } from './ExercisePickerSheet';
 import {
   getPlans, getPlanWithExercises, createPlan, updatePlan, deletePlan, duplicatePlan,
   createPlanExercise, updatePlanExercise, deletePlanExercise,
@@ -38,6 +39,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
   const [planForm, setPlanForm] = useState<PlanFormData>({ name: '', muscle_group: '' });
   const [editingPlanId, setEditingPlanId] = useState<number | null>(null);
   const [showExerciseForm, setShowExerciseForm] = useState(false);
+  const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [exerciseForm, setExerciseForm] = useState<ExerciseFormData>(EMPTY_EXERCISE);
   const [editingExerciseId, setEditingExerciseId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -123,7 +125,7 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
   };
 
   const handleEditExercise = (ex: PlanExercise) => {
-    setExerciseForm({ name: ex.name, video_url: ex.video_url ?? '', sets: ex.sets, reps: ex.reps, weight: ex.weight, rir: ex.rir, notes: ex.notes ?? '' });
+    setExerciseForm({ exercise_id: ex.exercise_id, name: ex.name, video_url: ex.video_url ?? '', sets: ex.sets, reps: ex.reps, weight: ex.weight, rir: ex.rir, notes: ex.notes ?? '' });
     setEditingExerciseId(ex.id);
     setShowExerciseForm(true);
   };
@@ -168,7 +170,15 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
 
                     <div>
                       <label className={labelClass}>{t('workout.plans_tab.exercise_name', 'Назва *')}</label>
-                      <input className={inputClass} placeholder={t('workout.plans_tab.exercise_name_placeholder', 'Наприклад: Жим лежачи')} value={exerciseForm.name} onChange={e => setExerciseForm(p => ({ ...p, name: e.target.value }))} />
+                      <div className="flex gap-2">
+                        <input className={inputClass} placeholder={t('workout.plans_tab.exercise_name_placeholder', 'Наприклад: Жим лежачи')} value={exerciseForm.name} onChange={e => setExerciseForm(p => ({ ...p, exercise_id: undefined, name: e.target.value }))} />
+                        <button
+                          onClick={() => setShowExercisePicker(true)}
+                          className={`px-4 rounded-2xl border text-sm font-bold shrink-0 transition-all active:scale-95 ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-zinc-50 border-zinc-200 text-zinc-600'}`}
+                        >
+                          {t('workout.exercise_picker.pick', 'Обрати')}
+                        </button>
+                      </div>
                     </div>
 
                     <div>
@@ -206,6 +216,23 @@ export const PlansTab = ({ user, isDark, themeColor = '#8b5cf6' }: PlansTabProps
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {showExercisePicker && (
+              <ExercisePickerSheet
+                user={user}
+                isDark={isDark}
+                themeColor={themeColor}
+                title={t('workout.exercise_picker.title', 'Обери вправу')}
+                onClose={() => setShowExercisePicker(false)}
+                onSelect={(exercise) => setExerciseForm(prev => ({
+                  ...prev,
+                  exercise_id: exercise.exercise_id,
+                  name: exercise.name ?? prev.name,
+                  video_url: exercise.video_url ?? prev.video_url,
+                  notes: exercise.notes ?? prev.notes,
+                }))}
+              />
+            )}
 
             {(selectedPlan.exercises ?? []).length === 0 ? (
               <div className={`rounded-3xl p-10 flex flex-col items-center justify-center text-center border border-dashed ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-300'}`}>

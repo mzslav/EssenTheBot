@@ -7,7 +7,7 @@ import { WeightTracker } from '../components/WeightTracker';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   User as UserIcon, Activity, Target, Droplets, Utensils,
-  ChevronRight, Pencil, Scale, Flame, Check, Globe, Trash2, Moon, Sun
+  ChevronRight, Pencil, Scale, Flame, Check, Globe, Trash2, Moon, Sun, TimerReset
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppContext } from '../context/AppContext';
@@ -40,7 +40,10 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [notifyWater, setNotifyWater] = useState(false);
   const [notifyMeals, setNotifyMeals] = useState(false);
-  const [activeModal, setActiveModal] = useState<'physical' | 'goal' | 'activity' | 'language' | 'theme' | 'delete_account' | null>(null);
+  const [restTimerEnabled, setRestTimerEnabled] = useState(true);
+  const [restTimerDefaultSeconds, setRestTimerDefaultSeconds] = useState(90);
+  const [restTimerAdjustSeconds, setRestTimerAdjustSeconds] = useState(30);
+  const [activeModal, setActiveModal] = useState<'physical' | 'goal' | 'activity' | 'language' | 'theme' | 'rest_timer' | 'delete_account' | null>(null);
   const { colorScheme, setAppTheme } = useAppContext();
 
   const fadeIn = useFadeIn(!isLoadingData);
@@ -76,6 +79,9 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
           }));
           setNotifyWater(data.notify_water || false);
           setNotifyMeals(data.notify_meals || false);
+          setRestTimerEnabled(data.rest_timer_enabled ?? true);
+          setRestTimerDefaultSeconds(data.rest_timer_default_seconds ?? 90);
+          setRestTimerAdjustSeconds(data.rest_timer_adjust_seconds ?? 30);
         }
       } catch (err) {
         console.error(err);
@@ -137,6 +143,9 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
         waterPerDay, BMI, BMICategory,
         notify_water: notifyWater,
         notify_meals: notifyMeals,
+        rest_timer_enabled: restTimerEnabled,
+        rest_timer_default_seconds: restTimerDefaultSeconds,
+        rest_timer_adjust_seconds: restTimerAdjustSeconds,
         language: i18n.language,
       }, { onConflict: 'telegram_user_id' });
 
@@ -274,6 +283,12 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
               label={t('results.meal_reminder')}
               state={notifyMeals}
               toggle={() => setNotifyMeals(!notifyMeals)}
+            />
+            <SettingRow
+              icon={<TimerReset size={18} />}
+              label={t('results.rest_timer', 'Таймер відпочинку')}
+              value={restTimerEnabled ? `${Math.round(restTimerDefaultSeconds / 60)} ${t('results.min_short', 'хв')}` : t('results.off', 'Вимкнено')}
+              onClick={() => setActiveModal('rest_timer')}
             />
           </div>
         </div>
@@ -466,6 +481,54 @@ export const ResultsScreen = ({ isDark, themeColor = '#8b5cf6', formData: initia
                       );
                     })}
                   </div>
+                </div>
+              )}
+
+              {activeModal === 'rest_timer' && (
+                <div>
+                  <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{t('results.rest_timer', 'Таймер відпочинку')}</h3>
+                  <p className={`text-xs mb-6 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>{t('results.rest_timer_desc', 'Автоматично запускається після завершення підходу.')}</p>
+
+                  <div className={`rounded-2xl border overflow-hidden mb-6 ${isDark ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'}`}>
+                    <ToggleRow
+                      icon={<TimerReset size={18} />}
+                      label={t('results.rest_timer_enabled', 'Увімкнути таймер')}
+                      desc={t('results.rest_timer_enabled_desc', 'Показувати панель відпочинку під час тренування')}
+                      state={restTimerEnabled}
+                      toggle={() => setRestTimerEnabled(prev => !prev)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="space-y-2">
+                      <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.rest_timer_default', 'Початковий час')}</label>
+                      <input
+                        type="number"
+                        min={10}
+                        step={5}
+                        value={restTimerDefaultSeconds}
+                        onChange={(e) => setRestTimerDefaultSeconds(Math.max(Number(e.target.value) || 90, 10))}
+                        className={`w-full p-4 rounded-2xl text-lg font-bold border focus:outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}
+                      />
+                      <p className={`text-[10px] ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{t('results.seconds', 'секунд')}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className={`text-xs font-medium ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{t('results.rest_timer_step', 'Крок +/-')}</label>
+                      <input
+                        type="number"
+                        min={5}
+                        step={5}
+                        value={restTimerAdjustSeconds}
+                        onChange={(e) => setRestTimerAdjustSeconds(Math.max(Number(e.target.value) || 30, 5))}
+                        className={`w-full p-4 rounded-2xl text-lg font-bold border focus:outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}
+                      />
+                      <p className={`text-[10px] ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{t('results.seconds', 'секунд')}</p>
+                    </div>
+                  </div>
+
+                  <button onClick={() => handleSave(true)} disabled={isSaving} className="w-full py-4 rounded-2xl text-white font-bold transition-transform active:scale-95" style={{ backgroundColor: themeColor }}>
+                    {isSaving ? t('results.saving') : t('results.save_changes')}
+                  </button>
                 </div>
               )}
 
