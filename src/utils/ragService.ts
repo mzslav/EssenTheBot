@@ -51,6 +51,26 @@ type RagIngestResponse = {
   chunkIds: string[];
 };
 
+type RagSyncResponse = {
+  ok: boolean;
+  syncedFrom: string;
+  syncedAt: string;
+  windows?: {
+    nutritionHistoryDays: number;
+    workoutHistoryDays: number;
+    weightHistoryDays: number;
+  };
+  stats?: {
+    totalChunks: number;
+    embeddedChunks: number;
+    reusedChunks: number;
+    skippedChunks: number;
+    deletedDocuments: number;
+  };
+  rateLimitRemaining?: number;
+  rateLimitResetAt?: string;
+};
+
 export type ManualKnowledgeNote = {
   id: string;
   title: string;
@@ -128,13 +148,7 @@ export async function syncKnowledge(user?: TelegramUser) {
     throw new RagServiceError('missing_user');
   }
 
-  return requestJson<{
-    ok: boolean;
-    syncedFrom: string;
-    syncedAt: string;
-    rateLimitRemaining?: number;
-    rateLimitResetAt?: string;
-  }>(buildApiUrl('/api/rag/sync'), {
+  return requestJson<RagSyncResponse>(buildApiUrl('/api/rag/sync'), {
     body: {
       ...buildTelegramPayload(user),
     },

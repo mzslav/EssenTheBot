@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
   content text NOT NULL,
   content_hash text,
   token_count int,
-  embedding vector(2048) NOT NULL,
+  embedding halfvec(4000) NOT NULL,
   metadata jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz DEFAULT now(),
   UNIQUE(document_id, chunk_index)
@@ -221,7 +221,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION match_knowledge_chunks(
   p_user_id bigint,
-  p_query_embedding vector(2048),
+  p_query_embedding halfvec(4000),
   p_match_count int DEFAULT 8,
   p_match_threshold double precision DEFAULT 0
 )
@@ -248,19 +248,19 @@ AS $$
     kd.source_type,
     kc.content,
     kc.metadata,
-    1 - (kc.embedding::halfvec(2048) <=> p_query_embedding::halfvec(2048)) AS similarity
+    1 - (kc.embedding <=> p_query_embedding) AS similarity
   FROM knowledge_chunks kc
   JOIN knowledge_documents kd
     ON kd.id = kc.document_id
   WHERE kc.user_id = p_user_id
     AND COALESCE((kd.metadata ->> 'synthetic')::boolean, false) = false
-    AND 1 - (kc.embedding::halfvec(2048) <=> p_query_embedding::halfvec(2048)) >= p_match_threshold
-  ORDER BY kc.embedding::halfvec(2048) <=> p_query_embedding::halfvec(2048)
+    AND 1 - (kc.embedding <=> p_query_embedding) >= p_match_threshold
+  ORDER BY kc.embedding <=> p_query_embedding
   LIMIT p_match_count;
 $$;
 
-REVOKE ALL ON FUNCTION match_knowledge_chunks(bigint, vector(2048), int, double precision) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION match_knowledge_chunks(bigint, vector(2048), int, double precision) TO service_role;
+REVOKE ALL ON FUNCTION match_knowledge_chunks(bigint, halfvec(4000), int, double precision) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION match_knowledge_chunks(bigint, halfvec(4000), int, double precision) TO service_role;
 
 CREATE OR REPLACE FUNCTION upsert_knowledge_snapshot(
   p_user_id bigint,
@@ -364,7 +364,7 @@ BEGIN
       v_chunk ->> 'content',
       NULLIF(v_chunk ->> 'contentHash', ''),
       NULLIF(v_chunk ->> 'tokenCount', '')::int,
-      (v_chunk ->> 'embedding')::vector(2048),
+      (v_chunk ->> 'embedding')::halfvec(4000),
       COALESCE(v_chunk -> 'metadata', '{}'::jsonb),
       now()
     )
@@ -595,5 +595,5 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_user ON knowledge_chunks(user_id
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_content_hash ON knowledge_chunks(content_hash);
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding
   ON knowledge_chunks
-  USING hnsw ((embedding::halfvec(2048)) halfvec_cosine_ops);
+  USING hnsw (embedding halfvec_cosine_ops);
 CREATE INDEX IF NOT EXISTS idx_api_rate_limits_updated_at ON api_rate_limits(updated_at);

@@ -24,6 +24,13 @@ type TextChunkInput = {
   metadata?: JsonObject;
 };
 
+export type KnowledgeIngestStats = {
+  totalChunks: number;
+  embeddedChunks: number;
+  reusedChunks: number;
+  skippedChunks: number;
+};
+
 function normalizeText(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -88,6 +95,12 @@ async function saveSnapshotDocument(
       documentId: existing.id,
       chunkIds: existing.chunks.map((chunk) => chunk.id),
       skipped: true,
+      stats: {
+        totalChunks: existing.chunks.length,
+        embeddedChunks: 0,
+        reusedChunks: 0,
+        skippedChunks: existing.chunks.length,
+      } satisfies KnowledgeIngestStats,
     };
   }
 
@@ -120,7 +133,7 @@ async function saveSnapshotDocument(
     embeddingByChunkIndex.set(chunk.chunkIndex, changedEmbeddings[index]);
   });
 
-  return upsertKnowledgeSnapshot({
+  const result = await upsertKnowledgeSnapshot({
     userId: input.userId,
     title: input.title.trim(),
     content,
@@ -146,6 +159,16 @@ async function saveSnapshotDocument(
       };
     }),
   });
+
+  return {
+    ...result,
+    stats: {
+      totalChunks: chunkPayload.length,
+      embeddedChunks: changedChunks.length,
+      reusedChunks: Math.max(0, chunkPayload.length - changedChunks.length),
+      skippedChunks: 0,
+    } satisfies KnowledgeIngestStats,
+  };
 }
 
 export async function ingestChunkedTextDocument(
@@ -187,7 +210,7 @@ export async function ingestChunkedTextDocument(
   const embeddings = await createEmbeddingsWithConcurrency(chunks, input.referer);
   const content = chunks.map((chunk) => chunk.content).join('\n\n');
 
-  return saveKnowledgeDocument({
+  const result = await saveKnowledgeDocument({
     userId: input.userId,
     title,
     content,
@@ -200,6 +223,17 @@ export async function ingestChunkedTextDocument(
       chunkIndex: index,
     })),
   });
+
+  return {
+    ...result,
+    skipped: false,
+    stats: {
+      totalChunks: chunks.length,
+      embeddedChunks: chunks.length,
+      reusedChunks: 0,
+      skippedChunks: 0,
+    } satisfies KnowledgeIngestStats,
+  };
 }
 
 export async function ingestTextDocument(input: IngestTextDocumentInput) {
@@ -231,7 +265,7 @@ export async function ingestTextDocument(input: IngestTextDocumentInput) {
 
   const embedding = await createTextEmbedding(content, input.referer);
 
-  return saveKnowledgeDocument({
+  const result = await saveKnowledgeDocument({
     userId: input.userId,
     title,
     content,
@@ -243,6 +277,17 @@ export async function ingestTextDocument(input: IngestTextDocumentInput) {
       buildSingleChunk(content, embedding, input.metadata),
     ],
   });
+
+  return {
+    ...result,
+    skipped: false,
+    stats: {
+      totalChunks: 1,
+      embeddedChunks: 1,
+      reusedChunks: 0,
+      skippedChunks: 0,
+    } satisfies KnowledgeIngestStats,
+  };
 }
 
 export async function updateTextDocument(input: IngestTextDocumentInput & { documentId: string }) {
@@ -267,7 +312,7 @@ export async function updateTextDocument(input: IngestTextDocumentInput & { docu
 
   const embedding = await createTextEmbedding(content, input.referer);
 
-  return updateSingleChunkKnowledgeDocument({
+  const result = await updateSingleChunkKnowledgeDocument({
     documentId: input.documentId,
     userId: input.userId,
     title,
@@ -276,4 +321,15 @@ export async function updateTextDocument(input: IngestTextDocumentInput & { docu
     metadata: input.metadata,
     chunk: buildSingleChunk(content, embedding, input.metadata),
   });
+
+  return {
+    ...result,
+    skipped: false,
+    stats: {
+      totalChunks: 1,
+      embeddedChunks: 1,
+      reusedChunks: 0,
+      skippedChunks: 0,
+    } satisfies KnowledgeIngestStats,
+  };
 }

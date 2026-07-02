@@ -64,6 +64,7 @@ export async function createEmbedding(input: string, referer?: string) {
     body: JSON.stringify({
       model: ragEnv.openRouterEmbeddingModel(),
       input,
+      dimensions: ragEnv.embeddingDimensions(),
       encoding_format: 'float',
     }),
   });
@@ -80,11 +81,21 @@ export async function createEmbedding(input: string, referer?: string) {
     throw new Error('OpenRouter embedding response does not contain an embedding array.');
   }
 
+  const expectedDimensions = ragEnv.embeddingDimensions();
+  if (embedding.length !== expectedDimensions) {
+    throw new Error(
+      `OpenRouter embedding dimension mismatch for ${ragEnv.openRouterEmbeddingModel()}: expected ` +
+      `${expectedDimensions}, received ${embedding.length}.`
+    );
+  }
+
   return embedding;
 }
 
 type ChatCompletionOptions = {
   jsonResponse?: boolean;
+  model?: string;
+  maxTokens?: number;
 };
 
 export async function createChatCompletion(
@@ -96,9 +107,10 @@ export async function createChatCompletion(
     method: 'POST',
     headers: getOpenRouterHeaders(referer),
     body: JSON.stringify({
-      model: ragEnv.openRouterModel(),
+      model: options.model ?? ragEnv.openRouterModel(),
       messages,
       temperature: 0.3,
+      ...(options.maxTokens ? { max_tokens: options.maxTokens } : {}),
       ...(options.jsonResponse ? { response_format: { type: 'json_object' } } : {}),
     }),
   });

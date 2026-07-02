@@ -83,6 +83,13 @@ function validateAnalyzeMessages(rawMessages: unknown) {
   return messages;
 }
 
+function hasImageMessage(messages: OpenRouterMessage[]) {
+  return messages.some((message) =>
+    Array.isArray(message.content) &&
+    message.content.some((part) => part.type === 'image_url')
+  );
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCorsPreflight(req, res)) {
     return;
@@ -102,6 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       windowSeconds: ragEnv.analyzeRateLimitWindowSeconds(),
     });
     const messages = validateAnalyzeMessages(req.body?.messages);
+    const model = hasImageMessage(messages) ? ragEnv.mealVisionModel() : ragEnv.mealTextModel();
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -112,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'X-Title': 'EssenTheBot',
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite-preview-09-2025',
+        model,
         messages,
         temperature: 0.3,
         max_tokens: 1500,

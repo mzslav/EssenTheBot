@@ -19,12 +19,22 @@ function readNumberEnv(name: string, fallback: number) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+const DEFAULT_CHAT_MODEL = 'google/gemini-2.5-flash-lite';
+
+function readModelEnv(name: string) {
+  return process.env[name] || process.env.OPENROUTER_MODEL || DEFAULT_CHAT_MODEL;
+}
+
 export const ragEnv = {
   openRouterApiKey: () => readRequiredEnv('OPENROUTER_API_KEY'),
   openRouterEmbeddingModel: () =>
-    process.env.OPENROUTER_EMBEDDING_MODEL || 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
-  openRouterModel: () =>
-    process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite-preview-09-2025',
+    process.env.OPENROUTER_EMBEDDING_MODEL || 'qwen/qwen3-embedding-8b',
+  embeddingDimensions: () => readNumberEnv('RAG_EMBEDDING_DIMENSIONS', 4000),
+  mealTextModel: () => readModelEnv('OPENROUTER_MEAL_TEXT_MODEL'),
+  mealVisionModel: () => readModelEnv('OPENROUTER_MEAL_VISION_MODEL'),
+  ragTextModel: () => readModelEnv('OPENROUTER_RAG_TEXT_MODEL'),
+  ragVisionModel: () => readModelEnv('OPENROUTER_RAG_VISION_MODEL'),
+  openRouterModel: () => readModelEnv('OPENROUTER_MODEL'),
   openRouterAppUrl: () => process.env.OPENROUTER_APP_URL || 'https://essenthebot.vercel.app',
   openRouterAppTitle: () => process.env.OPENROUTER_APP_TITLE || 'EssenTheBot',
   supabaseUrl: () => readRequiredEnv('SUPABASE_URL'),
@@ -32,6 +42,9 @@ export const ragEnv = {
   defaultMatchCount: () => readNumberEnv('RAG_MATCH_COUNT', 8),
   defaultMatchThreshold: () => readNumberEnv('RAG_MATCH_THRESHOLD', 0.72),
   minMatchThreshold: () => readNumberEnv('RAG_MIN_MATCH_THRESHOLD', 0.18),
+  nutritionHistoryDays: () => readNumberEnv('RAG_NUTRITION_HISTORY_DAYS', 14),
+  workoutHistoryDays: () => readNumberEnv('RAG_WORKOUT_HISTORY_DAYS', 14),
+  weightHistoryDays: () => readNumberEnv('RAG_WEIGHT_HISTORY_DAYS', 30),
   maxImageBytes: () => readNumberEnv('AI_MAX_IMAGE_BYTES', 2_500_000),
   maxTextChars: () => readNumberEnv('AI_MAX_TEXT_CHARS', 12000),
   chatRateLimitWindowSeconds: () => readNumberEnv('RAG_CHAT_RATE_LIMIT_WINDOW_SECONDS', 60),

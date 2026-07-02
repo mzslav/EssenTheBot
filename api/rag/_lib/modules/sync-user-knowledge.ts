@@ -1,7 +1,8 @@
 import { deleteKnowledgeDocument } from '../adapters/knowledge-store.js';
 import { createSupabaseServiceClient } from '../adapters/supabase.js';
-import { ingestChunkedTextDocument } from './ingest-text-document.js';
+import { ingestChunkedTextDocument, type KnowledgeIngestStats } from './ingest-text-document.js';
 import { ingestUserProfile } from './ingest-user-profile.js';
+import { ragEnv } from '../env.js';
 
 type UserProfile = Parameters<typeof ingestUserProfile>[0]['profile'];
 
@@ -72,6 +73,30 @@ type SnapshotChunk = {
   content: string;
   metadata?: Record<string, unknown>;
 };
+
+type SyncStats = KnowledgeIngestStats & {
+  deletedDocuments: number;
+};
+
+function emptyStats(): SyncStats {
+  return {
+    totalChunks: 0,
+    embeddedChunks: 0,
+    reusedChunks: 0,
+    skippedChunks: 0,
+    deletedDocuments: 0,
+  };
+}
+
+function mergeStats(target: SyncStats, source?: Partial<SyncStats> | null) {
+  if (!source) return target;
+  target.totalChunks += source.totalChunks ?? 0;
+  target.embeddedChunks += source.embeddedChunks ?? 0;
+  target.reusedChunks += source.reusedChunks ?? 0;
+  target.skippedChunks += source.skippedChunks ?? 0;
+  target.deletedDocuments += source.deletedDocuments ?? 0;
+  return target;
+}
 
 function getStartDate(days: number) {
   const date = new Date();
@@ -183,10 +208,16 @@ async function replaceOrDeleteSnapshot(input: {
       sourceType: input.sourceType,
       sourceRef: input.sourceRef,
     });
-    return null;
+    return {
+      document: null,
+      stats: {
+        ...emptyStats(),
+        deletedDocuments: 1,
+      },
+    };
   }
 
-  return ingestChunkedTextDocument({
+  const document = await ingestChunkedTextDocument({
     userId: input.userId,
     title: input.title,
     content: input.chunks.map((chunk) => chunk.content).join('\n\n'),
@@ -200,24 +231,38 @@ async function replaceOrDeleteSnapshot(input: {
     },
     referer: input.referer,
   });
+
+  return {
+    document,
+    stats: {
+      ...emptyStats(),
+      ...document.stats,
+    },
+  };
 }
 
 export async function syncUserKnowledge(input: SyncUserKnowledgeInput) {
   const supabase = createSupabaseServiceClient();
-  const startDate = getStartDate(30);
+  const nutritionHistoryDays = ragEnv.nutritionHistoryDays();
+  const workoutHistoryDays = ragEnv.workoutHistoryDays();
+  const weightHistoryDays = ragEnv.weightHistoryDays();
+  const nutritionStartDate = getStartDate(nutritionHistoryDays);
+  const workoutStartDate = getStartDate(workoutHistoryDays);
+  const weightStartDate = getStartDate(weightHistoryDays);
+  const syncedFrom = [nutritionStartDate, workoutStartDate, weightStartDate].sort()[0] ?? nutritionStartDate;
 
   const [dailyLogsResult, weightLogsResult, workoutPlansResult, workoutSessionsResult] = await Promise.all([
     supabase
       .from('daily_logs')
       .select('id,date,water_ml,tdee_at_time,protein_target,fat_target,carbs_target,meals(name,calories,protein,fat,carbs)')
       .eq('user_id', input.userId)
-      .gte('date', startDate)
+      .gte('date', nutritionStartDate)
       .order('date', { ascending: false }),
     supabase
       .from('weight_logs')
       .select('date,weight,note')
       .eq('user_id', input.userId)
-      .gte('date', startDate)
+      .gte('date', weightStartDate)
       .order('date', { ascending: false }),
     supabase
       .from('workout_plans')
@@ -229,7 +274,7 @@ export async function syncUserKnowledge(input: SyncUserKnowledgeInput) {
       .select('id,date,name,notes,session_exercises(name,notes,order_index,session_sets(set_number,reps,weight,rir,is_completed))')
       .eq('user_id', input.userId)
       .eq('status', 'completed')
-      .gte('date', startDate)
+      .gte('date', workoutStartDate)
       .order('date', { ascending: false }),
   ]);
 
@@ -252,7 +297,7 @@ export async function syncUserKnowledge(input: SyncUserKnowledgeInput) {
       chunks: buildNutritionChunks((dailyLogsResult.data ?? []) as DailyLog[]),
       sourceType: 'nutrition_history',
       sourceRef: `nutrition-history:${input.userId}`,
-      historyDays: 30,
+      historyDays: nutritionHistoryDays,
       referer: input.referer,
     }),
     replaceOrDeleteSnapshot({
@@ -261,7 +306,7 @@ export async function syncUserKnowledge(input: SyncUserKnowledgeInput) {
       chunks: buildWeightChunks((weightLogsResult.data ?? []) as WeightLog[]),
       sourceType: 'weight_history',
       sourceRef: `weight-history:${input.userId}`,
-      historyDays: 30,
+      historyDays: weightHistoryDays,
       referer: input.referer,
     }),
     replaceOrDeleteSnapshot({
@@ -278,13 +323,33 @@ export async function syncUserKnowledge(input: SyncUserKnowledgeInput) {
       chunks: buildWorkoutHistoryChunks((workoutSessionsResult.data ?? []) as WorkoutSession[]),
       sourceType: 'workout_history',
       sourceRef: `workout-history:${input.userId}`,
-      historyDays: 30,
+      historyDays: workoutHistoryDays,
       referer: input.referer,
     }),
   ]);
 
+  const stats = emptyStats();
+  mergeStats(stats, nutrition.stats);
+  mergeStats(stats, weight.stats);
+  mergeStats(stats, workoutPlans.stats);
+  mergeStats(stats, workoutHistory.stats);
+
+  const documents = {
+    profile,
+    nutrition: nutrition.document,
+    weight: weight.document,
+    workoutPlans: workoutPlans.document,
+    workoutHistory: workoutHistory.document,
+  };
+
   return {
-    syncedFrom: startDate,
-    documents: { profile, nutrition, weight, workoutPlans, workoutHistory },
+    syncedFrom,
+    windows: {
+      nutritionHistoryDays,
+      workoutHistoryDays,
+      weightHistoryDays,
+    },
+    stats,
+    documents,
   };
 }

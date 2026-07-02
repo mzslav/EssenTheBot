@@ -159,8 +159,6 @@ These are needed to run the app locally. Variables prefixed with `VITE_` are emb
 |---|---|
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/public key |
-| `VITE_OPENROUTER_API_KEY` | OpenRouter key for AI meal recognition |
-| `VITE_OPENROUTER_MODEL` | AI model identifier (e.g. `google/gemini-2.5-flash-lite-preview-09-2025`) |
 | `ASSEMBLYAI_API_KEY` | AssemblyAI key (server-side only, not exposed to browser) |
 | `TELEGRAM_BOT_TOKEN` | Bot token for webhook & notifications |
 | `CRON_SECRET` | Secret for cron endpoint authentication |
@@ -174,10 +172,26 @@ When deploying, add **all variables from the table above** to your Vercel projec
 | `SUPABASE_URL` | Supabase project URL (server-side, used by RAG functions) |
 | `SUPABASE_SERVICE_KEY` | Supabase service role key (full DB access, backend only) |
 | `OPENROUTER_API_KEY` | OpenRouter API key (server-side, used by RAG chat & embeddings) |
-| `OPENROUTER_MODEL` | LLM model for AI Coach (default: `google/gemini-2.5-flash-lite-preview-09-2025`) |
-| `OPENROUTER_EMBEDDING_MODEL` | Embedding model for RAG retrieval (default: `nvidia/llama-nemotron-embed-vl-1b-v2:free`) |
+| `OPENROUTER_MEAL_TEXT_MODEL` | Text-only meal analysis model (default: `google/gemini-2.5-flash-lite`) |
+| `OPENROUTER_MEAL_VISION_MODEL` | Photo meal analysis model (default: `google/gemini-2.5-flash-lite`) |
+| `OPENROUTER_RAG_TEXT_MODEL` | Text-only AI Coach model (default: `google/gemini-2.5-flash-lite`) |
+| `OPENROUTER_RAG_VISION_MODEL` | Image-capable AI Coach model (default: `google/gemini-2.5-flash-lite`) |
+| `OPENROUTER_EMBEDDING_MODEL` | Embedding model for RAG retrieval (default: `qwen/qwen3-embedding-8b`) |
+| `RAG_EMBEDDING_DIMENSIONS` | Expected embedding vector size requested from the embedding API (default: `4000`) |
 
 > **Important:** `ASSEMBLYAI_API_KEY` does **not** have the `VITE_` prefix on purpose — this keeps it hidden from the browser. All AssemblyAI requests go through the `/api/transcribe` serverless proxy.
+
+After changing `OPENROUTER_EMBEDDING_MODEL` or `RAG_EMBEDDING_DIMENSIONS`, run:
+
+```bash
+npm run rag:embedding:check
+```
+
+If the dimension matches, apply the matching SQL migration and rebuild RAG snapshots:
+
+```bash
+npm run rag:reindex
+```
 
 ### 4. Run Locally
 
